@@ -6,8 +6,7 @@ Ich will versuchen, eine bessere Lösung mit Javascript und CouchDb zu entwickel
 Dazu müssen zunächst mal die Daten aus Access im JSON-Format in die CouchDb importiert werden können.
 
 Idee:
-- Daten liegen in Access vor (ArtenDB der Fachstelle Naturschutz des Kantons Zürich, Schweiz)
-- Mit einer Tabellenerstellungsabfrage erstellt man in Access eine Tabelle, die alle gewünschten Informationen enthält
+- Mit einer Tabellenerstellungsabfrage erstellt man in Access Tabellen, die alle gewünschten Informationen enthalten
 - Diese CouchApp verbindet mit der gewählten Tabelle der Access-Datenbank
-- Sie importiert die Arten- und Lebensraumeigenschaften im JSON-Format in die noch zu entwickelnde CouchApp
+- Sie wandelt die Arten- und Lebensraumeigenschaften ins JSON-Format um und importiert sie in die CouchApp, deren UI noch zu entwickeln ist
 - Später soll aus dieser CochApp ein Tool entstehen, mit dem Datensammlungen von den jeweiligen Datenherren hinzugefügt oder aktualisiert werden können
