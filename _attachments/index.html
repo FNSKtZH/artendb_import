@@ -3,79 +3,24 @@
 	<head>
 		<meta charset="utf-8">
 		<script type="text/javascript" src="vendor/couchapp/jquery.js"></script>
+		<script type="text/javascript" src="vendor/couchapp/jquery.couch.js"></script>
 		<script type="text/javascript" src="vendor/couchapp/accessdb.js"></script>
+		<script type="text/javascript" src="vendor/couchapp/artendb_import.js"></script>
 		<title>Import aus ArtenDb</title>
 	</head>
 	<body>
 		<button id="fauna">Fauna importieren</button>
+		<button id="flora">Flora importieren</button>
 		<script>
-		function importiereFauna() {
-			var myDB = new ACCESSdb("C:\\Users\\alex\\artendb_import\\export_in_json.mdb", {showErrors:true});
-			$.ajax({
-				type: "POST", 
-				url: "http://127.0.0.1:5984/_session",
-				dataType: "json",
-						data: {name: 'barbalex', password: 'dLhdMg12'},
-						beforeSend: function(xhr) {
-								xhr.setRequestHeader('Accept', 'application/json');
-						},
-						success: function (data) {
-							//DB übergeben und Anfangswert 1
-							importiereFauna_02(myDB, 1);
-						}
-			});
-		}
-		function importiereFauna_02(myDB, startwert, endwert) {
-			var qryFauna;
-			//die ersten 10 posts reagieren nicht!!!!!!??????
-			//darum am Ende nochmals die ersten 10 aufrufen
-			if (!endwert) {
-				endwert = startwert + 50;
-			}
-			qryFauna = myDB.query("SELECT * FROM tblFaunaExport WHERE id >= " + startwert + " AND id <= " + endwert, {json:true});
-			var a = JSON.stringify(qryFauna);
-			//Rückgabewert ist in "" eingepackt > entfernen
-			var b = a.slice(1, a.length -1);
-			//im Rückgabewert sind alle " mit \" ersetzt. Das ist kein valid JSON!
-			var c = b.replace(/\\\"/gm, "\"");
-			//jetzt haben wir valid JSON. In ein Objekt parsen
-			var d = JSON.parse(c);
-			for (i in d) {
-				//_id soll GUID sein
-				d[i]._id = d[i].fns_Guid;
-        		//leerwerte entfernen
-				for (y in d[i]) {
-					if (y === "id" || d[i][y] === "" || d[i][y] === null) {
-						delete d[i][y];
-					}
-				}
-			}
-			importiereFauna_03(d);
-			//weiter mit den nächsten x Datensätzen, wenn tblFaunaExport weitere Datensätze enthält
-			//alert(d.length);
-			if (d.length > 50) {
-				importiereFauna_02(myDB, endwert);
-			} else {
-				//die ersten 10 posts reagieren nicht!!!!!!??????
-				//darum am Ende nochmals die ersten 10 aufrufen
-				importiereFauna_02(myDB, 1, 500);
-			}
-		}
+			
 
-		function importiereFauna_03(d) {
-			var Doc;
-			Doc = '{ "docs":' + JSON.stringify(d) + '}';
-			$.ajax({
-				type: "post", 
-				url: "http://127.0.0.1:5984/artendb/_bulk_docs",
-				contentType: "application/json",
-				data: Doc
+			$("body").on("click", "#fauna", function() {
+				importiereFauna();
 			});
-		}
 
-		$("body").on("click", "#fauna", function() {
-			importiereFauna();
-		});
+			$("body").on("click", "#flora", function() {
+				importiereFlora();
+			});
 
 		</script>
 	</body>
