@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<script type="text/javascript" src="vendor/couchapp/jquery.js"></script>
+		<script type="text/javascript" src="vendor/couchapp/accessdb.js"></script>
+		<title>Import aus ArtenDb</title>
+	</head>
+	<body>
+		<button id="fauna">Fauna importieren</button>
+		<script>
+		function importiereFauna() {
+			$.ajax({
+				type: "POST", 
+				url: "http://127.0.0.1:5984/_session",
+				dataType: "json",
+						data: {name: 'barbalex', password: 'dLhdMg12'},
+						beforeSend: function(xhr) {
+								xhr.setRequestHeader('Accept', 'application/json');
+						},
+						success: function (data) {
+							var myDB = new ACCESSdb("C:\\Users\\alex\\artendb\\export\\export_in_json.mdb", {showErrors:true});
+							setTimeout(function() {
+								for (x = 1; x < 216; x++) {
+									importiereFauna_02(myDB, x);
+								}
+							}, 5000)
+						}
+			});
+		}
+		function importiereFauna_02(myDB, x) {
+			var qryFauna, startwert, endwert;
+			startwert = x*100 - 99;
+			if ((startwert + 99) < 21503) {
+				endwert = startwert + 99;
+			} else {
+				endwert = 21503;
+			}
+			
+			qryFauna = myDB.query("SELECT * FROM tblFaunaExport WHERE id >= " + startwert + " AND id <= " + endwert, {json:true});
+			var a = JSON.stringify(qryFauna);
+			//Rückgabewert ist in "" eingepackt > entfernen
+			var b = a.slice(1, a.length -1);
+			//im Rückgabewert sind alle " mit \" ersetzt. Das ist kein valid JSON!
+			var c = b.replace(/\\\"/gm, "\"");
+			var d = JSON.parse(c);
+			for (i in d) {
+				//_id soll GUID sein
+				d[i]._id = d[i].fns_Guid;
+        //leerwerte entfernen
+				for (y in d[i]) {
+					if (y === "id" || d[i][y] === "" || d[i][y] === null) {
+						delete d[i][y];
+					}
+				}
+			}
+			var e = JSON.stringify(d);
+			var Doc = '{ "docs":' + e + '}';
+			$.ajax({
+							type: "post", 
+							url: "http://127.0.0.1:5984/artendb/_bulk_docs",
+							contentType: "application/json",
+							data: Doc
+			});
+		}
+
+		$("body").on("click", "#fauna", function() {
+			importiereFauna();
+		});
+
+		</script>
+	</body>
+</html>
