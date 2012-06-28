@@ -35,36 +35,41 @@ function importiereFlora(myDB) {
 	}
 }
 
-function importiereFloraDatensammlungen(tblName) {
-	initiiereImport("importiereFloraDatensammlungen_02", tblName);
+function importiereFloraDatensammlungen(tblName, Anz) {
+	initiiereImport("importiereFloraDatensammlungen_02", tblName, Anz);
 }
 
-function importiereFloraDatensammlungen_02(myDB, tblName) {
-	var DatensammlungMetadaten, Datensammlung, sqlDatensammlung, DatensammlungDieserArt, anzFelder;
+function importiereFloraDatensammlungen_02(myDB, tblName, Anz) {
+	var DatensammlungMetadaten, Datensammlung, sqlDatensammlung, DatensammlungDieserArt, anzFelder, anzDs;
 	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = '" + tblName + "'");
 	//Datensätze der Datensammlung abfragen, mit GUID ergänzen
 	sqlDatensammlung = "SELECT * FROM " + tblName + " INNER JOIN tblFloraSisfGuid ON tblFloraSisfGuid.NR = " + tblName + "." + DatensammlungMetadaten[0].DsBeziehungsfeldDs;
 	Datensammlung = frageSql(myDB, sqlDatensammlung);
+	anzDs = 0;
 	for (x in Datensammlung) {
-		//Datensammlung als Objekt gründen
-		DatensammlungDieserArt = {};
-		DatensammlungDieserArt.Typ = "Datensammlung";
-		//Felder der Datensammlung als Objekt gründen
-		DatensammlungDieserArt.Felder = {};
-		//Felder anfügen, wenn sie Werte enthalten
-		anzFelder = 0;
-		for (y in Datensammlung[x]) {
-			if (y !== "id" && y !== "GUID" && y !== "NR" && Datensammlung[x][y] !== "" && Datensammlung[x][y] !== null && y !== DatensammlungMetadaten[0].DsBeziehungsfeldDs && y !== "Gruppe") {
-				DatensammlungDieserArt.Felder[y] = Datensammlung[x][y];
-				anzFelder += 1;
+		anzDs += 1;
+		//nur importieren, wenn innerhalb des mit Anz übergebenen 8000er Batches
+		if ((anzDs > (Anz*4000-4000)) && (anzDs <= Anz*4000)) {
+			//Datensammlung als Objekt gründen
+			DatensammlungDieserArt = {};
+			DatensammlungDieserArt.Typ = "Datensammlung";
+			//Felder der Datensammlung als Objekt gründen
+			DatensammlungDieserArt.Felder = {};
+			//Felder anfügen, wenn sie Werte enthalten
+			anzFelder = 0;
+			for (y in Datensammlung[x]) {
+				if (y !== "id" && y !== "GUID" && y !== "NR" && Datensammlung[x][y] !== "" && Datensammlung[x][y] !== null && y !== DatensammlungMetadaten[0].DsBeziehungsfeldDs && y !== "Gruppe") {
+					DatensammlungDieserArt.Felder[y] = Datensammlung[x][y];
+					anzFelder += 1;
+				}
 			}
-		}
-		//entsprechenden Index öffnen
-		//sicherstellen, dass Felder vorkommen. Gibt sonst einen Fehler
-		if (anzFelder > 0) {
-			//Datenbankabfrage ist langsam. Estern aufrufen, 
-			//sonst überholt die for-Schlaufe und DatensammlungDieserArt ist bis zur saveDoc-Ausführung eine andere!
-			fuegeDatensammlungZuArt(Datensammlung[x].GUID, DatensammlungMetadaten[0].DsName, DatensammlungDieserArt);
+			//entsprechenden Index öffnen
+			//sicherstellen, dass Felder vorkommen. Gibt sonst einen Fehler
+			if (anzFelder > 0) {
+				//Datenbankabfrage ist langsam. Estern aufrufen, 
+				//sonst überholt die for-Schlaufe und DatensammlungDieserArt ist bis zur saveDoc-Ausführung eine andere!
+				fuegeDatensammlungZuArt(Datensammlung[x].GUID, DatensammlungMetadaten[0].DsName, DatensammlungDieserArt);
+			}
 		}
 	}
 }
@@ -231,11 +236,22 @@ function baueDatensammlungenSchaltflächenAuf() {
 	if (DatensammlungenFlora) {
 		html = "";
 		for (i in DatensammlungenFlora) {
-			html += "<button id='";
-			html += DatensammlungenFlora[i].DsTabelle;
-			html += "' name='SchaltflächeFloraDatensammlung'>";
-			html += DatensammlungenFlora[i].DsName;
-			html += "</button>";
+			//Anzahl Datensätze ermitteln
+			qryAnzDs = frageSql(myDB, "SELECT Count(" + DatensammlungenFlora[i].DsBeziehungsfeldDs + ") AS Anzahl FROM " + DatensammlungenFlora[i].DsTabelle);
+			anzDs = qryAnzDs[0].Anzahl;
+			anzButtons = Math.ceil(anzDs/4000);
+			for (y = 1; y <= anzButtons; y++) {
+				html += "<button id='";
+				html += DatensammlungenFlora[i].DsTabelle + y;
+				html += "' name='SchaltflächeFloraDatensammlung' Tabelle='" + DatensammlungenFlora[i].DsTabelle;
+				html += "' Anz='" + y + "' Von='" + anzButtons;
+				html += "'>";
+				html += DatensammlungenFlora[i].DsName;
+				if (anzButtons > 1) {
+					html += " (" + y + "/" + anzButtons + ")";
+				}
+				html += "</button>";
+			}
 		}
 		$("#SchaltflächenFloraDatensammlungen").html(html);
 		//jetzt Fauna
@@ -246,7 +262,6 @@ function baueDatensammlungenSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(" + DatensammlungenFauna[i].DsBeziehungsfeldDs + ") AS Anzahl FROM " + DatensammlungenFauna[i].DsTabelle);
 			anzDs = qryAnzDs[0].Anzahl;
-			//alert(DatensammlungenFauna[i].DsTabelle + ": " + anzDs + " Datensätze. typeof anzDs = " + typeof(anzDs));
 			anzButtons = Math.ceil(anzDs/4000);
 			for (y = 1; y <= anzButtons; y++) {
 				html += "<button id='";

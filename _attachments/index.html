@@ -36,7 +36,7 @@
 				initiiereImport("importiereFlora");
 			});
 			$("body").on("click", "[name='SchaltflächeFloraDatensammlung']", function() {
-				importiereFloraDatensammlungen(this.id);
+				importiereFloraDatensammlungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("Anz"));
 			});
 			$("body").on("click", "[name='SchaltflächeFaunaDatensammlung']", function() {
 				importiereFaunaDatensammlungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("Anz"));
