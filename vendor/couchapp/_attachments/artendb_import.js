@@ -120,7 +120,7 @@ function importiereFaunaDatensammlungen_02(myDB, tblName, Anz) {
 	for (x in Datensammlung) {
 		anzDs += 1;
 		//nur importieren, wenn innerhalb des mit Anz übergebenen 8000er Batches
-		if ((anzDs > (Anz*5000-5000)) && (anzDs <= Anz*5000)) {
+		if ((anzDs > (Anz*4000-4000)) && (anzDs <= Anz*4000)) {
 			//Datensammlung als Objekt gründen
 			DatensammlungDieserArt = {};
 			DatensammlungDieserArt.Typ = "Datensammlung";
@@ -129,7 +129,7 @@ function importiereFaunaDatensammlungen_02(myDB, tblName, Anz) {
 			//Felder anfügen, wenn sie Werte enthalten
 			anzFelder = 0;
 			for (y in Datensammlung[x]) {
-				if (y !== "id" && y !== "GUID" && y !== "Nuesp" && Datensammlung[x][y] !== "" && Datensammlung[x][y] !== null && y !== DatensammlungMetadaten[0].DsBeziehungsfeldDs && y !== "Gruppe") {
+				if (y !== "id" && y !== "GUID" && y !== "NR" && y !== "tblFaunaCscfGuid.NR" && y !== "Nuesp" && y !== "Gruppe" && Datensammlung[x][y] !== "" && Datensammlung[x][y] !== null && y !== DatensammlungMetadaten[0].DsBeziehungsfeldDs) {
 					DatensammlungDieserArt.Felder[y] = Datensammlung[x][y];
 					anzFelder += 1;
 				}
@@ -247,12 +247,17 @@ function baueDatensammlungenSchaltflächenAuf() {
 			qryAnzDs = frageSql(myDB, "SELECT Count(" + DatensammlungenFauna[i].DsBeziehungsfeldDs + ") AS Anzahl FROM " + DatensammlungenFauna[i].DsTabelle);
 			anzDs = qryAnzDs[0].Anzahl;
 			//alert(DatensammlungenFauna[i].DsTabelle + ": " + anzDs + " Datensätze. typeof anzDs = " + typeof(anzDs));
-			anzButtons = Math.ceil(anzDs/5000);
+			anzButtons = Math.ceil(anzDs/4000);
 			for (y = 1; y <= anzButtons; y++) {
 				html += "<button id='";
 				html += DatensammlungenFauna[i].DsTabelle + y;
-				html += "' name='SchaltflächeFaunaDatensammlung' Tabelle='" + DatensammlungenFauna[i].DsTabelle + "' Anz='" + y + "' Von='" + anzButtons + "'>";
-				html += DatensammlungenFauna[i].DsName + " (" + y + "/" + anzButtons + ")";
+				html += "' name='SchaltflächeFaunaDatensammlung' Tabelle='" + DatensammlungenFauna[i].DsTabelle;
+				html += "' Anz='" + y + "' Von='" + anzButtons;
+				html += "'>";
+				html += DatensammlungenFauna[i].DsName;
+				if (anzButtons > 1) {
+					html += " (" + y + "/" + anzButtons + ")";
+				}
 				html += "</button>";
 			}
 		}
