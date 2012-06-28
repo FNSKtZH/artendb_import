@@ -13,27 +13,33 @@
 		<label id="dbpfad_label" for='beob_Autor'>Pfad zur .mdb:</label>
 		<input id="dbpfad" type="text" style="width:90%;" placeholder="z.B.: C:\\Users\\alex\\artendb_import\\export_in_json.mdb"/><br><br>
 		
-		<button id="fauna">Fauna importieren</button><br><br>
-		
+		<button id="fauna1" name="fauna">Fauna Index, erste 8000</button><button id="fauna2" name="fauna">Fauna Index, zweite 8000</button><button id="fauna3" name="fauna">Fauna Index, Rest</button><br><br>
+		Fauna Datensammlungen:<br>
+		<div id="SchaltflächenFaunaDatensammlungen"></div><br><br>
+
 		<button id="flora">Flora Index</button><br><br>
 		Flora Datensammlungen:<br>
 		<div id="SchaltflächenFloraDatensammlungen"></div><br><br>
 
 		<script>
 			$(document).ready(function () {
-				baueFloraDatensammlungenSchaltflächenAuf();
+				baueDatensammlungenSchaltflächenAuf();
 			});
 			$("body").on("change", "#dbpfad", function() {
-				baueFloraDatensammlungenSchaltflächenAuf();
+				baueDatensammlungenSchaltflächenAuf();
 			});
-			$("body").on("click", "#fauna", function() {
-				importiereFauna();
+			$("body").on("click", "[name='fauna']", function() {
+				sessionStorage.fauna = this.id;
+				initiiereImport("importiereFauna");
 			});
 			$("body").on("click", "#flora", function() {
 				initiiereImport("importiereFlora");
 			});
 			$("body").on("click", "[name='SchaltflächeFloraDatensammlung']", function() {
 				importiereFloraDatensammlungen(this.id);
+			});
+			$("body").on("click", "[name='SchaltflächeFaunaDatensammlung']", function() {
+				importiereFaunaDatensammlungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("Anz"));
 			});
 		</script>
 	</body>
