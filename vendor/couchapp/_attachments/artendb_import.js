@@ -128,9 +128,10 @@ function fuegeDatensammlungZuArt(GUID, DsName, DatensammlungDieserArt) {
 }
 
 function initiiereImport(functionName, tblName) {
-	var myDB = new ACCESSdb("C:\\Users\\alex\\artendb_import\\export_in_json.mdb", {showErrors:true});
+	var myDB;
+	myDB = verbindeMitMdb();
 	$.ajax({
-		type: "POST", 
+		type: "POST",
 		url: "http://127.0.0.1:5984/_session",
 		dataType: "json",
 		data: {
@@ -149,6 +150,17 @@ function initiiereImport(functionName, tblName) {
 			}
 		}
 	});
+}
+
+function verbindeMitMdb() {
+	var myDB, dbPfad;
+	if ($("#dbpfad").val()) {
+		dbPfad = $("#dbpfad").val();
+	} else {
+		dbPfad = "C:\\Users\\alex\\artendb_import\\export_in_json.mdb";
+	}
+	myDB = new ACCESSdb(dbPfad, {showErrors:true});
+	return myDB;
 }
 
 //nimmt die DB und einen sql-String entgegen
@@ -177,4 +189,25 @@ function importiereJsonObjekt(JsonObjekt) {
 		contentType: "application/json",
 		data: Doc
 	});
+}
+
+function baueFloraDatensammlungenSchaltflächenAuf() {
+	var Datensammlungen, sqlDatensammlungen, myDB, html;
+	myDB = verbindeMitMdb();
+	sqlDatensammlungen = "SELECT * FROM tblDatensammlungMetadaten WHERE DsIndex = 'tblFloraSisf' AND DsBeziehungstyp = '1_zu_1' AND DsTabelle <> 'tblFloraSisf' ORDER BY DsReihenfolge";
+	Datensammlungen = frageSql(myDB, sqlDatensammlungen);
+	if (Datensammlungen) {
+		html = "";
+		for (i in Datensammlungen) {
+			html += "<button id='";
+			html += Datensammlungen[i].DsTabelle;
+			html += "' name='SchaltflächeFloraDatensammlung'>";
+			html += Datensammlungen[i].DsName;
+			html += "</button>";
+		}
+		$("#SchaltflächenFloraDatensammlungen").html(html);
+	} else {
+		alert("Bitte den Pfad zur .mdb erfassen");
+	}
+		
 }

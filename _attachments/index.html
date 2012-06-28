@@ -9,93 +9,32 @@
 		<title>Import aus ArtenDb</title>
 	</head>
 	<body>
+		<h2>Import in die Couch der ArtenDb</h2>
+		<label id="dbpfad_label" for='beob_Autor'>Pfad zur .mdb:</label>
+		<input id="dbpfad" type="text" style="width:90%;" placeholder="z.B.: C:\\Users\\alex\\artendb_import\\export_in_json.mdb"/><br><br>
+		
 		<button id="fauna">Fauna importieren</button><br><br>
-		<button id="flora">Flora importieren</button><br>
+		
+		<button id="flora">Flora Index</button><br><br>
 		Flora Datensammlungen:<br>
-		<button id="tblFloraZw2010">CH Zeigerwerte 2010</button><br>
-		<button id="tblFloraZw1977">CH Zeigerwerte 1977</button><br>
-		<button id="tblFloraWitt">Witt 1995</button><br>
-		<button id="tblFloraRL02">CH Rote Liste 2002</button><br>
-		<button id="tblFloraRL91">CH Rote Liste 1991</button><br>
-		<button id="tblFloraBlaueListen">Blaue Liste</button><br>
-		<button id="tblFloraSkew">CH Schwarze Liste</button><br>
-		<button id="tblFloraBdPrio">CH Prioritäten</button><br>
-		<button id="tblFloraUzl">CH Umweltziele LW</button><br>
-		<button id="tblFloraBdTww">CH TWW</button><br>
-		<button id="tblFloraOeQv">CH OeQV</button><br>
-		<button id="tblFloraFnsArtwert">ZH Artwert</button><br>
-		<button id="tblFloraFnsAp">ZH AP Flora</button><br>
-		<button id="tblFloraFnsApFm">ZH AP FM</button><br>
-		<button id="tblFloraFnsApLiWaArtenliste">ZH AP LiWa</button><br>
-		<button id="tblFloraFnsApTww">ZH AP TWW</button><br>
-		<button id="tblFloraArtengruppen">ZH Artengruppen</button><br>
-		<button id="tblFloraFnsKef">ZH KEF</button><br>
-		<button id="tblFloraFns">ZH Verbreitung 1995</button><br>
+		<div id="SchaltflächenFloraDatensammlungen"></div><br><br>
+
 		<script>
+			$(document).ready(function () {
+				baueFloraDatensammlungenSchaltflächenAuf();
+			});
+			$("body").on("change", "#dbpfad", function() {
+				baueFloraDatensammlungenSchaltflächenAuf();
+			});
 			$("body").on("click", "#fauna", function() {
 				importiereFauna();
 			});
 			$("body").on("click", "#flora", function() {
 				initiiereImport("importiereFlora");
 			});
-			$("body").on("click", "#tblFloraZw2010", function() {
-				importiereFloraDatensammlungen("tblFloraZw2010");
+			$("body").on("click", "[name='SchaltflächeFloraDatensammlung']", function() {
+				importiereFloraDatensammlungen(this.id);
 			});
-			$("body").on("click", "#tblFloraZw1977", function() {
-				importiereFloraDatensammlungen("tblFloraZw1977");
-			});
-			$("body").on("click", "#tblFloraWitt", function() {
-				importiereFloraDatensammlungen("tblFloraWitt");
-			});
-			$("body").on("click", "#tblFloraRL02", function() {
-				importiereFloraDatensammlungen("tblFloraRL02");
-			});
-			$("body").on("click", "#tblFloraRL91", function() {
-				importiereFloraDatensammlungen("tblFloraRL91");
-			});
-			$("body").on("click", "#tblFloraBlaueListen", function() {
-				importiereFloraDatensammlungen("tblFloraBlaueListen");
-			});
-			$("body").on("click", "#tblFloraSkew", function() {
-				importiereFloraDatensammlungen("tblFloraSkew");
-			});
-			$("body").on("click", "#tblFloraBdPrio", function() {
-				importiereFloraDatensammlungen("tblFloraBdPrio");
-			});
-			$("body").on("click", "#tblFloraUzl", function() {
-				importiereFloraDatensammlungen("tblFloraUzl");
-			});
-			$("body").on("click", "#tblFloraBdTww", function() {
-				importiereFloraDatensammlungen("tblFloraBdTww");
-			});
-			$("body").on("click", "#tblFloraOeQv", function() {
-				importiereFloraDatensammlungen("tblFloraOeQv");
-			});
-			$("body").on("click", "#tblFloraFnsArtwert", function() {
-				importiereFloraDatensammlungen("tblFloraFnsArtwert");
-			});
-			$("body").on("click", "#tblFloraFnsAp", function() {
-				importiereFloraDatensammlungen("tblFloraFnsAp");
-			});
-			$("body").on("click", "#tblFloraFnsApFm", function() {
-				importiereFloraDatensammlungen("tblFloraFnsApFm");
-			});
-			$("body").on("click", "#tblFloraFnsApLiWaArtenliste", function() {
-				importiereFloraDatensammlungen("tblFloraFnsApLiWaArtenliste");
-			});
-			$("body").on("click", "#tblFloraFnsApTww", function() {
-				importiereFloraDatensammlungen("tblFloraFnsApTww");
-			});
-			$("body").on("click", "#tblFloraArtengruppen", function() {
-				importiereFloraDatensammlungen("tblFloraArtengruppen");
-			});
-			$("body").on("click", "#tblFloraFnsKef", function() {
-				importiereFloraDatensammlungen("tblFloraFnsKef");
-			});
-			$("body").on("click", "#tblFloraFns", function() {
-				importiereFloraDatensammlungen("tblFloraFns");
-			});
-
 		</script>
 	</body>
 </html>
