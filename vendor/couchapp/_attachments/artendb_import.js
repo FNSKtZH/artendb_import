@@ -73,6 +73,81 @@ function importiereFloraDatensammlungen_02(myDB, tblName, Anz) {
 	}
 }
 
+function importiereMoosIndex(myDB, tblName, Anz) {
+	var Datensammlung, Index, Art, anzDs;
+	//tblName wird ignoriert
+	Datensammlung = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'tblMooseNism'");
+	//Index importieren
+	Index = frageSql(myDB, "SELECT * FROM tblMooseNism");
+	anzDs = 0;
+	for (x in Index) {
+		anzDs += 1;
+		//nur importieren, wenn innerhalb des mit Anz übergebenen Batches
+		if ((anzDs > (Anz*4000-4000)) && (anzDs <= Anz*4000)) {
+			//Art als Objekt gründen
+			Art = {};
+			//_id soll GUID sein, aber ohne Klammern
+			Art._id = Index[x].GUID.slice(1, 37);
+			//Datensammlung als Objekt gründen, heisst wie DsName
+			Art[Datensammlung[0].DsName] = {};
+			Art[Datensammlung[0].DsName].Typ = "Datensammlung";
+			//Felder der Datensammlung als Objekt gründen
+			Art[Datensammlung[0].DsName].Felder = {};
+			//Felder anfügen, wenn sie Werte enthalten
+			for (y in Index[x]) {
+				if (Index[x][y] !== "" && Index[x][y] !== null) {
+					if (y !== "GUID") {
+						Art[Datensammlung[0].DsName].Felder[y] = Index[x][y];
+					} else {
+						Art[Datensammlung[0].DsName].Felder[y] = Index[x][y].slice(1, 37);
+					}
+				}
+			}
+			$db = $.couch.db("artendb");
+			$db.saveDoc(Art);
+		}
+	}
+}
+
+function importiereMoosDatensammlungen(tblName, Anz) {
+	initiiereImport("importiereMoosDatensammlungen_02", tblName, Anz);
+}
+
+function importiereMoosDatensammlungen_02(myDB, tblName, Anz) {
+	var DatensammlungMetadaten, Datensammlung, sqlDatensammlung, DatensammlungDieserArt, anzFelder, anzDs;
+	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = '" + tblName + "'");
+	//Datensätze der Datensammlung abfragen, mit GUID ergänzen
+	sqlDatensammlung = "SELECT * FROM " + tblName + " INNER JOIN tblMooseNismGuid ON tblMooseNismGuid.NR = " + tblName + "." + DatensammlungMetadaten[0].DsBeziehungsfeldDs;
+	Datensammlung = frageSql(myDB, sqlDatensammlung);
+	anzDs = 0;
+	for (x in Datensammlung) {
+		anzDs += 1;
+		//nur importieren, wenn innerhalb des mit Anz übergebenen 8000er Batches
+		if ((anzDs > (Anz*4000-4000)) && (anzDs <= Anz*4000)) {
+			//Datensammlung als Objekt gründen
+			DatensammlungDieserArt = {};
+			DatensammlungDieserArt.Typ = "Datensammlung";
+			//Felder der Datensammlung als Objekt gründen
+			DatensammlungDieserArt.Felder = {};
+			//Felder anfügen, wenn sie Werte enthalten
+			anzFelder = 0;
+			for (y in Datensammlung[x]) {
+				if (y !== "GUID" && y !== "NR" && y !== "tblMooseNismGuid.NR" && Datensammlung[x][y] !== "" && Datensammlung[x][y] !== null && y !== DatensammlungMetadaten[0].DsBeziehungsfeldDs && y !== "Gruppe") {
+					DatensammlungDieserArt.Felder[y] = Datensammlung[x][y];
+					anzFelder += 1;
+				}
+			}
+			//entsprechenden Index öffnen
+			//sicherstellen, dass Felder vorkommen. Gibt sonst einen Fehler
+			if (anzFelder > 0) {
+				//Datenbankabfrage ist langsam. Estern aufrufen, 
+				//sonst überholt die for-Schlaufe und DatensammlungDieserArt ist bis zur saveDoc-Ausführung eine andere!
+				fuegeDatensammlungZuArt(Datensammlung[x].GUID, DatensammlungMetadaten[0].DsName, DatensammlungDieserArt);
+			}
+		}
+	}
+}
+
 function importiereFaunaIndex(myDB, tblName, Anz) {
 	var Datensammlung, Index, Art, anzDs;
 	//tblName wird ignoriert
@@ -228,7 +303,7 @@ function importiereJsonObjekt(JsonObjekt) {
 }
 
 function baueDatensammlungenSchaltflächenAuf() {
-	var DatensammlungenFlora, sqlDatensammlungenFlora, DatensammlungenFauna, sqlDatensammlungenFauna, myDB, html, qryAnzDs, anzDs, anzButtons;
+	var DatensammlungenFlora, sqlDatensammlungenFlora, DatensammlungenFauna, sqlDatensammlungenFauna, DatensammlungenMoos, sqlDatensammlungenMoos, myDB, html, qryAnzDs, anzDs, anzButtons;
 	myDB = verbindeMitMdb();
 	sqlDatensammlungenFlora = "SELECT * FROM tblDatensammlungMetadaten WHERE DsIndex = 'tblFloraSisf' AND DsBeziehungstyp = '1_zu_1' AND DsTabelle <> 'tblFloraSisf' ORDER BY DsReihenfolge";
 	DatensammlungenFlora = frageSql(myDB, sqlDatensammlungenFlora);
@@ -276,6 +351,29 @@ function baueDatensammlungenSchaltflächenAuf() {
 			}
 		}
 		$("#SchaltflächenFaunaDatensammlungen").html(html);
+		//jetzt Moos
+		sqlDatensammlungenMoos = "SELECT * FROM tblDatensammlungMetadaten WHERE DsIndex = 'tblMooseNism' AND DsBeziehungstyp = '1_zu_1' AND DsTabelle <> 'tblMooseNism' ORDER BY DsReihenfolge";
+		DatensammlungenMoos = frageSql(myDB, sqlDatensammlungenMoos);
+		html = "Moose Datensammlungen:<br>";
+		for (i in DatensammlungenMoos) {
+			//Anzahl Datensätze ermitteln
+			qryAnzDs = frageSql(myDB, "SELECT Count(" + DatensammlungenMoos[i].DsBeziehungsfeldDs + ") AS Anzahl FROM " + DatensammlungenMoos[i].DsTabelle);
+			anzDs = qryAnzDs[0].Anzahl;
+			anzButtons = Math.ceil(anzDs/4000);
+			for (y = 1; y <= anzButtons; y++) {
+				html += "<button id='";
+				html += DatensammlungenMoos[i].DsTabelle + y;
+				html += "' name='SchaltflächeMoosDatensammlung' Tabelle='" + DatensammlungenMoos[i].DsTabelle;
+				html += "' Anz='" + y + "' Von='" + anzButtons;
+				html += "'>";
+				html += DatensammlungenMoos[i].DsName;
+				if (anzButtons > 1) {
+					html += " (" + y + "/" + anzButtons + ")";
+				}
+				html += "</button>";
+			}
+		}
+		$("#SchaltflächenMoosDatensammlungen").html(html);
 	} else {
 		alert("Bitte den Pfad zur .mdb erfassen");
 	}
@@ -316,7 +414,7 @@ function baueIndexSchaltflächenAuf() {
 				html += "<button id='tblFaunaCscf" + y;
 				html += "' name='SchaltflächeFaunaIndex' Tabelle='tblFaunaCscf";
 				html += "' Anz='" + y + "' Von='" + anzButtons;
-				html += "'> Fauna Index";
+				html += "'>Fauna Index";
 				if (anzButtons > 1) {
 					html += " (" + y + "/" + anzButtons + ")";
 				}
@@ -324,6 +422,26 @@ function baueIndexSchaltflächenAuf() {
 			}
 		}
 		$("#SchaltflächenFaunaIndex").html(html);
+		//jetzt Moos
+		DatensammlungMoos = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'tblMooseNism'");
+		html = "";
+		for (i in DatensammlungMoos) {
+			//Anzahl Datensätze ermitteln
+			qryAnzDs = frageSql(myDB, "SELECT Count(TAXONNO) AS Anzahl FROM tblMooseNism");
+			anzDs = qryAnzDs[0].Anzahl;
+			anzButtons = Math.ceil(anzDs/4000);
+			for (y = 1; y <= anzButtons; y++) {
+				html += "<button id='tblMooseNism" + y;
+				html += "' name='SchaltflächeMoosIndex' Tabelle='tblMooseNism";
+				html += "' Anz='" + y + "' Von='" + anzButtons;
+				html += "'>Moose Index";
+				if (anzButtons > 1) {
+					html += " (" + y + "/" + anzButtons + ")";
+				}
+				html += "</button>";
+			}
+		}
+		$("#SchaltflächenMoosIndex").html(html);
 	} else {
 		alert("Bitte den Pfad zur .mdb erfassen");
 	}
