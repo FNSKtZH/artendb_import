@@ -1,37 +1,36 @@
-function importiereFlora(myDB) {
-	var Datensammlungen, sqlDatensammlungen, Index, Datensamlung, DsDerDatensammlung, Art, DsObjekt, Guid;
-	sqlDatensammlungen = "SELECT * FROM tblDatensammlungMetadaten WHERE DsIndex = 'tblFloraSisf' AND DsBeziehungstyp = '1_zu_1' ORDER BY DsReihenfolge";
-	Datensammlungen = frageSql(myDB, sqlDatensammlungen);
+function importiereFloraIndex(myDB, tblName, Anz) {
+	var Datensammlung, Index, Art, anzDs;
+	//tblName wird ignoriert
+	Datensammlung = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'tblFloraSisf'");
 	//Index importieren
-	for (i in Datensammlungen) {
-		//alert("Datensammlungen[i].DsTabelle = " + Datensammlungen[i].DsTabelle);
-		if (Datensammlungen[i].DsTabelle === Datensammlungen[i].DsIndex) {
-			Index = frageSql(myDB, "SELECT * FROM " + Datensammlungen[i].DsTabelle);
-			for (x in Index) {
-				//Art als Objekt gründen
-				Art = {};
-				//_id soll GUID sein, aber ohne Klammern
-				Art._id = Index[x].GUID.slice(1, 37);
-				//Datensammlung als Objekt gründen, heisst wie DsName
-				Art[Datensammlungen[i].DsName] = {};
-				Art[Datensammlungen[i].DsName].Typ = "Datensammlung";
-				//Felder der Datensammlung als Objekt gründen
-				Art[Datensammlungen[i].DsName].Felder = {};
-				//Felder anfügen, wenn sie Werte enthalten
-				for (y in Index[x]) {
-					if (y !== "id" && Index[x][y] !== "" && Index[x][y] !== null) {
-						if (y !== "GUID") {
-							Art[Datensammlungen[i].DsName].Felder[y] = Index[x][y];
-						} else {
-							Art[Datensammlungen[i].DsName].Felder[y] = Index[x][y].slice(1, 37);
-						}
+	Index = frageSql(myDB, "SELECT * FROM tblFloraSisf");
+	anzDs = 0;
+	for (x in Index) {
+		anzDs += 1;
+		//nur importieren, wenn innerhalb des mit Anz übergebenen Batches
+		if ((anzDs > (Anz*4000-4000)) && (anzDs <= Anz*4000)) {
+			//Art als Objekt gründen
+			Art = {};
+			//_id soll GUID sein, aber ohne Klammern
+			Art._id = Index[x].GUID.slice(1, 37);
+			//Datensammlung als Objekt gründen, heisst wie DsName
+			Art[Datensammlung[0].DsName] = {};
+			Art[Datensammlung[0].DsName].Typ = "Datensammlung";
+			//Felder der Datensammlung als Objekt gründen
+			Art[Datensammlung[0].DsName].Felder = {};
+			//Felder anfügen, wenn sie Werte enthalten
+			for (y in Index[x]) {
+				if (Index[x][y] !== "" && Index[x][y] !== null) {
+					if (y !== "GUID") {
+						Art[Datensammlung[0].DsName].Felder[y] = Index[x][y];
+					} else {
+						Art[Datensammlung[0].DsName].Felder[y] = Index[x][y].slice(1, 37);
 					}
 				}
-				$db = $.couch.db("artendb");
-				$db.saveDoc(Art);
 			}
+			$db = $.couch.db("artendb");
+			$db.saveDoc(Art);
 		}
-		break;
 	}
 }
 
@@ -74,33 +73,34 @@ function importiereFloraDatensammlungen_02(myDB, tblName, Anz) {
 	}
 }
 
-function importiereFauna(myDB) {
-	var Datensammlungen, sqlDatensammlungen, Index, Datensamlung, DsDerDatensammlung, Art, DsObjekt, Guid, dsNr;
-	sqlDatensammlungen = "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'tblFaunaCscf'";
-	Datensammlungen = frageSql(myDB, sqlDatensammlungen);
+function importiereFaunaIndex(myDB, tblName, Anz) {
+	var Datensammlung, Index, Art, anzDs;
+	//tblName wird ignoriert
+	Datensammlung = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'tblFaunaCscf'");
 	//Index importieren
 	Index = frageSql(myDB, "SELECT * FROM tblFaunaCscf");
-	dsNr = 0;
+	anzDs = 0;
 	for (x in Index) {
 		//In Häppchen von max. 8000 Datensätzen aufteilen
-		dsNr += 1;
-		if ((sessionStorage.fauna === "fauna1" && dsNr < 8000) || (sessionStorage.fauna === "fauna2" && dsNr >= 8000 && dsNr < 16000) || (sessionStorage.fauna === "fauna3" && dsNr >= 16000)) {
+		anzDs += 1;
+		//nur importieren, wenn innerhalb des mit Anz übergebenen 4000er Batches
+		if ((anzDs > (Anz*4000-4000)) && (anzDs <= Anz*4000)) {
 			//Art als Objekt gründen
 			Art = {};
 			//_id soll GUID sein, aber ohne Klammern
 			Art._id = Index[x].GUID.slice(1, 37);
 			//Datensammlung als Objekt gründen, heisst wie DsName
-			Art[Datensammlungen[0].DsName] = {};
-			Art[Datensammlungen[0].DsName].Typ = "Datensammlung";
+			Art[Datensammlung[0].DsName] = {};
+			Art[Datensammlung[0].DsName].Typ = "Datensammlung";
 			//Felder der Datensammlung als Objekt gründen
-			Art[Datensammlungen[0].DsName].Felder = {};
+			Art[Datensammlung[0].DsName].Felder = {};
 			//Felder anfügen, wenn sie Werte enthalten
 			for (y in Index[x]) {
 				if (y !== "id" && Index[x][y] !== "" && Index[x][y] !== null) {
 					if (y !== "GUID") {
-						Art[Datensammlungen[0].DsName].Felder[y] = Index[x][y];
+						Art[Datensammlung[0].DsName].Felder[y] = Index[x][y];
 					} else {
-						Art[Datensammlungen[0].DsName].Felder[y] = Index[x][y].slice(1, 37);
+						Art[Datensammlung[0].DsName].Felder[y] = Index[x][y].slice(1, 37);
 					}
 				}
 			}
@@ -108,7 +108,6 @@ function importiereFauna(myDB) {
 			$db.saveDoc(Art);
 		}
 	}
-	delete sessionStorage.fauna;
 }
 
 function importiereFaunaDatensammlungen(tblName, Anz) {
@@ -196,7 +195,7 @@ function verbindeMitMdb() {
 	} else {
 		dbPfad = "C:\\Users\\alex\\artendb_import\\export_in_json.mdb";
 	}
-	myDB = new ACCESSdb(dbPfad, {showErrors:true});
+	myDB = new ACCESSdb(dbPfad, {showErrors:false});
 	return myDB;
 }
 
@@ -234,7 +233,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 	sqlDatensammlungenFlora = "SELECT * FROM tblDatensammlungMetadaten WHERE DsIndex = 'tblFloraSisf' AND DsBeziehungstyp = '1_zu_1' AND DsTabelle <> 'tblFloraSisf' ORDER BY DsReihenfolge";
 	DatensammlungenFlora = frageSql(myDB, sqlDatensammlungenFlora);
 	if (DatensammlungenFlora) {
-		html = "";
+		html = "Flora Datensammlungen:<br>";
 		for (i in DatensammlungenFlora) {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(" + DatensammlungenFlora[i].DsBeziehungsfeldDs + ") AS Anzahl FROM " + DatensammlungenFlora[i].DsTabelle);
@@ -257,7 +256,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 		//jetzt Fauna
 		sqlDatensammlungenFauna = "SELECT * FROM tblDatensammlungMetadaten WHERE DsIndex = 'tblFaunaCscf' AND DsBeziehungstyp = '1_zu_1' AND DsTabelle <> 'tblFaunaCscf' ORDER BY DsReihenfolge";
 		DatensammlungenFauna = frageSql(myDB, sqlDatensammlungenFauna);
-		html = "";
+		html = "Fauna Datensammlungen:<br>";
 		for (i in DatensammlungenFauna) {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(" + DatensammlungenFauna[i].DsBeziehungsfeldDs + ") AS Anzahl FROM " + DatensammlungenFauna[i].DsTabelle);
@@ -280,5 +279,52 @@ function baueDatensammlungenSchaltflächenAuf() {
 	} else {
 		alert("Bitte den Pfad zur .mdb erfassen");
 	}
-		
+}
+
+function baueIndexSchaltflächenAuf() {
+	var DatensammlungFlora, DatensammlungFauna, myDB, html, qryAnzDs, anzDs, anzButtons;
+	myDB = verbindeMitMdb();
+	DatensammlungFlora = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'tblFloraSisf'");
+	if (DatensammlungFlora) {
+		html = "";
+		for (i in DatensammlungFlora) {
+			//Anzahl Datensätze ermitteln
+			qryAnzDs = frageSql(myDB, "SELECT Count(NR) AS Anzahl FROM tblFloraSisf");
+			anzDs = qryAnzDs[0].Anzahl;
+			anzButtons = Math.ceil(anzDs/4000);
+			for (y = 1; y <= anzButtons; y++) {
+				html += "<button id='tblFloraSisf" + y;
+				html += "' name='SchaltflächeFloraIndex' Tabelle='tblFloraSisf";
+				html += "' Anz='" + y + "' Von='" + anzButtons;
+				html += "'>Flora Index";
+				if (anzButtons > 1) {
+					html += " (" + y + "/" + anzButtons + ")";
+				}
+				html += "</button>";
+			}
+		}
+		$("#SchaltflächenFloraIndex").html(html);
+		//jetzt Fauna
+		DatensammlungFauna = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'tblFaunaCscf'");
+		html = "";
+		for (i in DatensammlungFauna) {
+			//Anzahl Datensätze ermitteln
+			qryAnzDs = frageSql(myDB, "SELECT Count(Nuesp) AS Anzahl FROM tblFaunaCscf");
+			anzDs = qryAnzDs[0].Anzahl;
+			anzButtons = Math.ceil(anzDs/4000);
+			for (y = 1; y <= anzButtons; y++) {
+				html += "<button id='tblFaunaCscf" + y;
+				html += "' name='SchaltflächeFaunaIndex' Tabelle='tblFaunaCscf";
+				html += "' Anz='" + y + "' Von='" + anzButtons;
+				html += "'> Fauna Index";
+				if (anzButtons > 1) {
+					html += " (" + y + "/" + anzButtons + ")";
+				}
+				html += "</button>";
+			}
+		}
+		$("#SchaltflächenFaunaIndex").html(html);
+	} else {
+		alert("Bitte den Pfad zur .mdb erfassen");
+	}
 }
