@@ -3,7 +3,7 @@ function importiereFloraIndex(myDB, tblName, Anz) {
 	//tblName wird ignoriert
 	Datensammlung = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'tblFloraSisf'");
 	//Index importieren
-	Index = frageSql(myDB, "SELECT * FROM tblFloraSisf");
+	Index = frageSql(myDB, "SELECT * FROM tblFloraSisf_import");
 	anzDs = 0;
 	for (x in Index) {
 		anzDs += 1;
@@ -12,7 +12,8 @@ function importiereFloraIndex(myDB, tblName, Anz) {
 			//Art als Objekt gründen
 			Art = {};
 			//_id soll GUID sein, aber ohne Klammern
-			Art._id = Index[x].GUID.slice(1, 37);
+			Art._id = Index[x].GUID;
+			Art.Gruppe = Index[x].Gruppe;
 			//Datensammlung als Objekt gründen, heisst wie DsName
 			Art[Datensammlung[0].DsName] = {};
 			Art[Datensammlung[0].DsName].Typ = "Datensammlung";
@@ -20,12 +21,8 @@ function importiereFloraIndex(myDB, tblName, Anz) {
 			Art[Datensammlung[0].DsName].Felder = {};
 			//Felder anfügen, wenn sie Werte enthalten
 			for (y in Index[x]) {
-				if (Index[x][y] !== "" && Index[x][y] !== null) {
-					if (y !== "GUID") {
-						Art[Datensammlung[0].DsName].Felder[y] = Index[x][y];
-					} else {
-						Art[Datensammlung[0].DsName].Felder[y] = Index[x][y].slice(1, 37);
-					}
+				if (Index[x][y] !== "" && Index[x][y] !== null && y !== "Gruppe" && y !== "GUID") {
+					Art[Datensammlung[0].DsName].Felder[y] = Index[x][y];
 				}
 			}
 			$db = $.couch.db("artendb");
@@ -47,7 +44,7 @@ function importiereFloraDatensammlungen_02(myDB, tblName, Anz) {
 	anzDs = 0;
 	for (x in Datensammlung) {
 		anzDs += 1;
-		//nur importieren, wenn innerhalb des mit Anz übergebenen 8000er Batches
+		//nur importieren, wenn innerhalb des mit Anz übergebenen 4000er Batches
 		if ((anzDs > (Anz*4000-4000)) && (anzDs <= Anz*4000)) {
 			//Datensammlung als Objekt gründen
 			DatensammlungDieserArt = {};
@@ -57,7 +54,7 @@ function importiereFloraDatensammlungen_02(myDB, tblName, Anz) {
 			//Felder anfügen, wenn sie Werte enthalten
 			anzFelder = 0;
 			for (y in Datensammlung[x]) {
-				if (y !== "id" && y !== "GUID" && y !== "NR" && Datensammlung[x][y] !== "" && Datensammlung[x][y] !== null && y !== DatensammlungMetadaten[0].DsBeziehungsfeldDs && y !== "Gruppe") {
+				if (y !== "GUID" && y !== "NR" && Datensammlung[x][y] !== "" && Datensammlung[x][y] !== null && y !== DatensammlungMetadaten[0].DsBeziehungsfeldDs && y !== "Gruppe") {
 					DatensammlungDieserArt.Felder[y] = Datensammlung[x][y];
 					anzFelder += 1;
 				}
@@ -88,6 +85,7 @@ function importiereMoosIndex(myDB, tblName, Anz) {
 			Art = {};
 			//_id soll GUID sein, aber ohne Klammern
 			Art._id = Index[x].GUID.slice(1, 37);
+			Art.Gruppe = Index[x].Gruppe;
 			//Datensammlung als Objekt gründen, heisst wie DsName
 			Art[Datensammlung[0].DsName] = {};
 			Art[Datensammlung[0].DsName].Typ = "Datensammlung";
@@ -95,12 +93,8 @@ function importiereMoosIndex(myDB, tblName, Anz) {
 			Art[Datensammlung[0].DsName].Felder = {};
 			//Felder anfügen, wenn sie Werte enthalten
 			for (y in Index[x]) {
-				if (Index[x][y] !== "" && Index[x][y] !== null) {
-					if (y !== "GUID") {
-						Art[Datensammlung[0].DsName].Felder[y] = Index[x][y];
-					} else {
-						Art[Datensammlung[0].DsName].Felder[y] = Index[x][y].slice(1, 37);
-					}
+				if (Index[x][y] !== "" && Index[x][y] !== null && y !== "Gruppe" && y !== "GUID") {
+					Art[Datensammlung[0].DsName].Felder[y] = Index[x][y];
 				}
 			}
 			$db = $.couch.db("artendb");
@@ -153,17 +147,18 @@ function importiereFaunaIndex(myDB, tblName, Anz) {
 	//tblName wird ignoriert
 	Datensammlung = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'tblFaunaCscf'");
 	//Index importieren
-	Index = frageSql(myDB, "SELECT * FROM tblFaunaCscf");
+	Index = frageSql(myDB, "SELECT * FROM tblFaunaCscf_import");
 	anzDs = 0;
 	for (x in Index) {
-		//In Häppchen von max. 8000 Datensätzen aufteilen
+		//In Häppchen von max. 4000 Datensätzen aufteilen
 		anzDs += 1;
 		//nur importieren, wenn innerhalb des mit Anz übergebenen 4000er Batches
 		if ((anzDs > (Anz*4000-4000)) && (anzDs <= Anz*4000)) {
 			//Art als Objekt gründen
 			Art = {};
 			//_id soll GUID sein, aber ohne Klammern
-			Art._id = Index[x].GUID.slice(1, 37);
+			Art._id = Index[x].GUID;
+			Art.Gruppe = Index[x].Gruppe;
 			//Datensammlung als Objekt gründen, heisst wie DsName
 			Art[Datensammlung[0].DsName] = {};
 			Art[Datensammlung[0].DsName].Typ = "Datensammlung";
@@ -171,12 +166,8 @@ function importiereFaunaIndex(myDB, tblName, Anz) {
 			Art[Datensammlung[0].DsName].Felder = {};
 			//Felder anfügen, wenn sie Werte enthalten
 			for (y in Index[x]) {
-				if (y !== "id" && Index[x][y] !== "" && Index[x][y] !== null) {
-					if (y !== "GUID") {
-						Art[Datensammlung[0].DsName].Felder[y] = Index[x][y];
-					} else {
-						Art[Datensammlung[0].DsName].Felder[y] = Index[x][y].slice(1, 37);
-					}
+				if (Index[x][y] !== "" && Index[x][y] !== null && y !== "Gruppe" && y !== "GUID") {
+					Art[Datensammlung[0].DsName].Felder[y] = Index[x][y];
 				}
 			}
 			$db = $.couch.db("artendb");
@@ -193,12 +184,12 @@ function importiereFaunaDatensammlungen_02(myDB, tblName, Anz) {
 	var DatensammlungMetadaten, Datensammlung, sqlDatensammlung, DatensammlungDieserArt, anzFelder, anzDs;
 	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = '" + tblName + "'");
 	//Datensätze der Datensammlung abfragen, mit GUID ergänzen
-	sqlDatensammlung = "SELECT * FROM " + tblName + " INNER JOIN tblFaunaCscfGuid ON tblFaunaCscfGuid.NR = " + tblName + "." + DatensammlungMetadaten[0].DsBeziehungsfeldDs;
+	sqlDatensammlung = "SELECT * FROM " + tblName + "_import INNER JOIN tblFaunaCscfGuid ON tblFaunaCscfGuid.NR = " + tblName + "." + DatensammlungMetadaten[0].DsBeziehungsfeldDs;
 	Datensammlung = frageSql(myDB, sqlDatensammlung);
 	anzDs = 0;
 	for (x in Datensammlung) {
 		anzDs += 1;
-		//nur importieren, wenn innerhalb des mit Anz übergebenen 8000er Batches
+		//nur importieren, wenn innerhalb des mit Anz übergebenen 4000er Batches
 		if ((anzDs > (Anz*4000-4000)) && (anzDs <= Anz*4000)) {
 			//Datensammlung als Objekt gründen
 			DatensammlungDieserArt = {};
@@ -208,7 +199,7 @@ function importiereFaunaDatensammlungen_02(myDB, tblName, Anz) {
 			//Felder anfügen, wenn sie Werte enthalten
 			anzFelder = 0;
 			for (y in Datensammlung[x]) {
-				if (y !== "id" && y !== "GUID" && y !== "NR" && y !== "tblFaunaCscfGuid.NR" && y !== "Nuesp" && y !== "Gruppe" && Datensammlung[x][y] !== "" && Datensammlung[x][y] !== null && y !== DatensammlungMetadaten[0].DsBeziehungsfeldDs) {
+				if (y !== "GUID" && y !== "NR" && y !== "tblFaunaCscfGuid.NR" && y !== "Nuesp" && Datensammlung[x][y] !== "" && Datensammlung[x][y] !== null && y !== DatensammlungMetadaten[0].DsBeziehungsfeldDs) {
 					DatensammlungDieserArt.Felder[y] = Datensammlung[x][y];
 					anzFelder += 1;
 				}
@@ -387,7 +378,7 @@ function baueIndexSchaltflächenAuf() {
 		html = "";
 		for (i in DatensammlungFlora) {
 			//Anzahl Datensätze ermitteln
-			qryAnzDs = frageSql(myDB, "SELECT Count(NR) AS Anzahl FROM tblFloraSisf");
+			qryAnzDs = frageSql(myDB, "SELECT Count(NR) AS Anzahl FROM tblFloraSisf_import");
 			anzDs = qryAnzDs[0].Anzahl;
 			anzButtons = Math.ceil(anzDs/4000);
 			for (y = 1; y <= anzButtons; y++) {
@@ -407,7 +398,7 @@ function baueIndexSchaltflächenAuf() {
 		html = "";
 		for (i in DatensammlungFauna) {
 			//Anzahl Datensätze ermitteln
-			qryAnzDs = frageSql(myDB, "SELECT Count(Nuesp) AS Anzahl FROM tblFaunaCscf");
+			qryAnzDs = frageSql(myDB, "SELECT Count(Nuesp) AS Anzahl FROM tblFaunaCscf_import");
 			anzDs = qryAnzDs[0].Anzahl;
 			anzButtons = Math.ceil(anzDs/4000);
 			for (y = 1; y <= anzButtons; y++) {
