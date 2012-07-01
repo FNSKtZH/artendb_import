@@ -8,7 +8,7 @@ function importiereFloraIndex(myDB, tblName, Anz) {
 	for (x in Index) {
 		anzDs += 1;
 		//nur importieren, wenn innerhalb des mit Anz übergebenen Batches
-		if ((anzDs > (Anz*4000-4000)) && (anzDs <= Anz*4000)) {
+		if ((anzDs > (Anz*3000-3000)) && (anzDs <= Anz*3000)) {
 			//Art als Objekt gründen
 			Art = {};
 			//_id soll GUID sein, aber ohne Klammern
@@ -44,8 +44,8 @@ function importiereFloraDatensammlungen_02(myDB, tblName, Anz) {
 	anzDs = 0;
 	for (x in Datensammlung) {
 		anzDs += 1;
-		//nur importieren, wenn innerhalb des mit Anz übergebenen 4000er Batches
-		if ((anzDs > (Anz*4000-4000)) && (anzDs <= Anz*4000)) {
+		//nur importieren, wenn innerhalb des mit Anz übergebenen 3000er Batches
+		if ((anzDs > (Anz*3000-3000)) && (anzDs <= Anz*3000)) {
 			//Datensammlung als Objekt gründen
 			DatensammlungDieserArt = {};
 			DatensammlungDieserArt.Typ = "Datensammlung";
@@ -80,7 +80,7 @@ function importiereMoosIndex(myDB, tblName, Anz) {
 	for (x in Index) {
 		anzDs += 1;
 		//nur importieren, wenn innerhalb des mit Anz übergebenen Batches
-		if ((anzDs > (Anz*4000-4000)) && (anzDs <= Anz*4000)) {
+		if ((anzDs > (Anz*3000-3000)) && (anzDs <= Anz*3000)) {
 			//Art als Objekt gründen
 			Art = {};
 			//_id soll GUID sein, aber ohne Klammern
@@ -117,7 +117,7 @@ function importiereMoosDatensammlungen_02(myDB, tblName, Anz) {
 	for (x in Datensammlung) {
 		anzDs += 1;
 		//nur importieren, wenn innerhalb des mit Anz übergebenen 8000er Batches
-		if ((anzDs > (Anz*4000-4000)) && (anzDs <= Anz*4000)) {
+		if ((anzDs > (Anz*3000-3000)) && (anzDs <= Anz*3000)) {
 			//Datensammlung als Objekt gründen
 			DatensammlungDieserArt = {};
 			DatensammlungDieserArt.Typ = "Datensammlung";
@@ -150,10 +150,10 @@ function importiereFaunaIndex(myDB, tblName, Anz) {
 	Index = frageSql(myDB, "SELECT * FROM tblFaunaCscf_import");
 	anzDs = 0;
 	for (x in Index) {
-		//In Häppchen von max. 4000 Datensätzen aufteilen
+		//In Häppchen von max. 3000 Datensätzen aufteilen
 		anzDs += 1;
-		//nur importieren, wenn innerhalb des mit Anz übergebenen 4000er Batches
-		if ((anzDs > (Anz*4000-4000)) && (anzDs <= Anz*4000)) {
+		//nur importieren, wenn innerhalb des mit Anz übergebenen 3000er Batches
+		if ((anzDs > (Anz*3000-3000)) && (anzDs <= Anz*3000)) {
 			//Art als Objekt gründen
 			Art = {};
 			//_id soll GUID sein, aber ohne Klammern
@@ -184,13 +184,13 @@ function importiereFaunaDatensammlungen_02(myDB, tblName, Anz) {
 	var DatensammlungMetadaten, Datensammlung, sqlDatensammlung, DatensammlungDieserArt, anzFelder, anzDs;
 	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = '" + tblName + "'");
 	//Datensätze der Datensammlung abfragen, mit GUID ergänzen
-	sqlDatensammlung = "SELECT * FROM " + tblName + "_import INNER JOIN tblFaunaCscfGuid ON tblFaunaCscfGuid.NR = " + tblName + "." + DatensammlungMetadaten[0].DsBeziehungsfeldDs;
+	sqlDatensammlung = "SELECT * FROM " + tblName + "_import";
 	Datensammlung = frageSql(myDB, sqlDatensammlung);
 	anzDs = 0;
 	for (x in Datensammlung) {
 		anzDs += 1;
-		//nur importieren, wenn innerhalb des mit Anz übergebenen 4000er Batches
-		if ((anzDs > (Anz*4000-4000)) && (anzDs <= Anz*4000)) {
+		//nur importieren, wenn innerhalb des mit Anz übergebenen 3000er Batches
+		if ((anzDs > (Anz*3000-3000)) && (anzDs <= Anz*3000)) {
 			//Datensammlung als Objekt gründen
 			DatensammlungDieserArt = {};
 			DatensammlungDieserArt.Typ = "Datensammlung";
@@ -199,7 +199,7 @@ function importiereFaunaDatensammlungen_02(myDB, tblName, Anz) {
 			//Felder anfügen, wenn sie Werte enthalten
 			anzFelder = 0;
 			for (y in Datensammlung[x]) {
-				if (y !== "GUID" && y !== "NR" && y !== "tblFaunaCscfGuid.NR" && y !== "Nuesp" && Datensammlung[x][y] !== "" && Datensammlung[x][y] !== null && y !== DatensammlungMetadaten[0].DsBeziehungsfeldDs) {
+				if (y !== "GUID" && Datensammlung[x][y] !== "" && Datensammlung[x][y] !== null) {
 					DatensammlungDieserArt.Felder[y] = Datensammlung[x][y];
 					anzFelder += 1;
 				}
@@ -304,7 +304,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(" + DatensammlungenFlora[i].DsBeziehungsfeldDs + ") AS Anzahl FROM " + DatensammlungenFlora[i].DsTabelle);
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/4000);
+			anzButtons = Math.ceil(anzDs/3000);
 			for (y = 1; y <= anzButtons; y++) {
 				html += "<button id='";
 				html += DatensammlungenFlora[i].DsTabelle + y;
@@ -327,7 +327,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(" + DatensammlungenFauna[i].DsBeziehungsfeldDs + ") AS Anzahl FROM " + DatensammlungenFauna[i].DsTabelle);
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/4000);
+			anzButtons = Math.ceil(anzDs/3000);
 			for (y = 1; y <= anzButtons; y++) {
 				html += "<button id='";
 				html += DatensammlungenFauna[i].DsTabelle + y;
@@ -350,7 +350,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(" + DatensammlungenMoos[i].DsBeziehungsfeldDs + ") AS Anzahl FROM " + DatensammlungenMoos[i].DsTabelle);
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/4000);
+			anzButtons = Math.ceil(anzDs/3000);
 			for (y = 1; y <= anzButtons; y++) {
 				html += "<button id='";
 				html += DatensammlungenMoos[i].DsTabelle + y;
@@ -380,7 +380,7 @@ function baueIndexSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(NR) AS Anzahl FROM tblFloraSisf_import");
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/4000);
+			anzButtons = Math.ceil(anzDs/3000);
 			for (y = 1; y <= anzButtons; y++) {
 				html += "<button id='tblFloraSisf" + y;
 				html += "' name='SchaltflächeFloraIndex' Tabelle='tblFloraSisf";
@@ -400,7 +400,7 @@ function baueIndexSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(Nuesp) AS Anzahl FROM tblFaunaCscf_import");
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/4000);
+			anzButtons = Math.ceil(anzDs/3000);
 			for (y = 1; y <= anzButtons; y++) {
 				html += "<button id='tblFaunaCscf" + y;
 				html += "' name='SchaltflächeFaunaIndex' Tabelle='tblFaunaCscf";
@@ -420,7 +420,7 @@ function baueIndexSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(TAXONNO) AS Anzahl FROM tblMooseNism");
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/4000);
+			anzButtons = Math.ceil(anzDs/3000);
 			for (y = 1; y <= anzButtons; y++) {
 				html += "<button id='tblMooseNism" + y;
 				html += "' name='SchaltflächeMoosIndex' Tabelle='tblMooseNism";

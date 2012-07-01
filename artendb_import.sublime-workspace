@@ -99,7 +99,7 @@
 			"file": "README.md",
 			"settings":
 			{
-				"buffer_size": 1607,
+				"buffer_size": 1597,
 				"line_ending": "Windows"
 			}
 		},
@@ -107,7 +107,7 @@
 			"file": "_attachments/index.html",
 			"settings":
 			{
-				"buffer_size": 2419,
+				"buffer_size": 2441,
 				"line_ending": "Windows"
 			}
 		},
@@ -115,7 +115,7 @@
 			"file": "vendor/couchapp/_attachments/artendb_import.js",
 			"settings":
 			{
-				"buffer_size": 17415,
+				"buffer_size": 16972,
 				"line_ending": "Windows"
 			}
 		},
@@ -309,6 +309,12 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"4000",
+			"baueIndexSchaltflächenAuf",
+			"slice",
+			"tblFaunaCscf",
+			"tblFaunaSisf",
+			"tblFloraSisf",
 			"Fauna",
 			"Flora",
 			"importiereFloraIndex",
@@ -430,13 +436,7 @@
 			"neuenort",
 			"neuezeit",
 			"speichereNeueBeob",
-			"NeuenOrt",
-			"speichereNeueBeob",
-			"NeuenOrt",
-			"NeuerOrt",
-			"NeueZeit",
-			"ergaenzeFelderZuDoc",
-			"alert"
+			"NeuenOrt"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -444,6 +444,9 @@
 		"regex": false,
 		"replace_history":
 		[
+			"3000",
+			"tblFaunaCscf_import",
+			"tblFloraSisf_import",
 			"Moos",
 			"Datensammlung[0]",
 			"DatensammlungFauna",
@@ -568,10 +571,7 @@
 			"Zeit",
 			"sessionStorage.getItem",
 			"if (",
-			") {",
-			"Optionn",
-			"!== \"undefined\"",
-			""
+			") {"
 		],
 		"reverse": false,
 		"show_context": true,
@@ -582,7 +582,7 @@
 	"groups":
 	[
 		{
-			"selected": 1,
+			"selected": 3,
 			"sheets":
 			[
 				{
@@ -616,15 +616,15 @@
 					"file": "README.md",
 					"settings":
 					{
-						"buffer_size": 1607,
+						"buffer_size": 1597,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1607,
-								1607
+								1318,
+								1318
 							]
 						],
 						"settings":
@@ -642,15 +642,15 @@
 					"file": "_attachments/index.html",
 					"settings":
 					{
-						"buffer_size": 2419,
+						"buffer_size": 2441,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1664,
-								1664
+								1136,
+								1136
 							]
 						],
 						"settings":
@@ -659,7 +659,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 360.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -669,15 +669,15 @@
 					"file": "vendor/couchapp/_attachments/artendb_import.js",
 					"settings":
 					{
-						"buffer_size": 17415,
+						"buffer_size": 16972,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								9919,
-								9898
+								8258,
+								8258
 							]
 						],
 						"settings":
@@ -687,7 +687,7 @@
 							"word_wrap": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 5711.0,
+						"translation.y": 4325.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
