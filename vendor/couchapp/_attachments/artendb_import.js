@@ -18,7 +18,12 @@ function importiereFloraIndex(myDB, tblName, Anz) {
 			Art[DatensammlungMetadaten[0].DsName] = {};
 			Art[DatensammlungMetadaten[0].DsName].Typ = "Datensammlung";
 			Art[DatensammlungMetadaten[0].DsName].Beschreibung = DatensammlungMetadaten[0].DsBeschreibung;
-			Art[DatensammlungMetadaten[0].DsName]["Link"] = DatensammlungMetadaten[0].DsLink;
+			if (DatensammlungMetadaten[0].DsDatenstand) {
+				Art[DatensammlungMetadaten[0].DsName].Datenstand = DatensammlungMetadaten[0].DsDatenstand;
+			}
+			if (DatensammlungMetadaten[0].DsLink) {
+				Art[DatensammlungMetadaten[0].DsName]["Link"] = DatensammlungMetadaten[0].DsLink;
+			}
 			//Felder der Datensammlung als Objekt gründen
 			Art[DatensammlungMetadaten[0].DsName].Felder = {};
 			//Felder anfügen, wenn sie Werte enthalten
@@ -52,7 +57,12 @@ function importiereFloraDatensammlungen_02(myDB, tblName, Anz) {
 			DatensammlungDieserArt = {};
 			DatensammlungDieserArt.Typ = "Datensammlung";
 			DatensammlungDieserArt.Beschreibung = DatensammlungMetadaten[0].DsBeschreibung;
-			DatensammlungDieserArt["Link"] = DatensammlungMetadaten[0].DsLink;
+			if (DatensammlungMetadaten[0].DsDatenstand) {
+				DatensammlungDieserArt.Datenstand = DatensammlungMetadaten[0].DsDatenstand;
+			}
+			if (DatensammlungMetadaten[0].DsLink) {
+				DatensammlungDieserArt["Link"] = DatensammlungMetadaten[0].DsLink;
+			}
 			//Felder der Datensammlung als Objekt gründen
 			DatensammlungDieserArt.Felder = {};
 			//Felder anfügen, wenn sie Werte enthalten
@@ -79,7 +89,7 @@ function importiereMoosIndex(myDB, tblName, Anz) {
 	//tblName wird ignoriert
 	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'tblMooseNism'");
 	//Index importieren
-	Index = frageSql(myDB, "SELECT * FROM tblMooseNism");
+	Index = frageSql(myDB, "SELECT * FROM tblMooseNism_import");
 	anzDs = 0;
 	for (x in Index) {
 		anzDs += 1;
@@ -88,13 +98,18 @@ function importiereMoosIndex(myDB, tblName, Anz) {
 			//Art als Objekt gründen
 			Art = {};
 			//_id soll GUID sein, aber ohne Klammern
-			Art._id = Index[x].GUID.slice(1, 37);
+			Art._id = Index[x].GUID;
 			Art.Gruppe = Index[x].Gruppe;
 			//Datensammlung als Objekt gründen, heisst wie DsName
 			Art[DatensammlungMetadaten[0].DsName] = {};
 			Art[DatensammlungMetadaten[0].DsName].Typ = "Datensammlung";
 			Art[DatensammlungMetadaten[0].DsName].Beschreibung = DatensammlungMetadaten[0].DsBeschreibung;
-			Art[DatensammlungMetadaten[0].DsName]["Link"] = DatensammlungMetadaten[0].DsLink;
+			if (DatensammlungMetadaten[0].DsDatenstand) {
+				Art[DatensammlungMetadaten[0].DsName].Datenstand = DatensammlungMetadaten[0].DsDatenstand;
+			}
+			if (DatensammlungMetadaten[0].DsLink) {
+				Art[DatensammlungMetadaten[0].DsName]["Link"] = DatensammlungMetadaten[0].DsLink;
+			}
 			//Felder der Datensammlung als Objekt gründen
 			Art[DatensammlungMetadaten[0].DsName].Felder = {};
 			//Felder anfügen, wenn sie Werte enthalten
@@ -114,11 +129,10 @@ function importiereMoosDatensammlungen(tblName, Anz) {
 }
 
 function importiereMoosDatensammlungen_02(myDB, tblName, Anz) {
-	var DatensammlungMetadaten, Datensammlung, sqlDatensammlung, DatensammlungDieserArt, anzFelder, anzDs;
+	var DatensammlungMetadaten, Datensammlung, DatensammlungDieserArt, anzFelder, anzDs;
 	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = '" + tblName + "'");
 	//Datensätze der Datensammlung abfragen, mit GUID ergänzen
-	sqlDatensammlung = "SELECT * FROM " + tblName + " INNER JOIN tblMooseNismGuid ON tblMooseNismGuid.NR = " + tblName + "." + DatensammlungMetadaten[0].DsBeziehungsfeldDs;
-	Datensammlung = frageSql(myDB, sqlDatensammlung);
+	Datensammlung = frageSql(myDB, "SELECT * FROM " + tblName + "_import");
 	anzDs = 0;
 	for (x in Datensammlung) {
 		anzDs += 1;
@@ -128,7 +142,12 @@ function importiereMoosDatensammlungen_02(myDB, tblName, Anz) {
 			DatensammlungDieserArt = {};
 			DatensammlungDieserArt.Typ = "Datensammlung";
 			DatensammlungDieserArt.Beschreibung = DatensammlungMetadaten[0].DsBeschreibung;
-			DatensammlungDieserArt["Link"] = DatensammlungMetadaten[0].DsLink;
+			if (DatensammlungMetadaten[0].DsDatenstand) {
+				DatensammlungDieserArt.Datenstand = DatensammlungMetadaten[0].DsDatenstand;
+			}
+			if (DatensammlungMetadaten[0].DsLink) {
+				DatensammlungDieserArt["Link"] = DatensammlungMetadaten[0].DsLink;
+			}
 			//Felder der Datensammlung als Objekt gründen
 			DatensammlungDieserArt.Felder = {};
 			//Felder anfügen, wenn sie Werte enthalten
@@ -171,7 +190,12 @@ function importiereFaunaIndex(myDB, tblName, Anz) {
 			Art[DatensammlungMetadaten[0].DsName] = {};
 			Art[DatensammlungMetadaten[0].DsName].Typ = "Datensammlung";
 			Art[DatensammlungMetadaten[0].DsName].Beschreibung = DatensammlungMetadaten[0].DsBeschreibung;
-			Art[DatensammlungMetadaten[0].DsName]["Link"] = DatensammlungMetadaten[0].DsLink;
+			if (DatensammlungMetadaten[0].DsDatenstand) {
+				Art[DatensammlungMetadaten[0].DsName].Datenstand = DatensammlungMetadaten[0].DsDatenstand;
+			}
+			if (DatensammlungMetadaten[0].DsLink) {
+				Art[DatensammlungMetadaten[0].DsName]["Link"] = DatensammlungMetadaten[0].DsLink;
+			}
 			//Felder der Datensammlung als Objekt gründen
 			Art[DatensammlungMetadaten[0].DsName].Felder = {};
 			//Felder anfügen, wenn sie Werte enthalten
@@ -204,7 +228,12 @@ function importiereFaunaDatensammlungen_02(myDB, tblName, Anz) {
 			DatensammlungDieserArt = {};
 			DatensammlungDieserArt.Typ = "Datensammlung";
 			DatensammlungDieserArt.Beschreibung = DatensammlungMetadaten[0].DsBeschreibung;
-			DatensammlungDieserArt["Link"] = DatensammlungMetadaten[0].DsLink;
+			if (DatensammlungMetadaten[0].DsDatenstand) {
+				DatensammlungDieserArt.Datenstand = DatensammlungMetadaten[0].DsDatenstand;
+			}
+			if (DatensammlungMetadaten[0].DsLink) {
+				DatensammlungDieserArt["Link"] = DatensammlungMetadaten[0].DsLink;
+			}
 			//Felder der Datensammlung als Objekt gründen
 			DatensammlungDieserArt.Felder = {};
 			//Felder anfügen, wenn sie Werte enthalten
@@ -384,6 +413,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 function baueIndexSchaltflächenAuf() {
 	var DatensammlungFlora, DatensammlungFauna, myDB, html, qryAnzDs, anzDs, anzButtons;
 	myDB = verbindeMitMdb();
+	//zuerst Flora
 	DatensammlungFlora = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'tblFloraSisf'");
 	if (DatensammlungFlora) {
 		html = "";
