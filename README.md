@@ -6,7 +6,7 @@ Dazu müssen zunächst die Daten aus Access im JSON-Format in die Couch importie
 Idee:
 - In Access wird eine Import-mdb erstellt, welche die Tabellen der ArtenDb.mdb einbindet und daraus Importtabellen generiert
 - Eine [CouchApp](http://couchapp.org) verbindet mit den gewählten Tabellen der Access-Datenbank
-- Sie wandelt die Arten- und Lebensraumeigenschaften ins JSON-Format um und importiert sie in die CouchApp der künftigen Artendatenbank, deren Benutzerorberfläche noch zu entwickeln ist
+- Sie wandelt die Arten- und Lebensraumeigenschaften ins JSON-Format um und importiert sie in die CouchDb-Datenbank der künftigen Artendatenbank, deren Benutzerorberfläche noch zu entwickeln ist
 - Später soll aus artendb_import ein Tool entstehen, mit dem Datensammlungen von den jeweiligen Datenherren hinzugefügt oder aktualisiert werden können
 
 Voraussetzungen:
