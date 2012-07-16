@@ -69,7 +69,13 @@ function importiereFloraDatensammlungen_02(myDB, tblName, Anz) {
 			anzFelder = 0;
 			for (y in Datensammlung[x]) {
 				if (y !== "GUID" && y !== "NR" && Datensammlung[x][y] !== "" && Datensammlung[x][y] !== null && y !== DatensammlungMetadaten[0].DsBeziehungsfeldDs && y !== "Gruppe") {
-					DatensammlungDieserArt.Felder[y] = Datensammlung[x][y];
+					if (Datensammlung[x][y] === -1) {
+						//Access macht in Abfragen mit Wenn-Klausel aus true -1 > korrigieren
+						DatensammlungDieserArt.Felder[y] = true;
+					} else {
+						//Normalfall
+						DatensammlungDieserArt.Felder[y] = Datensammlung[x][y];
+					}
 					anzFelder += 1;
 				}
 			}
@@ -240,7 +246,12 @@ function importiereFaunaDatensammlungen_02(myDB, tblName, Anz) {
 			anzFelder = 0;
 			for (y in Datensammlung[x]) {
 				if (y !== "GUID" && Datensammlung[x][y] !== "" && Datensammlung[x][y] !== null) {
-					DatensammlungDieserArt.Felder[y] = Datensammlung[x][y];
+					if (y === "Prioritätsart Vögel" && Datensammlung[x][y] === -1) {
+						//Access hat ja/nein Feld in Zahlenfeld verwandelt. Ändern
+						DatensammlungDieserArt.Felder[y] = true;
+					} else {
+						DatensammlungDieserArt.Felder[y] = Datensammlung[x][y];
+					}
 					anzFelder += 1;
 				}
 			}
