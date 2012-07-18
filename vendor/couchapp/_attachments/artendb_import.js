@@ -29,7 +29,12 @@ function importiereFloraIndex(myDB, tblName, Anz) {
 			//Felder anfügen, wenn sie Werte enthalten
 			for (y in Index[x]) {
 				if (Index[x][y] !== "" && Index[x][y] !== null && y !== "Gruppe" && y !== "GUID") {
-					Art[DatensammlungMetadaten[0].DsName].Felder[y] = Index[x][y];
+					if (Index[x][y] === -1) {
+						//Access wadelt in Abfragen Felder mit Wenn() in Zahlen um. Umkehren
+						Art[DatensammlungMetadaten[0].DsName].Felder[y] = true;
+					} else {
+						Art[DatensammlungMetadaten[0].DsName].Felder[y] = Index[x][y];
+					}
 				}
 			}
 			$db = $.couch.db("artendb");
