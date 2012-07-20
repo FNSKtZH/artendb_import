@@ -35,7 +35,7 @@ function importiereFloraIndex(myDB, tblName, Anz) {
 					} else if (y === "Offizielle Art" || y === "Eingeschlossen in" || y === "Synonym von") {
 						//Objekt aus Name und GUID bilden
 						offizielleArt = {};
-						andereArt = frageSql(myDB, "SELECT Artname FROM tblFloraSisf_import where GUID='" + Index[x][y] + "'");
+						andereArt = frageSql(myDB, "SELECT [Artname vollständig] as Artname FROM tblFloraSisf_import where GUID='" + Index[x][y] + "'");
 						offizielleArt.GUID = Index[x][y];
 						offizielleArt.Name = andereArt[0].Artname;
 						Art[DatensammlungMetadaten[0].DsName].Felder[y] = offizielleArt;
@@ -50,7 +50,7 @@ function importiereFloraIndex(myDB, tblName, Anz) {
 	}
 }
 
-function ergänzeDeutscheNamen() {
+function ergänzeFloraDeutscheNamen() {
 	var qryDeutscheNamen, myDB;
 	//mit der mdb verbinden
 	myDB = verbindeMitMdb();
@@ -81,7 +81,7 @@ function ergänzeDeutscheNamen() {
 	});
 }
 
-function aktualisiereGültigeNamen() {
+function aktualisiereFloraGültigeNamen() {
 	$db = $.couch.db("artendb");
 	$db.view('artendb/flora?include_docs=true', {
 		success: function (data) {
@@ -94,8 +94,6 @@ function aktualisiereGültigeNamen() {
 					gültigeNamen = [];
 					for (a in Nrn) {
 						for (k in data.rows) {
-							//alert("data.rows[k].doc.Index.NR = " + data.rows[k].doc.Index.NR);
-							//alert("parseInt(Nrn[a]) = " + parseInt(Nrn[a]));
 							if (data.rows[k].doc.Index.Felder.NR == parseInt(Nrn[a])) {
 								gültigeArt = {};
 								gültigeArt.GUID = data.rows[k].doc.Index.Felder.GUID;
@@ -108,6 +106,68 @@ function aktualisiereGültigeNamen() {
 						Art.Index.Felder["Gültige Namen"] = gültigeNamen;
 						$db.saveDoc(Art);
 					}
+				}
+			}
+		}
+	});
+}
+
+function ergänzeFloraEingeschlosseneArten() {
+	var qryEingeschlosseneArten, myDB;
+	//mit der mdb verbinden
+	myDB = verbindeMitMdb();
+	qryEingeschlosseneArten = frageSql(myDB, "SELECT tblFloraSisfAggrSl.NO_AGR_SL, IIf([tblFloraSisf].[Deutsch] Is Not Null,[tblFloraSisf].[Name] & ' (' & [tblFloraSisf].[Deutsch] & ')',[tblFloraSisf].[Name]) AS [Artname vollständig], Mid([tblFloraSisf].[GUID],2,36) AS [GUID] FROM tblFloraSisfAggrSl INNER JOIN tblFloraSisf ON tblFloraSisfAggrSl.NO_NOM_INCLU = tblFloraSisf.NR");
+	$db = $.couch.db("artendb");
+	$db.view('artendb/flora?include_docs=true', {
+		success: function (data) {
+			//alert(JSON.stringify(qryEingeschlosseneArten));
+			//alert(JSON.stringify(data));
+			for (i in data.rows) {
+				var Art, ArtNr, eingeschlosseneArten, eingeschlosseneArt;
+				Art = data.rows[i].doc;
+				//alert(JSON.stringify(Art));
+				if (Art.Index.Felder["Eingeschlossene Arten"]) {
+					//alert(JSON.stringify(Art));
+					eingeschlosseneArten = [];
+					for (k in qryEingeschlosseneArten) {
+						if (qryEingeschlosseneArten[k].NO_AGR_SL === Art.Index.Felder.NR) {
+							eingeschlosseneArt = {};
+							eingeschlosseneArt.GUID = qryEingeschlosseneArten[k].GUID;
+							eingeschlosseneArt.Name = qryEingeschlosseneArten[k]["Artname vollständig"];
+							eingeschlosseneArten.push(eingeschlosseneArt);
+						}
+					}
+					Art.Index.Felder["Eingeschlossene Arten"] = eingeschlosseneArten;
+					$db.saveDoc(Art);
+				}
+			}
+		}
+	});
+}
+
+function ergänzeFloraSynonyme() {
+	var qrySynonyme, myDB;
+	//mit der mdb verbinden
+	myDB = verbindeMitMdb();
+	qrySynonyme = frageSql(myDB, "SELECT tblFloraSisf.SynonymVon AS NR, Mid([tblFloraSisf].[GUID],2,36) AS Synonym_GUID, IIf([tblFloraSisf].[Deutsch] Is Not Null,[tblFloraSisf].[Name] & ' (' & [tblFloraSisf].[Deutsch] & ')',[tblFloraSisf].[Name]) AS Synonym_Name FROM tblFloraSisf WHERE tblFloraSisf.SynonymVon Is Not Null ORDER BY [tblFloraSisf].[Name]");
+	$db = $.couch.db("artendb");
+	$db.view('artendb/flora?include_docs=true', {
+		success: function (data) {
+			for (i in data.rows) {
+				var Art, ArtNr, Synonyme, Synonym;
+				Art = data.rows[i].doc;
+				if (Art.Index.Felder.Synonyme) {
+					Synonyme = [];
+					for (k in qrySynonyme) {
+						if (qrySynonyme[k].NR === Art.Index.Felder.NR) {
+							Synonym = {};
+							Synonym.GUID = qrySynonyme[k].Synonym_GUID;
+							Synonym.Name = qrySynonyme[k].Synonym_Name;
+							Synonyme.push(Synonym);
+						}
+					}
+					Art.Index.Felder.Synonyme = Synonyme;
+					$db.saveDoc(Art);
 				}
 			}
 		}
