@@ -17,7 +17,10 @@
 		<div id="SchaltflächenFaunaDatensammlungen"></div><br><br>
 
 		<div id="SchaltflächenFloraIndex">hier kommt die Flora</div><br><br>
-		<div id="SchaltflächenFloraDatensammlungen"></div><br><br>
+		<div id="SchaltflächenFloraDatensammlungen"></div><br>
+		Erst nach Floraimport und upload der views machen:
+		<button id="FloraDeutscheNamen">Deutsche Namen ergänzen</button>
+		<button id="FloraGültigeNamen">Gültige Namen aktualisieren</button><br><br>
 
 		<div id="SchaltflächenMoosIndex">hier kommen die Moose</div><br><br>
 		<div id="SchaltflächenMoosDatensammlungen"></div><br><br>
@@ -47,6 +50,12 @@
 			});
 			$("body").on("click", "[name='SchaltflächeMoosDatensammlung']", function() {
 				importiereMoosDatensammlungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("Anz"));
+			});
+			$("body").on("click", "#FloraDeutscheNamen", function() {
+				ergänzeDeutscheNamen();
+			});
+			$("body").on("click", "#FloraGültigeNamen", function() {
+				aktualisiereGültigeNamen();
 			});
 		</script>
 	</body>

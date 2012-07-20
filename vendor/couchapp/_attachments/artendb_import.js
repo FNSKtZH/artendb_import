@@ -1,5 +1,5 @@
 function importiereFloraIndex(myDB, tblName, Anz) {
-	var DatensammlungMetadaten, Index, Art, anzDs;
+	var DatensammlungMetadaten, Index, Art, anzDs, länge, andereArt, offizielleArt;
 	//tblName wird ignoriert
 	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'tblFloraSisf'");
 	//Index importieren
@@ -8,7 +8,7 @@ function importiereFloraIndex(myDB, tblName, Anz) {
 	for (x in Index) {
 		anzDs += 1;
 		//nur importieren, wenn innerhalb des mit Anz übergebenen Batches
-		if ((anzDs > (Anz*3000-3000)) && (anzDs <= Anz*3000)) {
+		if ((anzDs > (Anz*2500-2500)) && (anzDs <= Anz*2500)) {
 			//Art als Objekt gründen
 			Art = {};
 			//_id soll GUID sein, aber ohne Klammern
@@ -28,10 +28,17 @@ function importiereFloraIndex(myDB, tblName, Anz) {
 			Art[DatensammlungMetadaten[0].DsName].Felder = {};
 			//Felder anfügen, wenn sie Werte enthalten
 			for (y in Index[x]) {
-				if (Index[x][y] !== "" && Index[x][y] !== null && y !== "Gruppe" && y !== "GUID") {
+				if (Index[x][y] !== "" && Index[x][y] !== null && y !== "Gruppe") {
 					if (Index[x][y] === -1) {
 						//Access wadelt in Abfragen Felder mit Wenn() in Zahlen um. Umkehren
 						Art[DatensammlungMetadaten[0].DsName].Felder[y] = true;
+					} else if (y === "Offizielle Art" || y === "Eingeschlossen in" || y === "Synonym von") {
+						//Objekt aus Name und GUID bilden
+						offizielleArt = {};
+						andereArt = frageSql(myDB, "SELECT Artname FROM tblFloraSisf_import where GUID='" + Index[x][y] + "'");
+						offizielleArt.GUID = Index[x][y];
+						offizielleArt.Name = andereArt[0].Artname;
+						Art[DatensammlungMetadaten[0].DsName].Felder[y] = offizielleArt;
 					} else {
 						Art[DatensammlungMetadaten[0].DsName].Felder[y] = Index[x][y];
 					}
@@ -41,6 +48,70 @@ function importiereFloraIndex(myDB, tblName, Anz) {
 			$db.saveDoc(Art);
 		}
 	}
+}
+
+function ergänzeDeutscheNamen() {
+	var qryDeutscheNamen, myDB;
+	//mit der mdb verbinden
+	myDB = verbindeMitMdb();
+	qryDeutscheNamen = frageSql(myDB, "SELECT SisfNr, NOM_COMMUN FROM tblFloraSisfNomCommun INNER JOIN tblFloraSisfNomComTax ON tblFloraSisfNomCommun.NO_NOM_COMMUN = tblFloraSisfNomComTax.NO_NOM_COMMUN ORDER BY NOM_COMMUN");
+	$db = $.couch.db("artendb");
+	$db.view('artendb/flora?include_docs=true', {
+		success: function (data) {
+			for (i in data.rows) {
+				var Art, ArtNr, deutscheNamen;
+				Art = data.rows[i].doc;
+				ArtNr = Art.Index.Felder.NR;
+				deutscheNamen = "";
+				for (k in qryDeutscheNamen) {
+					if (qryDeutscheNamen[k].SisfNr === ArtNr) {
+						if (deutscheNamen) {
+							deutscheNamen += ', ';
+						}
+						deutscheNamen += qryDeutscheNamen[k].NOM_COMMUN;
+					}
+				}
+				if (deutscheNamen && deutscheNamen !== Art.Index.Felder["Deutsche Namen"]) {
+					Art.Index.Felder["Deutsche Namen"] = deutscheNamen;
+					$db = $.couch.db("artendb");
+					$db.saveDoc(Art);
+				}
+			}
+		}
+	});
+}
+
+function aktualisiereGültigeNamen() {
+	$db = $.couch.db("artendb");
+	$db.view('artendb/flora?include_docs=true', {
+		success: function (data) {
+			var Art, Nrn, gültigeNamen, gültigeArt;
+			for (i in data.rows) {
+				Art = data.rows[i].doc;
+				//Liste aller Deutschen Namen bilden
+				if (Art.Index.Felder["Gültige Namen"]) {
+					Nrn = Art.Index.Felder["Gültige Namen"].split(",");
+					gültigeNamen = [];
+					for (a in Nrn) {
+						for (k in data.rows) {
+							//alert("data.rows[k].doc.Index.NR = " + data.rows[k].doc.Index.NR);
+							//alert("parseInt(Nrn[a]) = " + parseInt(Nrn[a]));
+							if (data.rows[k].doc.Index.Felder.NR == parseInt(Nrn[a])) {
+								gültigeArt = {};
+								gültigeArt.GUID = data.rows[k].doc.Index.Felder.GUID;
+								gültigeArt.Name = data.rows[k].doc.Index.Felder["Artname vollständig"];
+								gültigeNamen.push(gültigeArt);
+							}
+						}
+					}
+					if (gültigeNamen !== []) {
+						Art.Index.Felder["Gültige Namen"] = gültigeNamen;
+						$db.saveDoc(Art);
+					}
+				}
+			}
+		}
+	});
 }
 
 function importiereFloraDatensammlungen(tblName, Anz) {
@@ -57,7 +128,7 @@ function importiereFloraDatensammlungen_02(myDB, tblName, Anz) {
 	for (x in Datensammlung) {
 		anzDs += 1;
 		//nur importieren, wenn innerhalb des mit Anz übergebenen 3000er Batches
-		if ((anzDs > (Anz*3000-3000)) && (anzDs <= Anz*3000)) {
+		if ((anzDs > (Anz*2500-2500)) && (anzDs <= Anz*2500)) {
 			//Datensammlung als Objekt gründen
 			DatensammlungDieserArt = {};
 			DatensammlungDieserArt.Typ = "Datensammlung";
@@ -105,7 +176,7 @@ function importiereMoosIndex(myDB, tblName, Anz) {
 	for (x in Index) {
 		anzDs += 1;
 		//nur importieren, wenn innerhalb des mit Anz übergebenen Batches
-		if ((anzDs > (Anz*3000-3000)) && (anzDs <= Anz*3000)) {
+		if ((anzDs > (Anz*2500-2500)) && (anzDs <= Anz*2500)) {
 			//Art als Objekt gründen
 			Art = {};
 			//_id soll GUID sein, aber ohne Klammern
@@ -148,7 +219,7 @@ function importiereMoosDatensammlungen_02(myDB, tblName, Anz) {
 	for (x in Datensammlung) {
 		anzDs += 1;
 		//nur importieren, wenn innerhalb des mit Anz übergebenen 8000er Batches
-		if ((anzDs > (Anz*3000-3000)) && (anzDs <= Anz*3000)) {
+		if ((anzDs > (Anz*2500-2500)) && (anzDs <= Anz*2500)) {
 			//Datensammlung als Objekt gründen
 			DatensammlungDieserArt = {};
 			DatensammlungDieserArt.Typ = "Datensammlung";
@@ -188,10 +259,10 @@ function importiereFaunaIndex(myDB, tblName, Anz) {
 	Index = frageSql(myDB, "SELECT * FROM tblFaunaCscf_import");
 	anzDs = 0;
 	for (x in Index) {
-		//In Häppchen von max. 3000 Datensätzen aufteilen
+		//In Häppchen von max. 2500 Datensätzen aufteilen
 		anzDs += 1;
 		//nur importieren, wenn innerhalb des mit Anz übergebenen 3000er Batches
-		if ((anzDs > (Anz*3000-3000)) && (anzDs <= Anz*3000)) {
+		if ((anzDs > (Anz*2500-2500)) && (anzDs <= Anz*2500)) {
 			//Art als Objekt gründen
 			Art = {};
 			//_id soll GUID sein, aber ohne Klammern
@@ -234,7 +305,7 @@ function importiereFaunaDatensammlungen_02(myDB, tblName, Anz) {
 	for (x in Datensammlung) {
 		anzDs += 1;
 		//nur importieren, wenn innerhalb des mit Anz übergebenen 3000er Batches
-		if ((anzDs > (Anz*3000-3000)) && (anzDs <= Anz*3000)) {
+		if ((anzDs > (Anz*2500-2500)) && (anzDs <= Anz*2500)) {
 			//Datensammlung als Objekt gründen
 			DatensammlungDieserArt = {};
 			DatensammlungDieserArt.Typ = "Datensammlung";
@@ -360,7 +431,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(" + DatensammlungenFlora[i].DsBeziehungsfeldDs + ") AS Anzahl FROM " + DatensammlungenFlora[i].DsTabelle);
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/3000);
+			anzButtons = Math.ceil(anzDs/2500);
 			for (y = 1; y <= anzButtons; y++) {
 				html += "<button id='";
 				html += DatensammlungenFlora[i].DsTabelle + y;
@@ -383,7 +454,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(" + DatensammlungenFauna[i].DsBeziehungsfeldDs + ") AS Anzahl FROM " + DatensammlungenFauna[i].DsTabelle);
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/3000);
+			anzButtons = Math.ceil(anzDs/2500);
 			for (y = 1; y <= anzButtons; y++) {
 				html += "<button id='";
 				html += DatensammlungenFauna[i].DsTabelle + y;
@@ -406,7 +477,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(" + DatensammlungenMoos[i].DsBeziehungsfeldDs + ") AS Anzahl FROM " + DatensammlungenMoos[i].DsTabelle);
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/3000);
+			anzButtons = Math.ceil(anzDs/2500);
 			for (y = 1; y <= anzButtons; y++) {
 				html += "<button id='";
 				html += DatensammlungenMoos[i].DsTabelle + y;
@@ -437,7 +508,7 @@ function baueIndexSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(NR) AS Anzahl FROM tblFloraSisf_import");
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/3000);
+			anzButtons = Math.ceil(anzDs/2500);
 			for (y = 1; y <= anzButtons; y++) {
 				html += "<button id='tblFloraSisf" + y;
 				html += "' name='SchaltflächeFloraIndex' Tabelle='tblFloraSisf";
@@ -457,7 +528,7 @@ function baueIndexSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(Nuesp) AS Anzahl FROM tblFaunaCscf_import");
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/3000);
+			anzButtons = Math.ceil(anzDs/2500);
 			for (y = 1; y <= anzButtons; y++) {
 				html += "<button id='tblFaunaCscf" + y;
 				html += "' name='SchaltflächeFaunaIndex' Tabelle='tblFaunaCscf";
@@ -477,7 +548,7 @@ function baueIndexSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(TAXONNO) AS Anzahl FROM tblMooseNism");
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/3000);
+			anzButtons = Math.ceil(anzDs/2500);
 			for (y = 1; y <= anzButtons; y++) {
 				html += "<button id='tblMooseNism" + y;
 				html += "' name='SchaltflächeMoosIndex' Tabelle='tblMooseNism";
