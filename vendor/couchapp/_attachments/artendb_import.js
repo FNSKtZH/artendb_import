@@ -227,7 +227,7 @@ function importiereFloraDatensammlungen_02(myDB, tblName, Anz) {
 }
 
 function importiereMoosIndex(myDB, tblName, Anz) {
-	var DatensammlungMetadaten, Index, Art, anzDs;
+	var DatensammlungMetadaten, Index, Art, anzDs, akzeptierteReferenz;
 	//tblName wird ignoriert
 	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'tblMooseNism'");
 	//Index importieren
@@ -257,7 +257,16 @@ function importiereMoosIndex(myDB, tblName, Anz) {
 			//Felder anfügen, wenn sie Werte enthalten
 			for (y in Index[x]) {
 				if (Index[x][y] !== "" && Index[x][y] !== null && y !== "Gruppe") {
-					Art[DatensammlungMetadaten[0].DsName].Felder[y] = Index[x][y];
+					if (y === "Akzeptierte Referenz") {
+						//Objekt aus Name und GUID bilden
+						akzeptierteReferenz = {};
+						andereArt = frageSql(myDB, "SELECT [Artname vollständig] as Artname FROM tblMooseNism_import where GUID='" + Index[x][y] + "'");
+						akzeptierteReferenz.GUID = Index[x][y];
+						akzeptierteReferenz.Name = andereArt[0].Artname;
+						Art[DatensammlungMetadaten[0].DsName].Felder[y] = akzeptierteReferenz;
+					} else {
+						Art[DatensammlungMetadaten[0].DsName].Felder[y] = Index[x][y];
+					}
 				}
 			}
 			$db = $.couch.db("artendb");
