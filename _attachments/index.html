@@ -27,6 +27,9 @@
 		<div id="SchaltflächenMoosIndex">hier kommen die Moose</div><br><br>
 		<div id="SchaltflächenMoosDatensammlungen"></div><br><br>
 
+		<div id="SchaltflächenMacromycetesIndex">hier kommen die Pilze</div><br><br>
+		<div id="SchaltflächenMacromycetesDatensammlungen"></div><br><br>
+
 		<script>
 			$(document).ready(function () {
 				baueIndexSchaltflächenAuf();
@@ -44,6 +47,9 @@
 			$("body").on("click", "[name='SchaltflächeMoosIndex']", function() {
 				initiiereImport("importiereMoosIndex", "tblName", $("#" + this.id).attr("Anz"));
 			});
+			$("body").on("click", "[name='SchaltflächeMacromycetesIndex']", function() {
+				initiiereImport("importiereMacromycetesIndex", "tblName", $("#" + this.id).attr("Anz"));
+			});
 			$("body").on("click", "[name='SchaltflächeFaunaDatensammlung']", function() {
 				importiereFaunaDatensammlungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("Anz"));
 			});
@@ -52,6 +58,9 @@
 			});
 			$("body").on("click", "[name='SchaltflächeMoosDatensammlung']", function() {
 				importiereMoosDatensammlungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("Anz"));
+			});
+			$("body").on("click", "[name='SchaltflächeMacromycetesDatensammlung']", function() {
+				importiereMacromycetesDatensammlungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("Anz"));
 			});
 			$("body").on("click", "#FloraDeutscheNamen", function() {
 				ergänzeFloraDeutscheNamen();

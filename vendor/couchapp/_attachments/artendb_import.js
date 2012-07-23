@@ -295,7 +295,92 @@ function importiereMoosDatensammlungen_02(myDB, tblName, Anz) {
 			//Felder anfügen, wenn sie Werte enthalten
 			anzFelder = 0;
 			for (y in Datensammlung[x]) {
-				if (y !== "GUID" && y !== "NR" && y !== "tblMooseNismGuid.NR" && Datensammlung[x][y] !== "" && Datensammlung[x][y] !== null && y !== DatensammlungMetadaten[0].DsBeziehungsfeldDs && y !== "Gruppe") {
+				if (y !== "GUID" && y !== "NR" && Datensammlung[x][y] !== "" && Datensammlung[x][y] !== null && y !== DatensammlungMetadaten[0].DsBeziehungsfeldDs && y !== "Gruppe") {
+					DatensammlungDieserArt.Felder[y] = Datensammlung[x][y];
+					anzFelder += 1;
+				}
+			}
+			//entsprechenden Index öffnen
+			//sicherstellen, dass Felder vorkommen. Gibt sonst einen Fehler
+			if (anzFelder > 0) {
+				//Datenbankabfrage ist langsam. Estern aufrufen, 
+				//sonst überholt die for-Schlaufe und DatensammlungDieserArt ist bis zur saveDoc-Ausführung eine andere!
+				fuegeDatensammlungZuArt(Datensammlung[x].GUID, DatensammlungMetadaten[0].DsName, DatensammlungDieserArt);
+			}
+		}
+	}
+}
+
+function importiereMacromycetesIndex(myDB, tblName, Anz) {
+	var DatensammlungMetadaten, Index, Art, anzDs;
+	//tblName wird ignoriert
+	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'tblMacromycetes'");
+	//Index importieren
+	Index = frageSql(myDB, "SELECT * FROM tblMacromycetes_import");
+	anzDs = 0;
+	for (x in Index) {
+		anzDs += 1;
+		//nur importieren, wenn innerhalb des mit Anz übergebenen Batches
+		if ((anzDs > (Anz*2500-2500)) && (anzDs <= Anz*2500)) {
+			//Art als Objekt gründen
+			Art = {};
+			//_id soll GUID sein, aber ohne Klammern
+			Art._id = Index[x].GUID;
+			Art.Gruppe = Index[x].Gruppe;
+			//Datensammlung als Objekt gründen, heisst wie DsName
+			Art[DatensammlungMetadaten[0].DsName] = {};
+			Art[DatensammlungMetadaten[0].DsName].Typ = "Datensammlung";
+			Art[DatensammlungMetadaten[0].DsName].Beschreibung = DatensammlungMetadaten[0].DsBeschreibung;
+			if (DatensammlungMetadaten[0].DsDatenstand) {
+				Art[DatensammlungMetadaten[0].DsName].Datenstand = DatensammlungMetadaten[0].DsDatenstand;
+			}
+			if (DatensammlungMetadaten[0].DsLink) {
+				Art[DatensammlungMetadaten[0].DsName]["Link"] = DatensammlungMetadaten[0].DsLink;
+			}
+			//Felder der Datensammlung als Objekt gründen
+			Art[DatensammlungMetadaten[0].DsName].Felder = {};
+			//Felder anfügen, wenn sie Werte enthalten
+			for (y in Index[x]) {
+				if (Index[x][y] !== "" && Index[x][y] !== null && y !== "Gruppe" && y !== "GUID") {
+					Art[DatensammlungMetadaten[0].DsName].Felder[y] = Index[x][y];
+				}
+			}
+			$db = $.couch.db("artendb");
+			$db.saveDoc(Art);
+		}
+	}
+}
+
+function importiereMacromycetesDatensammlungen(tblName, Anz) {
+	initiiereImport("importiereMacromycetesDatensammlungen_02", tblName, Anz);
+}
+
+function importiereMacromycetesDatensammlungen_02(myDB, tblName, Anz) {
+	var DatensammlungMetadaten, Datensammlung, DatensammlungDieserArt, anzFelder, anzDs;
+	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = '" + tblName + "'");
+	//Datensätze der Datensammlung abfragen, mit GUID ergänzen
+	Datensammlung = frageSql(myDB, "SELECT * FROM " + tblName + "_import");
+	anzDs = 0;
+	for (x in Datensammlung) {
+		anzDs += 1;
+		//nur importieren, wenn innerhalb des mit Anz übergebenen 8000er Batches
+		if ((anzDs > (Anz*2500-2500)) && (anzDs <= Anz*2500)) {
+			//Datensammlung als Objekt gründen
+			DatensammlungDieserArt = {};
+			DatensammlungDieserArt.Typ = "Datensammlung";
+			DatensammlungDieserArt.Beschreibung = DatensammlungMetadaten[0].DsBeschreibung;
+			if (DatensammlungMetadaten[0].DsDatenstand) {
+				DatensammlungDieserArt.Datenstand = DatensammlungMetadaten[0].DsDatenstand;
+			}
+			if (DatensammlungMetadaten[0].DsLink) {
+				DatensammlungDieserArt["Link"] = DatensammlungMetadaten[0].DsLink;
+			}
+			//Felder der Datensammlung als Objekt gründen
+			DatensammlungDieserArt.Felder = {};
+			//Felder anfügen, wenn sie Werte enthalten
+			anzFelder = 0;
+			for (y in Datensammlung[x]) {
+				if (y !== "GUID" && y !== "TaxonId" && y !== "tblMacromycetes.TaxonId" && Datensammlung[x][y] !== "" && Datensammlung[x][y] !== null && y !== DatensammlungMetadaten[0].DsBeziehungsfeldDs && y !== "Gruppe") {
 					DatensammlungDieserArt.Felder[y] = Datensammlung[x][y];
 					anzFelder += 1;
 				}
@@ -481,7 +566,7 @@ function importiereJsonObjekt(JsonObjekt) {
 }
 
 function baueDatensammlungenSchaltflächenAuf() {
-	var DatensammlungenFlora, sqlDatensammlungenFlora, DatensammlungenFauna, sqlDatensammlungenFauna, DatensammlungenMoos, sqlDatensammlungenMoos, myDB, html, qryAnzDs, anzDs, anzButtons;
+	var DatensammlungenFlora, sqlDatensammlungenFlora, DatensammlungenFauna, sqlDatensammlungenFauna, DatensammlungenMoos, sqlDatensammlungenMoos, DatensmmlungenMacromycetes, sqlDatensammlungMacromycetes, myDB, html, qryAnzDs, anzDs, anzButtons;
 	myDB = verbindeMitMdb();
 	sqlDatensammlungenFlora = "SELECT * FROM tblDatensammlungMetadaten WHERE DsIndex = 'tblFloraSisf' AND DsBeziehungstyp = '1_zu_1' AND DsTabelle <> 'tblFloraSisf' ORDER BY DsReihenfolge";
 	DatensammlungenFlora = frageSql(myDB, sqlDatensammlungenFlora);
@@ -552,13 +637,36 @@ function baueDatensammlungenSchaltflächenAuf() {
 			}
 		}
 		$("#SchaltflächenMoosDatensammlungen").html(html);
+		//jetzt Macromycetes
+		sqlDatensammlungenMacromycetes = "SELECT * FROM tblDatensammlungMetadaten WHERE DsIndex = 'tblMacromycetes' AND DsBeziehungstyp = '1_zu_1' AND DsTabelle <> 'tblMacromycetes' ORDER BY DsReihenfolge";
+		DatensammlungenMacromycetes = frageSql(myDB, sqlDatensammlungenMacromycetes);
+		html = "Macromycetes Datensammlungen:<br>";
+		for (i in DatensammlungenMacromycetes) {
+			//Anzahl Datensätze ermitteln
+			qryAnzDs = frageSql(myDB, "SELECT Count(" + DatensammlungenMacromycetes[i].DsBeziehungsfeldDs + ") AS Anzahl FROM " + DatensammlungenMacromycetes[i].DsTabelle);
+			anzDs = qryAnzDs[0].Anzahl;
+			anzButtons = Math.ceil(anzDs/2500);
+			for (y = 1; y <= anzButtons; y++) {
+				html += "<button id='";
+				html += DatensammlungenMacromycetes[i].DsTabelle + y;
+				html += "' name='SchaltflächeMacromycetesDatensammlung' Tabelle='" + DatensammlungenMacromycetes[i].DsTabelle;
+				html += "' Anz='" + y + "' Von='" + anzButtons;
+				html += "'>";
+				html += DatensammlungenMacromycetes[i].DsName;
+				if (anzButtons > 1) {
+					html += " (" + y + "/" + anzButtons + ")";
+				}
+				html += "</button>";
+			}
+		}
+		$("#SchaltflächenMacromycetesDatensammlungen").html(html);
 	} else {
 		alert("Bitte den Pfad zur .mdb erfassen");
 	}
 }
 
 function baueIndexSchaltflächenAuf() {
-	var DatensammlungFlora, DatensammlungFauna, myDB, html, qryAnzDs, anzDs, anzButtons;
+	var DatensammlungFlora, DatensammlungFauna, DatensammlungMoos, DatensammlungMacromycetes, myDB, html, qryAnzDs, anzDs, anzButtons;
 	myDB = verbindeMitMdb();
 	//zuerst Flora
 	DatensammlungFlora = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'tblFloraSisf'");
@@ -566,7 +674,7 @@ function baueIndexSchaltflächenAuf() {
 		html = "";
 		for (i in DatensammlungFlora) {
 			//Anzahl Datensätze ermitteln
-			qryAnzDs = frageSql(myDB, "SELECT Count(NR) AS Anzahl FROM tblFloraSisf_import");
+			qryAnzDs = frageSql(myDB, "SELECT Count([Index ID]) AS Anzahl FROM tblFloraSisf_import");
 			anzDs = qryAnzDs[0].Anzahl;
 			anzButtons = Math.ceil(anzDs/2500);
 			for (y = 1; y <= anzButtons; y++) {
@@ -586,7 +694,7 @@ function baueIndexSchaltflächenAuf() {
 		html = "";
 		for (i in DatensammlungFauna) {
 			//Anzahl Datensätze ermitteln
-			qryAnzDs = frageSql(myDB, "SELECT Count(Nuesp) AS Anzahl FROM tblFaunaCscf_import");
+			qryAnzDs = frageSql(myDB, "SELECT Count([Index ID]) AS Anzahl FROM tblFaunaCscf_import");
 			anzDs = qryAnzDs[0].Anzahl;
 			anzButtons = Math.ceil(anzDs/2500);
 			for (y = 1; y <= anzButtons; y++) {
@@ -621,6 +729,26 @@ function baueIndexSchaltflächenAuf() {
 			}
 		}
 		$("#SchaltflächenMoosIndex").html(html);
+		//jetzt Pilze
+		DatensammlungMacromycetes = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'tblMacromycetes'");
+		html = "";
+		for (i in DatensammlungMacromycetes) {
+			//Anzahl Datensätze ermitteln
+			qryAnzDs = frageSql(myDB, "SELECT Count(TaxonId) AS Anzahl FROM tblMacromycetes");
+			anzDs = qryAnzDs[0].Anzahl;
+			anzButtons = Math.ceil(anzDs/2500);
+			for (y = 1; y <= anzButtons; y++) {
+				html += "<button id='tblMacromycetes" + y;
+				html += "' name='SchaltflächeMacromycetesIndex' Tabelle='tblMacromycetes";
+				html += "' Anz='" + y + "' Von='" + anzButtons;
+				html += "'>Macromycetes Index";
+				if (anzButtons > 1) {
+					html += " (" + y + "/" + anzButtons + ")";
+				}
+				html += "</button>";
+			}
+		}
+		$("#SchaltflächenMacromycetesIndex").html(html);
 	} else {
 		alert("Bitte den Pfad zur .mdb erfassen");
 	}
