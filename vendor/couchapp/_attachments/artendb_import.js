@@ -256,7 +256,7 @@ function importiereMoosIndex(myDB, tblName, Anz) {
 			Art[DatensammlungMetadaten[0].DsName].Felder = {};
 			//Felder anfügen, wenn sie Werte enthalten
 			for (y in Index[x]) {
-				if (Index[x][y] !== "" && Index[x][y] !== null && y !== "Gruppe" && y !== "GUID") {
+				if (Index[x][y] !== "" && Index[x][y] !== null && y !== "Gruppe") {
 					Art[DatensammlungMetadaten[0].DsName].Felder[y] = Index[x][y];
 				}
 			}
@@ -341,7 +341,7 @@ function importiereMacromycetesIndex(myDB, tblName, Anz) {
 			Art[DatensammlungMetadaten[0].DsName].Felder = {};
 			//Felder anfügen, wenn sie Werte enthalten
 			for (y in Index[x]) {
-				if (Index[x][y] !== "" && Index[x][y] !== null && y !== "Gruppe" && y !== "GUID") {
+				if (Index[x][y] !== "" && Index[x][y] !== null && y !== "Gruppe") {
 					Art[DatensammlungMetadaten[0].DsName].Felder[y] = Index[x][y];
 				}
 			}
@@ -427,7 +427,7 @@ function importiereFaunaIndex(myDB, tblName, Anz) {
 			Art[DatensammlungMetadaten[0].DsName].Felder = {};
 			//Felder anfügen, wenn sie Werte enthalten
 			for (y in Index[x]) {
-				if (Index[x][y] !== "" && Index[x][y] !== null && y !== "Gruppe" && y !== "GUID") {
+				if (Index[x][y] !== "" && Index[x][y] !== null && y !== "Gruppe") {
 					Art[DatensammlungMetadaten[0].DsName].Felder[y] = Index[x][y];
 				}
 			}
@@ -674,7 +674,7 @@ function baueIndexSchaltflächenAuf() {
 		html = "";
 		for (i in DatensammlungFlora) {
 			//Anzahl Datensätze ermitteln
-			qryAnzDs = frageSql(myDB, "SELECT Count([Index ID]) AS Anzahl FROM tblFloraSisf_import");
+			qryAnzDs = frageSql(myDB, "SELECT Count(GUID) AS Anzahl FROM tblFloraSisf_import");
 			anzDs = qryAnzDs[0].Anzahl;
 			anzButtons = Math.ceil(anzDs/2500);
 			for (y = 1; y <= anzButtons; y++) {
@@ -694,7 +694,7 @@ function baueIndexSchaltflächenAuf() {
 		html = "";
 		for (i in DatensammlungFauna) {
 			//Anzahl Datensätze ermitteln
-			qryAnzDs = frageSql(myDB, "SELECT Count([Index ID]) AS Anzahl FROM tblFaunaCscf_import");
+			qryAnzDs = frageSql(myDB, "SELECT Count(GUID) AS Anzahl FROM tblFaunaCscf_import");
 			anzDs = qryAnzDs[0].Anzahl;
 			anzButtons = Math.ceil(anzDs/2500);
 			for (y = 1; y <= anzButtons; y++) {
@@ -734,7 +734,7 @@ function baueIndexSchaltflächenAuf() {
 		html = "";
 		for (i in DatensammlungMacromycetes) {
 			//Anzahl Datensätze ermitteln
-			qryAnzDs = frageSql(myDB, "SELECT Count(TaxonId) AS Anzahl FROM tblMacromycetes");
+			qryAnzDs = frageSql(myDB, "SELECT Count(GUID) AS Anzahl FROM tblMacromycetes");
 			anzDs = qryAnzDs[0].Anzahl;
 			anzButtons = Math.ceil(anzDs/2500);
 			for (y = 1; y <= anzButtons; y++) {
