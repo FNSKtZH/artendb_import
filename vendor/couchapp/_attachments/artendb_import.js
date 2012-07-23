@@ -264,6 +264,9 @@ function importiereMoosIndex(myDB, tblName, Anz) {
 						akzeptierteReferenz.GUID = Index[x][y];
 						akzeptierteReferenz.Name = andereArt[0].Artname;
 						Art[DatensammlungMetadaten[0].DsName].Felder[y] = akzeptierteReferenz;
+					} else if (Index[x][y] === -1) {
+						//Access wadelt in Abfragen Felder mit Wenn() in Zahlen um. Umkehren
+						Art[DatensammlungMetadaten[0].DsName].Felder[y] = true;
 					} else {
 						Art[DatensammlungMetadaten[0].DsName].Felder[y] = Index[x][y];
 					}
@@ -305,7 +308,13 @@ function importiereMoosDatensammlungen_02(myDB, tblName, Anz) {
 			anzFelder = 0;
 			for (y in Datensammlung[x]) {
 				if (y !== "GUID" && y !== "NR" && Datensammlung[x][y] !== "" && Datensammlung[x][y] !== null && y !== DatensammlungMetadaten[0].DsBeziehungsfeldDs && y !== "Gruppe") {
-					DatensammlungDieserArt.Felder[y] = Datensammlung[x][y];
+					if (Datensammlung[x][y] === -1) {
+						//Access macht in Abfragen mit Wenn-Klausel aus true -1 > korrigieren
+						DatensammlungDieserArt.Felder[y] = true;
+					} else {
+						//Normalfall
+						DatensammlungDieserArt.Felder[y] = Datensammlung[x][y];
+					}
 					anzFelder += 1;
 				}
 			}
@@ -351,7 +360,12 @@ function importiereMacromycetesIndex(myDB, tblName, Anz) {
 			//Felder anfügen, wenn sie Werte enthalten
 			for (y in Index[x]) {
 				if (Index[x][y] !== "" && Index[x][y] !== null && y !== "Gruppe") {
-					Art[DatensammlungMetadaten[0].DsName].Felder[y] = Index[x][y];
+					if (Index[x][y] === -1) {
+						//Access wadelt in Abfragen Felder mit Wenn() in Zahlen um. Umkehren
+						Art[DatensammlungMetadaten[0].DsName].Felder[y] = true;
+					} else {
+						Art[DatensammlungMetadaten[0].DsName].Felder[y] = Index[x][y];
+					}
 				}
 			}
 			$db = $.couch.db("artendb");
@@ -390,7 +404,13 @@ function importiereMacromycetesDatensammlungen_02(myDB, tblName, Anz) {
 			anzFelder = 0;
 			for (y in Datensammlung[x]) {
 				if (y !== "GUID" && y !== "TaxonId" && y !== "tblMacromycetes.TaxonId" && Datensammlung[x][y] !== "" && Datensammlung[x][y] !== null && y !== DatensammlungMetadaten[0].DsBeziehungsfeldDs && y !== "Gruppe") {
-					DatensammlungDieserArt.Felder[y] = Datensammlung[x][y];
+					if (Datensammlung[x][y] === -1) {
+						//Access macht in Abfragen mit Wenn-Klausel aus true -1 > korrigieren
+						DatensammlungDieserArt.Felder[y] = true;
+					} else {
+						//Normalfall
+						DatensammlungDieserArt.Felder[y] = Datensammlung[x][y];
+					}
 					anzFelder += 1;
 				}
 			}
@@ -437,7 +457,12 @@ function importiereFaunaIndex(myDB, tblName, Anz) {
 			//Felder anfügen, wenn sie Werte enthalten
 			for (y in Index[x]) {
 				if (Index[x][y] !== "" && Index[x][y] !== null && y !== "Gruppe") {
-					Art[DatensammlungMetadaten[0].DsName].Felder[y] = Index[x][y];
+					if (Index[x][y] === -1) {
+						//Access wadelt in Abfragen Felder mit Wenn() in Zahlen um. Umkehren
+						Art[DatensammlungMetadaten[0].DsName].Felder[y] = true;
+					} else {
+						Art[DatensammlungMetadaten[0].DsName].Felder[y] = Index[x][y];
+					}
 				}
 			}
 			$db = $.couch.db("artendb");
@@ -476,10 +501,11 @@ function importiereFaunaDatensammlungen_02(myDB, tblName, Anz) {
 			anzFelder = 0;
 			for (y in Datensammlung[x]) {
 				if (y !== "GUID" && Datensammlung[x][y] !== "" && Datensammlung[x][y] !== null) {
-					if (y === "Prioritätsart Vögel" && Datensammlung[x][y] === -1) {
-						//Access hat ja/nein Feld in Zahlenfeld verwandelt. Ändern
+					if (Datensammlung[x][y] === -1) {
+						//Access macht in Abfragen mit Wenn-Klausel aus true -1 > korrigieren
 						DatensammlungDieserArt.Felder[y] = true;
 					} else {
+						//Normalfall
 						DatensammlungDieserArt.Felder[y] = Datensammlung[x][y];
 					}
 					anzFelder += 1;
