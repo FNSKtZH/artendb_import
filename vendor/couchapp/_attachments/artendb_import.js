@@ -61,7 +61,7 @@ function ergänzeFloraDeutscheNamen() {
 			for (i in data.rows) {
 				var Art, ArtNr, deutscheNamen;
 				Art = data.rows[i].doc;
-				ArtNr = Art.Index.Felder.NR;
+				ArtNr = Art.Index.Felder["Index ID"];
 				deutscheNamen = "";
 				for (k in qryDeutscheNamen) {
 					if (qryDeutscheNamen[k].SisfNr === ArtNr) {
@@ -94,7 +94,7 @@ function aktualisiereFloraGültigeNamen() {
 					gültigeNamen = [];
 					for (a in Nrn) {
 						for (k in data.rows) {
-							if (data.rows[k].doc.Index.Felder.NR == parseInt(Nrn[a])) {
+							if (data.rows[k].doc.Index.Felder["Index ID"] == parseInt(Nrn[a])) {
 								gültigeArt = {};
 								gültigeArt.GUID = data.rows[k].doc.Index.Felder.GUID;
 								gültigeArt.Name = data.rows[k].doc.Index.Felder["Artname vollständig"];
@@ -130,7 +130,7 @@ function ergänzeFloraEingeschlosseneArten() {
 					//alert(JSON.stringify(Art));
 					eingeschlosseneArten = [];
 					for (k in qryEingeschlosseneArten) {
-						if (qryEingeschlosseneArten[k].NO_AGR_SL === Art.Index.Felder.NR) {
+						if (qryEingeschlosseneArten[k].NO_AGR_SL === Art.Index.Felder["Index ID"]) {
 							eingeschlosseneArt = {};
 							eingeschlosseneArt.GUID = qryEingeschlosseneArten[k].GUID;
 							eingeschlosseneArt.Name = qryEingeschlosseneArten[k]["Artname vollständig"];
@@ -159,7 +159,7 @@ function ergänzeFloraSynonyme() {
 				if (Art.Index.Felder.Synonyme) {
 					Synonyme = [];
 					for (k in qrySynonyme) {
-						if (qrySynonyme[k].NR === Art.Index.Felder.NR) {
+						if (qrySynonyme[k].NR === Art.Index.Felder["Index ID"]) {
 							Synonym = {};
 							Synonym.GUID = qrySynonyme[k].Synonym_GUID;
 							Synonym.Name = qrySynonyme[k].Synonym_Name;
