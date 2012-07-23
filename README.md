@@ -10,5 +10,5 @@ Idee:
 - Später soll aus artendb_import ein Tool entstehen, mit dem Datensammlungen von den jeweiligen Datenherren hinzugefügt oder aktualisiert werden können
 
 Voraussetzungen:
-- Der direkte Zugriff auf lokale Daten ist Web-Anwendungen normalerweise verwehrt. Darum muss ActiveX verwendet werden, was wiederum die Verwendung des Internet Explorers voraussetzt
+- Der direkte Zugriff auf lokale Daten ist Web-Anwendungen normalerweise verwehrt. Darum wird ActiveX verwendet, was die Verwendung des Internet Explorers voraussetzt
 - Die Anwendung greift gleichzeitig auf lokale Daten und auf die CouchApp im Netz zu. Dieser "crossdomain"-Zugriff ist bei unbekannten Seiten ein Sicherheitsrisiko. Darum muss diese Seite in den Optionen des Internet Explorers als sichere Seite eingestellt werden und crossdomain für sichere Seiten freigegeben werden
