@@ -523,7 +523,7 @@ function importiereFaunaDatensammlungen_02(myDB, tblName, Anz) {
 }
 
 function importiereLrIndex(myDB, tblName, Anz) {
-	var DatensammlungMetadaten, Index, Art, anzDs, Parent, parentArt, Hierarchie;
+	var DatensammlungMetadaten, Index, Art, anzDs, Parent, parentArt, parentObjekt, Hierarchie;
 	//tblName wird ignoriert
 	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'LR'");
 	//Index importieren
@@ -567,7 +567,10 @@ function importiereLrIndex(myDB, tblName, Anz) {
 						Art[DatensammlungMetadaten[0].DsName].Felder[y] = Parent;
 					} else if (y === "Hierarchie") {
 						Hierarchie = [];
-						Hierarchie.push(Art._id);
+						parentObjekt = {};
+						parentObjekt.Name = Index[x].Label + ": " + Index[x].Einheit;
+						parentObjekt.GUID = Index[x].GUID;
+						Hierarchie.push(parentObjekt);
 						if (Index[x].Parent) {
 							Art[DatensammlungMetadaten[0].DsName].Felder[y] = holeLrHierarchie(myDB, Art._id, Hierarchie);
 						} else {
@@ -586,13 +589,16 @@ function importiereLrIndex(myDB, tblName, Anz) {
 }
 
 function holeLrHierarchie(myDB, GUID, Hierarchie) {
-	var Parent, qryParent;
-	qryParent = frageSql(myDB, "SELECT Parent from LR_import where GUID ='" + GUID + "'");
-	Parent = qryParent[0].Parent;
-	if (Parent) {
-		Hierarchie.push(Parent);
+	var ParentGUID, qryParent, parentObjekt;
+	qryParentGUID = frageSql(myDB, "SELECT Parent from LR_import where GUID ='" + GUID + "'");
+	if (qryParentGUID[0].Parent) {
+		qryParent = frageSql(myDB, "SELECT Parent, Label, Einheit from LR_import where GUID ='" + qryParentGUID[0].Parent + "'");
+		parentObjekt = {};
+		parentObjekt.Name = qryParent[0].Label + ": " + qryParent[0].Einheit;
+		parentObjekt.GUID = qryParentGUID[0].Parent;
+		Hierarchie.push(parentObjekt);
 		//Hierarchie ist noch nicht zu Ende - weitermachen
-		return holeLrHierarchie(myDB, Parent, Hierarchie);
+		return holeLrHierarchie(myDB, qryParentGUID[0].Parent, Hierarchie);
 	} else {
 		//jetzt ist die Hierarchie vollständig aber verkehrt - umkehren
 		return Hierarchie.reverse();
