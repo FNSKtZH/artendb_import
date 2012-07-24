@@ -522,6 +522,113 @@ function importiereFaunaDatensammlungen_02(myDB, tblName, Anz) {
 	}
 }
 
+function importiereLrIndex(myDB, tblName, Anz) {
+	var DatensammlungMetadaten, Index, Art, anzDs, Parent, parentArt;
+	//tblName wird ignoriert
+	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'LR'");
+	//Index importieren
+	Index = frageSql(myDB, "SELECT * FROM LR_import");
+	anzDs = 0;
+	for (x in Index) {
+		anzDs += 1;
+		//nur importieren, wenn innerhalb des mit Anz übergebenen Batches
+		if ((anzDs > (Anz*2500-2500)) && (anzDs <= Anz*2500)) {
+			//Art als Objekt gründen
+			Art = {};
+			//_id soll GUID sein, aber ohne Klammern
+			Art._id = Index[x].GUID;
+			Art.Gruppe = Index[x].Gruppe;
+			//Datensammlung als Objekt gründen, heisst wie DsName
+			Art[DatensammlungMetadaten[0].DsName] = {};
+			Art[DatensammlungMetadaten[0].DsName].Typ = "Datensammlung";
+			if (Art[DatensammlungMetadaten[0].DsName].Beschreibung) {
+				Art[DatensammlungMetadaten[0].DsName].Beschreibung = DatensammlungMetadaten[0].DsBeschreibung;
+			}
+			if (DatensammlungMetadaten[0].DsDatenstand) {
+				Art[DatensammlungMetadaten[0].DsName].Datenstand = DatensammlungMetadaten[0].DsDatenstand;
+			}
+			if (DatensammlungMetadaten[0].DsLink) {
+				Art[DatensammlungMetadaten[0].DsName]["Link"] = DatensammlungMetadaten[0].DsLink;
+			}
+			//Felder der Datensammlung als Objekt gründen
+			Art[DatensammlungMetadaten[0].DsName].Felder = {};
+			//Felder anfügen, wenn sie Werte enthalten
+			for (y in Index[x]) {
+				if (Index[x][y] !== "" && Index[x][y] !== null && y !== "Gruppe") {
+					if (Index[x][y] === -1) {
+						//Access wadelt in Abfragen Felder mit Wenn() in Zahlen um. Umkehren
+						Art[DatensammlungMetadaten[0].DsName].Felder[y] = true;
+					} else if (y === "Parent") {
+						//Objekt aus Name und GUID bilden
+						Parent = {};
+						parentArt = frageSql(myDB, "SELECT Einheit FROM LR_import where GUID='" + Index[x][y] + "'");
+						Parent.GUID = Index[x][y];
+						Parent.Name = parentArt[0].Einheit;
+						Art[DatensammlungMetadaten[0].DsName].Felder[y] = Parent;
+					} else {
+						Art[DatensammlungMetadaten[0].DsName].Felder[y] = Index[x][y];
+					}
+				}
+			}
+			$db = $.couch.db("artendb");
+			$db.saveDoc(Art);
+		}
+	}
+}
+
+function importiereLrDatensammlungen(tblName, Anz) {
+	initiiereImport("importiereLrDatensammlungen_02", tblName, Anz);
+}
+
+function importiereLrDatensammlungen_02(myDB, tblName, Anz) {
+	var DatensammlungMetadaten, Datensammlung, DatensammlungDieserArt, anzFelder, anzDs;
+	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = '" + tblName + "'");
+	//Datensätze der Datensammlung abfragen, mit GUID ergänzen
+	Datensammlung = frageSql(myDB, "SELECT * FROM " + tblName + "_import");
+	anzDs = 0;
+	for (x in Datensammlung) {
+		anzDs += 1;
+		//nur importieren, wenn innerhalb des mit Anz übergebenen 8000er Batches
+		if ((anzDs > (Anz*2500-2500)) && (anzDs <= Anz*2500)) {
+			//Datensammlung als Objekt gründen
+			DatensammlungDieserArt = {};
+			DatensammlungDieserArt.Typ = "Datensammlung";
+			if (DatensammlungMetadaten[0].DsBeschreibung) {
+				DatensammlungDieserArt.Beschreibung = DatensammlungMetadaten[0].DsBeschreibung;
+			}
+			if (DatensammlungMetadaten[0].DsDatenstand) {
+				DatensammlungDieserArt.Datenstand = DatensammlungMetadaten[0].DsDatenstand;
+			}
+			if (DatensammlungMetadaten[0].DsLink) {
+				DatensammlungDieserArt["Link"] = DatensammlungMetadaten[0].DsLink;
+			}
+			//Felder der Datensammlung als Objekt gründen
+			DatensammlungDieserArt.Felder = {};
+			//Felder anfügen, wenn sie Werte enthalten
+			anzFelder = 0;
+			for (y in Datensammlung[x]) {
+				if (y !== "GUID" && y !== "Id" && y !== "LR.Id" && Datensammlung[x][y] !== "" && Datensammlung[x][y] !== null && y !== DatensammlungMetadaten[0].DsBeziehungsfeldDs && y !== "Gruppe") {
+					if (Datensammlung[x][y] === -1) {
+						//Access macht in Abfragen mit Wenn-Klausel aus true -1 > korrigieren
+						DatensammlungDieserArt.Felder[y] = true;
+					} else {
+						//Normalfall
+						DatensammlungDieserArt.Felder[y] = Datensammlung[x][y];
+					}
+					anzFelder += 1;
+				}
+			}
+			//entsprechenden Index öffnen
+			//sicherstellen, dass Felder vorkommen. Gibt sonst einen Fehler
+			if (anzFelder > 0) {
+				//Datenbankabfrage ist langsam. Estern aufrufen, 
+				//sonst überholt die for-Schlaufe und DatensammlungDieserArt ist bis zur saveDoc-Ausführung eine andere!
+				fuegeDatensammlungZuArt(Datensammlung[x].GUID, DatensammlungMetadaten[0].DsName, DatensammlungDieserArt);
+			}
+		}
+	}
+}
+
 function fuegeDatensammlungZuArt(GUID, DsName, DatensammlungDieserArt) {
 	$db = $.couch.db("artendb");
 	$db.openDoc(GUID, {
@@ -601,7 +708,7 @@ function importiereJsonObjekt(JsonObjekt) {
 }
 
 function baueDatensammlungenSchaltflächenAuf() {
-	var DatensammlungenFlora, sqlDatensammlungenFlora, DatensammlungenFauna, sqlDatensammlungenFauna, DatensammlungenMoos, sqlDatensammlungenMoos, DatensmmlungenMacromycetes, sqlDatensammlungMacromycetes, myDB, html, qryAnzDs, anzDs, anzButtons;
+	var DatensammlungenFlora, sqlDatensammlungenFlora, DatensammlungenFauna, sqlDatensammlungenFauna, DatensammlungenMoos, sqlDatensammlungenMoos, DatensmmlungenMacromycetes, sqlDatensammlungMacromycetes, DatensmmlungenLRs, sqlDatensammlungLR, myDB, html, qryAnzDs, anzDs, anzButtons;
 	myDB = verbindeMitMdb();
 	sqlDatensammlungenFlora = "SELECT * FROM tblDatensammlungMetadaten WHERE DsIndex = 'tblFloraSisf' AND DsBeziehungstyp = '1_zu_1' AND DsTabelle <> 'tblFloraSisf' ORDER BY DsReihenfolge";
 	DatensammlungenFlora = frageSql(myDB, sqlDatensammlungenFlora);
@@ -695,6 +802,29 @@ function baueDatensammlungenSchaltflächenAuf() {
 			}
 		}
 		$("#SchaltflächenMacromycetesDatensammlungen").html(html);
+		//jetzt LR
+		sqlDatensammlungenLR = "SELECT * FROM tblDatensammlungMetadaten WHERE DsIndex = 'LR' AND DsBeziehungstyp = '1_zu_1' AND DsTabelle <> 'LR' ORDER BY DsReihenfolge";
+		DatensammlungenLR = frageSql(myDB, sqlDatensammlungenLR);
+		html = "LR Datensammlungen:<br>";
+		for (i in DatensammlungenLR) {
+			//Anzahl Datensätze ermitteln
+			qryAnzDs = frageSql(myDB, "SELECT Count(" + DatensammlungenLR[i].DsBeziehungsfeldDs + ") AS Anzahl FROM " + DatensammlungenLR[i].DsTabelle);
+			anzDs = qryAnzDs[0].Anzahl;
+			anzButtons = Math.ceil(anzDs/2500);
+			for (y = 1; y <= anzButtons; y++) {
+				html += "<button id='";
+				html += DatensammlungenLR[i].DsTabelle + y;
+				html += "' name='SchaltflächeLRDatensammlung' Tabelle='" + DatensammlungenLR[i].DsTabelle;
+				html += "' Anz='" + y + "' Von='" + anzButtons;
+				html += "'>";
+				html += DatensammlungenLR[i].DsName;
+				if (anzButtons > 1) {
+					html += " (" + y + "/" + anzButtons + ")";
+				}
+				html += "</button>";
+			}
+		}
+		$("#SchaltflächenLRDatensammlungen").html(html);
 	} else {
 		alert("Bitte den Pfad zur .mdb erfassen");
 	}
@@ -784,6 +914,26 @@ function baueIndexSchaltflächenAuf() {
 			}
 		}
 		$("#SchaltflächenMacromycetesIndex").html(html);
+		//jetzt LR
+		DatensammlungLR = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'LR'");
+		html = "";
+		for (i in DatensammlungLR) {
+			//Anzahl Datensätze ermitteln
+			qryAnzDs = frageSql(myDB, "SELECT Count(GUID) AS Anzahl FROM LR");
+			anzDs = qryAnzDs[0].Anzahl;
+			anzButtons = Math.ceil(anzDs/2500);
+			for (y = 1; y <= anzButtons; y++) {
+				html += "<button id='LR" + y;
+				html += "' name='SchaltflächeLRIndex' Tabelle='LR";
+				html += "' Anz='" + y + "' Von='" + anzButtons;
+				html += "'>LR Methode";
+				if (anzButtons > 1) {
+					html += " (" + y + "/" + anzButtons + ")";
+				}
+				html += "</button>";
+			}
+		}
+		$("#SchaltflächenLRIndex").html(html);
 	} else {
 		alert("Bitte den Pfad zur .mdb erfassen");
 	}
