@@ -523,7 +523,7 @@ function importiereFaunaDatensammlungen_02(myDB, tblName, Anz) {
 }
 
 function importiereLrIndex(myDB, tblName, Anz) {
-	var DatensammlungMetadaten, Index, Art, anzDs, Parent, parentArt;
+	var DatensammlungMetadaten, Index, Art, anzDs, Parent, parentArt, Hierarchie;
 	//tblName wird ignoriert
 	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'LR'");
 	//Index importieren
@@ -565,6 +565,15 @@ function importiereLrIndex(myDB, tblName, Anz) {
 						Parent.GUID = Index[x][y];
 						Parent.Name = parentArt[0].Einheit;
 						Art[DatensammlungMetadaten[0].DsName].Felder[y] = Parent;
+					} else if (y === "Hierarchie") {
+						Hierarchie = [];
+						Hierarchie.push(Art._id);
+						if (Index[x].Parent) {
+							Art[DatensammlungMetadaten[0].DsName].Felder[y] = holeLrHierarchie(myDB, Art._id, Hierarchie);
+						} else {
+							//Kein Parent
+							Art[DatensammlungMetadaten[0].DsName].Felder[y] = Hierarchie;
+						}
 					} else {
 						Art[DatensammlungMetadaten[0].DsName].Felder[y] = Index[x][y];
 					}
@@ -573,6 +582,20 @@ function importiereLrIndex(myDB, tblName, Anz) {
 			$db = $.couch.db("artendb");
 			$db.saveDoc(Art);
 		}
+	}
+}
+
+function holeLrHierarchie(myDB, GUID, Hierarchie) {
+	var Parent, qryParent;
+	qryParent = frageSql(myDB, "SELECT Parent from LR_import where GUID ='" + GUID + "'");
+	Parent = qryParent[0].Parent;
+	if (Parent) {
+		Hierarchie.push(Parent);
+		//Hierarchie ist noch nicht zu Ende - weitermachen
+		return holeLrHierarchie(myDB, Parent, Hierarchie);
+	} else {
+		//jetzt ist die Hierarchie vollständig aber verkehrt - umkehren
+		return Hierarchie.reverse();
 	}
 }
 
