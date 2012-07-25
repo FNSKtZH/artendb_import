@@ -35,7 +35,10 @@
 		<div id="SchaltflächenMacromycetesDatensammlungen"></div><br><br>
 		<hr />
 		<h3>Lebensräume</h3>
-		<div id="SchaltflächenLRIndex">hier kommen die Lebensräume</div><br><br>
+		<div id="SchaltflächenLRIndex">hier kommen die Lebensräume</div><br>
+		Jetzt views uploaden, dann:
+		<button id="LrHierarchie">Hierarchie aktualisieren</button>
+		<button id="LrParent">Parent aktualisieren</button><br>
 		<div id="SchaltflächenLRDatensammlungen"></div><br><br>
 
 		<script>
@@ -87,6 +90,12 @@
 			});
 			$("body").on("click", "#FloraSynonyme", function() {
 				ergänzeFloraSynonyme();
+			});
+			$("body").on("click", "#LrHierarchie", function() {
+				aktualisiereLrHierarchie();
+			});
+			$("body").on("click", "#LrParent", function() {
+				aktualisiereLrParent();
 			});
 		</script>
 	</body>

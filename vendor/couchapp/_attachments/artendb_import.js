@@ -11,7 +11,7 @@ function importiereFloraIndex(myDB, tblName, Anz) {
 		if ((anzDs > (Anz*2500-2500)) && (anzDs <= Anz*2500)) {
 			//Art als Objekt gründen
 			Art = {};
-			//_id soll GUID sein, aber ohne Klammern
+			//_id soll GUID sein
 			Art._id = Index[x].GUID;
 			Art.Gruppe = Index[x].Gruppe;
 			//Datensammlung als Objekt gründen, heisst wie DsName
@@ -239,7 +239,7 @@ function importiereMoosIndex(myDB, tblName, Anz) {
 		if ((anzDs > (Anz*2500-2500)) && (anzDs <= Anz*2500)) {
 			//Art als Objekt gründen
 			Art = {};
-			//_id soll GUID sein, aber ohne Klammern
+			//_id soll GUID sein
 			Art._id = Index[x].GUID;
 			Art.Gruppe = Index[x].Gruppe;
 			//Datensammlung als Objekt gründen, heisst wie DsName
@@ -342,7 +342,7 @@ function importiereMacromycetesIndex(myDB, tblName, Anz) {
 		if ((anzDs > (Anz*2500-2500)) && (anzDs <= Anz*2500)) {
 			//Art als Objekt gründen
 			Art = {};
-			//_id soll GUID sein, aber ohne Klammern
+			//_id soll GUID sein
 			Art._id = Index[x].GUID;
 			Art.Gruppe = Index[x].Gruppe;
 			//Datensammlung als Objekt gründen, heisst wie DsName
@@ -439,7 +439,7 @@ function importiereFaunaIndex(myDB, tblName, Anz) {
 		if ((anzDs > (Anz*2500-2500)) && (anzDs <= Anz*2500)) {
 			//Art als Objekt gründen
 			Art = {};
-			//_id soll GUID sein, aber ohne Klammern
+			//_id soll GUID sein
 			Art._id = Index[x].GUID;
 			Art.Gruppe = Index[x].Gruppe;
 			//Datensammlung als Objekt gründen, heisst wie DsName
@@ -523,7 +523,7 @@ function importiereFaunaDatensammlungen_02(myDB, tblName, Anz) {
 }
 
 function importiereLrIndex(myDB, tblName, Anz) {
-	var DatensammlungMetadaten, Index, Art, anzDs, Parent, parentArt, parentObjekt, Hierarchie;
+	var DatensammlungMetadaten, Index, Art, anzDs, Parent, parentArt, parentObjekt, Objekt, Hierarchie;
 	//tblName wird ignoriert
 	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'LR'");
 	//Index importieren
@@ -535,7 +535,7 @@ function importiereLrIndex(myDB, tblName, Anz) {
 		if ((anzDs > (Anz*2500-2500)) && (anzDs <= Anz*2500)) {
 			//Art als Objekt gründen
 			Art = {};
-			//_id soll GUID sein, aber ohne Klammern
+			//_id soll GUID sein
 			Art._id = Index[x].GUID;
 			Art.Gruppe = Index[x].Gruppe;
 			//Datensammlung als Objekt gründen, heisst wie DsName
@@ -552,31 +552,28 @@ function importiereLrIndex(myDB, tblName, Anz) {
 			}
 			//Felder der Datensammlung als Objekt gründen
 			Art[DatensammlungMetadaten[0].DsName].Felder = {};
-			//Felder anfügen, wenn sie Werte enthalten
+			//Felder anfügen, wenn sie Werte enthalten. Gruppe ist schon eingefügt
 			for (y in Index[x]) {
 				if (Index[x][y] !== "" && Index[x][y] !== null && y !== "Gruppe") {
 					if (Index[x][y] === -1) {
-						//Access wadelt in Abfragen Felder mit Wenn() in Zahlen um. Umkehren
+						//Access wandelt in Abfragen Felder mit Wenn() in Zahlen um. Umkehren
 						Art[DatensammlungMetadaten[0].DsName].Felder[y] = true;
-					} else if (y === "Parent") {
-						//Objekt aus Name und GUID bilden
-						Parent = {};
-						parentArt = frageSql(myDB, "SELECT Einheit FROM LR_import where GUID='" + Index[x][y] + "'");
-						Parent.GUID = Index[x][y];
-						Parent.Name = parentArt[0].Einheit;
-						Art[DatensammlungMetadaten[0].DsName].Felder[y] = Parent;
-					} else if (y === "Hierarchie") {
+					/*} else if (y === "Hierarchie") {
 						Hierarchie = [];
-						parentObjekt = {};
-						parentObjekt.Name = Index[x].Label + ": " + Index[x].Einheit;
-						parentObjekt.GUID = Index[x].GUID;
-						Hierarchie.push(parentObjekt);
+						Objekt = {};
+						if (Index[x].Label) {
+							Objekt.Name = Index[x].Label + ": " + Index[x].Einheit;
+						} else {
+							Objekt.Name = Index[x].Einheit;
+						}
+						Objekt.GUID = Index[x].GUID;
+						Hierarchie.push(Objekt);
 						if (Index[x].Parent) {
-							Art[DatensammlungMetadaten[0].DsName].Felder[y] = holeLrHierarchie(myDB, Art._id, Hierarchie);
+							Art[DatensammlungMetadaten[0].DsName].Felder[y] = holeLrHierarchie(myDB, Index[x].GUID, Hierarchie);
 						} else {
 							//Kein Parent
 							Art[DatensammlungMetadaten[0].DsName].Felder[y] = Hierarchie;
-						}
+						}*/
 					} else {
 						Art[DatensammlungMetadaten[0].DsName].Felder[y] = Index[x][y];
 					}
@@ -588,21 +585,133 @@ function importiereLrIndex(myDB, tblName, Anz) {
 	}
 }
 
-function holeLrHierarchie(myDB, GUID, Hierarchie) {
+function aktualisiereLrHierarchie() {
+	var qryEinheiten, myDB;
+	//mit der mdb verbinden
+	myDB = verbindeMitMdb();
+	$db = $.couch.db("artendb");
+	$db.view('artendb/lr?include_docs=true', {
+		success: function (data) {
+			for (i in data.rows) {
+				var LR, Hierarchie, Objekt;
+				LR = data.rows[i].doc;
+				//Beim export wurde "path" in die Hierarchie geschrieben
+				if (LR.Methode.Felder.Hierarchie && LR.Methode.Felder.Hierarchie === "path") {
+					Hierarchie = [];
+					Objekt = {};
+					if (LR.Methode.Felder.Label) {
+						Objekt.Name = LR.Methode.Felder.Label + ": " + LR.Methode.Felder.Einheit;
+					} else {
+						Objekt.Name = LR.Methode.Felder.Einheit;
+					}
+					Objekt.GUID = LR._id;
+					Hierarchie.push(Objekt);
+					if (LR.Methode.Felder.Parent) {
+						if (typeof LR.Methode.Felder.Parent === "objekt") {
+							//Parent wurde schon umgewandelt, ist jetzt Objekt
+							LR.Methode.Felder.Hierarchie = ergänzeParentZuHierarchie(data, LR.Methode.Felder.Parent.GUID, Hierarchie);
+						} else {
+							//Parent ist noch ein GUID
+							LR.Methode.Felder.Hierarchie = ergänzeParentZuHierarchie(data, LR.Methode.Felder.Parent, Hierarchie);
+						}
+					} else {
+						//Kein Parent
+						LR.Methode.Felder.Hierarchie = Hierarchie;
+					}
+					$db.saveDoc(LR);
+				}
+			}
+		}
+	});
+}
+
+//Baut den Hierarchiepfad für einen Lebensraum auf
+//das erste Element - der Lebensraum selbst - wird mit der Variable "Hierarchie" übergeben
+//ruft sich selbst rekursiv auf, bis das oberste Hierarchieelement erreicht ist
+function ergänzeParentZuHierarchie(Lebensräume, parentGUID, Hierarchie) {
+	for (i in Lebensräume.rows) {
+		var LR, Hierarchie, parentObjekt;
+		LR = Lebensräume.rows[i].doc;
+		if (LR._id === parentGUID) {
+			parentObjekt = {};
+			if (LR.Methode.Felder.Label) {
+				parentObjekt.Name = LR.Methode.Felder.Label + ": " + LR.Methode.Felder.Einheit;
+			} else {
+				parentObjekt.Name = LR.Methode.Felder.Einheit;
+			}
+			parentObjekt.GUID = LR._id;
+			Hierarchie.push(parentObjekt);
+			if (LR.Methode.Felder.Parent) {
+				//die Hierarchie ist noch nicht zu Ende - weitermachen
+				if (typeof LR.Methode.Felder.Parent === "objekt") {
+					//Parent wurde schon umgewandelt, ist jetzt Objekt
+					return ergänzeParentZuHierarchie(Lebensräume, LR.Methode.Felder.Parent.GUID, Hierarchie);
+				} else {
+					//Parent ist noch ein GUID
+					return ergänzeParentZuHierarchie(Lebensräume, LR.Methode.Felder.Parent, Hierarchie);
+				}
+			} else {
+				//jetzt ist die Hierarchie vollständig
+				//sie ist aber verkehrt - umkehren
+				return Hierarchie.reverse();
+			}
+		}
+	}
+}
+
+//Baut den Hierarchiepfad für einen Lebensraum auf
+//das erste Element - der Lebensraum selbst - wird mit der Variable "Hierarchie" übergeben
+//ruft sich selbst rekursiv auf, bis das oberste Hierarchieelement erreicht ist
+/*function ergänzeParentZuHierarchie(myDB, GUID, Hierarchie) {
 	var ParentGUID, qryParent, parentObjekt;
 	qryParentGUID = frageSql(myDB, "SELECT Parent from LR_import where GUID ='" + GUID + "'");
 	if (qryParentGUID[0].Parent) {
 		qryParent = frageSql(myDB, "SELECT Parent, Label, Einheit from LR_import where GUID ='" + qryParentGUID[0].Parent + "'");
 		parentObjekt = {};
-		parentObjekt.Name = qryParent[0].Label + ": " + qryParent[0].Einheit;
+		if (qryParent[0].Label) {
+			parentObjekt.Name = qryParent[0].Label + ": " + qryParent[0].Einheit;
+		} else {
+			parentObjekt.Name = qryParent[0].Einheit;
+		}
 		parentObjekt.GUID = qryParentGUID[0].Parent;
 		Hierarchie.push(parentObjekt);
-		//Hierarchie ist noch nicht zu Ende - weitermachen
-		return holeLrHierarchie(myDB, qryParentGUID[0].Parent, Hierarchie);
+		//die Hierarchie ist noch nicht zu Ende - weitermachen
+		return ergänzeParentZuHierarchie(myDB, qryParentGUID[0].Parent, Hierarchie);
 	} else {
-		//jetzt ist die Hierarchie vollständig aber verkehrt - umkehren
+		//jetzt ist die Hierarchie vollständig
+		//sie ist aber verkehrt - umkehren
 		return Hierarchie.reverse();
 	}
+}*/
+
+//Macht für alle Lebensräume mit Parent aus dem im Feld Parent enthaltenen GUID 
+//ein Objekt mit GUID und Name = Einheit
+function aktualisiereLrParent() {
+	var qryEinheiten, myDB;
+	//mit der mdb verbinden
+	myDB = verbindeMitMdb();
+	qryEinheiten = frageSql(myDB, "SELECT GUID, Einheit FROM LR_import");
+	$db = $.couch.db("artendb");
+	$db.view('artendb/lr?include_docs=true', {
+		success: function (data) {
+			for (i in data.rows) {
+				var LR, Parent;
+				LR = data.rows[i].doc;
+				if (LR.Methode.Felder.Parent) {
+					for (k in qryEinheiten) {
+						if (qryEinheiten[k].GUID === LR.Methode.Felder.GUID) {
+							Parent = {};
+							Parent.GUID = qryEinheiten[k].GUID;
+							Parent.Name = qryEinheiten[k].Einheit;
+							break;
+						}
+					}
+					LR.Methode.Felder.Parent = Parent;
+					$db.saveDoc(LR);
+				}
+			}
+		}
+	});
 }
 
 function importiereLrDatensammlungen(tblName, Anz) {
@@ -713,11 +822,11 @@ function verbindeMitMdb() {
 function frageSql(db, sql) {
 	var qry, a, b, c, d;
 	qry = db.query(sql, {json:true});
-	var a = JSON.stringify(qry);
+	a = JSON.stringify(qry);
 	//Rückgabewert ist in "" eingepackt > entfernen
-	var b = a.slice(1, a.length -1);
+	b = a.slice(1, a.length -1);
 	//im Rückgabewert sind alle " mit \" ersetzt. Das ist kein valid JSON!
-	var c = b.replace(/\\\"/gm, "\"");
+	c = b.replace(/\\\"/gm, "\"");
 	//jetzt haben wir valid JSON. In ein Objekt parsen
 	d = JSON.parse(c);
 	return d;
