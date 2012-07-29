@@ -40,6 +40,10 @@
 		<button id="LrHierarchie">Hierarchie aktualisieren</button>
 		<button id="LrParent">Parent aktualisieren</button><br>
 		<div id="SchaltflächenLRDatensammlungen"></div><br><br>
+		<hr />
+		<h3>LR-Beziehungen</h3>
+		 NACH dem Import aller Arten und LR machen:
+		<button id="LrBez">LR-Beziehungen importieren</button>
 
 		<script>
 			$(document).ready(function () {
@@ -96,6 +100,9 @@
 			});
 			$("body").on("click", "#LrParent", function() {
 				aktualisiereLrParent();
+			});
+			$("body").on("click", "#LrBez", function() {
+				importiereLrBeziehungen();
 			});
 		</script>
 	</body>

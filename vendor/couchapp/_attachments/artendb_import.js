@@ -181,7 +181,7 @@ function importiereFloraDatensammlungen(tblName, Anz) {
 function importiereFloraDatensammlungen_02(myDB, tblName, Anz) {
 	var DatensammlungMetadaten, Datensammlung, sqlDatensammlung, DatensammlungDieserArt, anzFelder, anzDs;
 	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = '" + tblName + "'");
-	//Datensätze der Datensammlung abfragen, mit GUID ergänzen
+	//Datensätze der Datensammlung abfragen
 	sqlDatensammlung = "SELECT * FROM " + tblName + "_import";
 	Datensammlung = frageSql(myDB, sqlDatensammlung);
 	anzDs = 0;
@@ -285,7 +285,7 @@ function importiereMoosDatensammlungen(tblName, Anz) {
 function importiereMoosDatensammlungen_02(myDB, tblName, Anz) {
 	var DatensammlungMetadaten, Datensammlung, DatensammlungDieserArt, anzFelder, anzDs;
 	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = '" + tblName + "'");
-	//Datensätze der Datensammlung abfragen, mit GUID ergänzen
+	//Datensätze der Datensammlung abfragen
 	Datensammlung = frageSql(myDB, "SELECT * FROM " + tblName + "_import");
 	anzDs = 0;
 	for (x in Datensammlung) {
@@ -381,7 +381,7 @@ function importiereMacromycetesDatensammlungen(tblName, Anz) {
 function importiereMacromycetesDatensammlungen_02(myDB, tblName, Anz) {
 	var DatensammlungMetadaten, Datensammlung, DatensammlungDieserArt, anzFelder, anzDs;
 	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = '" + tblName + "'");
-	//Datensätze der Datensammlung abfragen, mit GUID ergänzen
+	//Datensätze der Datensammlung abfragen
 	Datensammlung = frageSql(myDB, "SELECT * FROM " + tblName + "_import");
 	anzDs = 0;
 	for (x in Datensammlung) {
@@ -478,7 +478,7 @@ function importiereFaunaDatensammlungen(tblName, Anz) {
 function importiereFaunaDatensammlungen_02(myDB, tblName, Anz) {
 	var DatensammlungMetadaten, Datensammlung, DatensammlungDieserArt, anzFelder, anzDs;
 	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = '" + tblName + "'");
-	//Datensätze der Datensammlung abfragen, mit GUID ergänzen
+	//Datensätze der Datensammlung abfragen
 	Datensammlung = frageSql(myDB, "SELECT * FROM " + tblName + "_import");
 	anzDs = 0;
 	for (x in Datensammlung) {
@@ -659,31 +659,6 @@ function ergänzeParentZuHierarchie(Lebensräume, parentGUID, Hierarchie) {
 	}
 }
 
-//Baut den Hierarchiepfad für einen Lebensraum auf
-//das erste Element - der Lebensraum selbst - wird mit der Variable "Hierarchie" übergeben
-//ruft sich selbst rekursiv auf, bis das oberste Hierarchieelement erreicht ist
-/*function ergänzeParentZuHierarchie(myDB, GUID, Hierarchie) {
-	var ParentGUID, qryParent, parentObjekt;
-	qryParentGUID = frageSql(myDB, "SELECT Parent from LR_import where GUID ='" + GUID + "'");
-	if (qryParentGUID[0].Parent) {
-		qryParent = frageSql(myDB, "SELECT Parent, Label, Einheit from LR_import where GUID ='" + qryParentGUID[0].Parent + "'");
-		parentObjekt = {};
-		if (qryParent[0].Label) {
-			parentObjekt.Name = qryParent[0].Label + ": " + qryParent[0].Einheit;
-		} else {
-			parentObjekt.Name = qryParent[0].Einheit;
-		}
-		parentObjekt.GUID = qryParentGUID[0].Parent;
-		Hierarchie.push(parentObjekt);
-		//die Hierarchie ist noch nicht zu Ende - weitermachen
-		return ergänzeParentZuHierarchie(myDB, qryParentGUID[0].Parent, Hierarchie);
-	} else {
-		//jetzt ist die Hierarchie vollständig
-		//sie ist aber verkehrt - umkehren
-		return Hierarchie.reverse();
-	}
-}*/
-
 //Macht für alle Lebensräume mit Parent aus dem im Feld Parent enthaltenen GUID 
 //ein Objekt mit GUID und Name = Einheit
 function aktualisiereLrParent() {
@@ -721,7 +696,7 @@ function importiereLrDatensammlungen(tblName, Anz) {
 function importiereLrDatensammlungen_02(myDB, tblName, Anz) {
 	var DatensammlungMetadaten, Datensammlung, DatensammlungDieserArt, anzFelder, anzDs;
 	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = '" + tblName + "'");
-	//Datensätze der Datensammlung abfragen, mit GUID ergänzen
+	//Datensätze der Datensammlung abfragen
 	Datensammlung = frageSql(myDB, "SELECT * FROM " + tblName + "_import");
 	anzDs = 0;
 	for (x in Datensammlung) {
@@ -761,13 +736,13 @@ function importiereLrDatensammlungen_02(myDB, tblName, Anz) {
 			if (anzFelder > 0) {
 				//Datenbankabfrage ist langsam. Estern aufrufen, 
 				//sonst überholt die for-Schlaufe und DatensammlungDieserArt ist bis zur saveDoc-Ausführung eine andere!
-				fuegeDatensammlungZuArt(Datensammlung[x].GUID, DatensammlungMetadaten[0].DsName, DatensammlungDieserArt);
+				fuegeLrDatensammlungZuArt(Datensammlung[x].GUID, DatensammlungMetadaten[0].DsName, DatensammlungDieserArt);
 			}
 		}
 	}
 }
 
-function fuegeDatensammlungZuArt(GUID, DsName, DatensammlungDieserArt) {
+function fuegeLrDatensammlungZuArt(GUID, DsName, DatensammlungDieserArt) {
 	$db = $.couch.db("artendb");
 	$db.openDoc(GUID, {
 		success: function (doc) {
@@ -777,6 +752,145 @@ function fuegeDatensammlungZuArt(GUID, DsName, DatensammlungDieserArt) {
 			$db.saveDoc(doc);
 		}
 	});
+}
+
+function importiereLrBeziehungen() {
+	var qryLrBeziehungenMetadaten, LrBeziehungenTabellen, myDB;
+	//mit der mdb verbinden
+	myDB = verbindeMitMdb();
+	qryLrBeziehungenMetadaten = frageSql(myDB, "SELECT * FROM tblLrBezMetadaten");
+	LrBeziehungenTabellen = frageSql(myDB, "SELECT tbl FROM tblLrBezMetadaten group by tbl");
+	for (i in LrBeziehungenTabellen) {
+		importiereLrBeziehungenVonTabelle(LrBeziehungenTabellen[i].tbl, qryLrBeziehungenMetadaten, myDB);
+	}
+}
+
+function importiereLrBeziehungenVonTabelle(tblName, qryLrBeziehungenMetadaten, myDB) {
+	var qryLrBez, anzLrBez, anzDs, qryAnzLrBez, anzAufrufe, qryDatensammlungMetadaten;
+	//Datensätze der Tabelle abfragen
+	qryLrBez = frageSql(myDB, "SELECT * FROM " + tblName + "_import");
+	//Die Sache in Batches ausführe, damit der Arbeitsspeicher nicht überlastet wird
+	qryAnzLrBez = frageSql(myDB, "SELECT count(LrId) AS Anzahl FROM " + tblName + "_import");
+	qryDatensammlungenMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten");
+	anzLrBez = qryAnzLrBez[0].Anzahl;
+	anzAufrufe = Math.ceil(anzLrBez/1250);
+	for (y = 1; y <= anzAufrufe; y++) {
+		//mit jeweils 5s Abstand den nächsten Batch auslösen
+		setTimeout(function() {
+			importiereBatchLrBeziehungenVonTabelle(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungMetadaten, y);
+		}, (y-1)*5000);
+	}
+}
+
+function importiereBatchLrBeziehungenVonTabelle(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, Anz) {
+	var anzDs, LrBeziehungMetadaten, DatensammlungMetadaten, Datensammlung, Beziehung;
+	anzDs = 0;
+	for (x in qryLrBez) {
+		anzDs += 1;
+		//nur importieren, wenn innerhalb des mit Anz übergebenen Batches
+		if ((anzDs > (Anz*1250-1250)) && (anzDs <= Anz*1250)) {
+			//Objekt bilden mit allen Informationen
+			//es kann sein, dass die Datensammlung noch nicht existiert
+			//darum wird immer ein vollständiges Objekt gebildet
+			//erst später, wenn das Objekt angefügt wird, wird gelöscht, was schon drin ist
+			//Metadaten für die LrBez holen
+			LrBeziehungMetadaten = {};
+			for  (a in qryLrBeziehungenMetadaten) {
+				if (qryLrBez[x].Gruppe === qryLrBeziehungenMetadaten[a].Gruppe && qryLrBez[x].Beziehung === qryLrBeziehungenMetadaten[a].Beziehung) {
+					LrBeziehungMetadaten = qryLrBeziehungenMetadaten[a];
+					break;
+				}
+			}
+			//Metadaten für die Datensammlung holen
+			DatensammlungMetadaten = {};
+			if (LrBeziehungMetadaten.DatensammlungGuid) {
+				for (b in qryDatensammlungenMetadaten) {
+					if (qryDatensammlungenMetadaten[b].GUID === LrBeziehungMetadaten.GUID) {
+						DatensammlungMetadaten = qryDatensammlungenMetadaten[b];
+						break;
+					}
+				}
+			}
+
+			//Datensammlung als Objekt gründen
+			Datensammlung = {};
+			Datensammlung.Typ = "Datensammlung";
+			if (DatensammlungMetadaten && DatensammlungMetadaten.DsBeschreibung) {
+				Datensammlung.Beschreibung = DatensammlungMetadaten.DsBeschreibung;
+			}
+			if (DatensammlungMetadaten && DatensammlungMetadaten.DsDatenstand) {
+				Datensammlung.Datenstand = DatensammlungMetadaten.DsDatenstand;
+			}
+			if (DatensammlungMetadaten && DatensammlungMetadaten.DsLink) {
+				Datensammlung["Link"] = DatensammlungMetadaten.DsLink;
+			}
+			//Felder der Datensammlung als Objekt gründen
+			Datensammlung.Beziehungen = [];
+			Beziehung = {};
+			//Felder der Beziehung anfügen
+			for (y in qryLrBez[x]) {
+				if (qryLrBez[x][y] !== "" && qryLrBez[x][y] !== null) {
+					if (qryLrBez[x][y] === -1) {
+						//Access macht in Abfragen mit Wenn-Klausel aus true -1 > korrigieren
+						Datensammlung.Beziehung[y] = true;
+					} else if (y === "Wert") {
+						//Feld wie vorgesehen beschriften
+						if (LrBeziehungMetadaten.NameFürWert) {
+							Datensammlung.Beziehung["NameFürWert"] = qryLrBez[x][y];
+						} else {
+							//Abfangen, falls kein Name erfasst wurde
+							Datensammlung.Beziehung[y] = qryLrBez[x][y];
+						}
+					} else {
+						//Normalfall
+						Datensammlung.Beziehung[y] = qryLrBez[x][y];
+					}
+				}
+			}
+			Datensammlung.Beziehungen.push(Datensammlung.Beziehung);
+			//Datenbankabfrage ist langsam. Estern aufrufen, 
+			//sonst überholt die for-Schlaufe und Datensammlung ist bis zur saveDoc-Ausführung eine andere!
+			fügeLrBezAn(Datensammlung, LrBeziehungMetadaten.Datensammlung);
+		}
+	}
+}
+
+//fügt einer Art oder Lebensraum Beziehungen an
+function fügeLrBezAn(Datensammlung, dsName) {
+	$db = $.couch.db("artendb");
+	//zuerst von
+	$db.openDoc(Datensammlung.Beziehungen[0].von_GUID, {
+		success: function (doc) {
+			fügeLrBezAn_2(Datensammlung, dsName, doc);
+		}
+	});
+	//jetzt zu
+	$db.openDoc(Datensammlung.Beziehungen[0].zu_GUID, {
+		success: function (doc) {
+			fügeLrBezAn_2(Datensammlung, dsName, doc);
+		}
+	});
+}
+
+function fügeLrBezAn_2(Datensammlung, dsName, doc) {
+	//Datensammlung anfügen
+	if (doc[dsName]) {
+		//Datensammlung existiert schon
+		//kontrollieren, ob Beziehungen existieren
+		if (doc[dsName].Beziehungen) {
+			//Es gibt schon Beziehungen. Neue pushen
+			doc[dsName].Beziehungen.push(Datensammlung.Beziehungen[0]);
+
+		} else {
+			//Es gibt noch keine Beziehungen
+			doc[dsName].Beziehungen = Datensammlung.Beziehungen;
+		}
+	} else {
+		//Datensammlung existiert noch nicht
+		doc[dsName] = Datensammlung;
+	}
+	//in artendb speichern
+	$db.saveDoc(doc);
 }
 
 function initiiereImport(functionName, tblName, Anz) {
