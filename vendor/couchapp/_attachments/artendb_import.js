@@ -802,6 +802,7 @@ function importiereLrBeziehungen(tblName) {
 
 //Diese Funktion staffelt den Aufruf der folgenden Funktion, um den Arbeitsspeicher nicht zu überlasten
 function importiereBatchLrBeziehungenVonTabelle(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, y, anzAufrufe) {
+	//alert("qryLrBeziehungenMetadaten: " + JSON.stringify(qryLrBeziehungenMetadaten));
 	if (y === 1) {
 		importiereBatchLrBeziehungenVonTabelle_2(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, y);
 	} else {
@@ -810,12 +811,12 @@ function importiereBatchLrBeziehungenVonTabelle(qryLrBez, qryLrBeziehungenMetada
 			importiereBatchLrBeziehungenVonTabelle_2(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, y);
 		}, (y-1)*5000);
 	}
-	/*//zuletzt in die DB speichern
+	//zuletzt in die DB speichern
 	if (y === anzAufrufe) {
 		setTimeout(function() {
 			speichereBezDocs();
 		}, y*5000);
-	}*/
+	}
 }
 
 function importiereBatchLrBeziehungenVonTabelle_2(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, Anz) {
@@ -832,9 +833,17 @@ function importiereBatchLrBeziehungenVonTabelle_2(qryLrBez, qryLrBeziehungenMeta
 			
 			//Metadaten für die LrBez holen
 			LrBeziehungMetadaten = {};
+			//alert("qryLrBez: " + JSON.stringify(qryLrBez));
+			//alert("qryLrBeziehungenMetadaten: " + JSON.stringify(qryLrBeziehungenMetadaten));
+			//alert("qryDatensammlungenMetadaten: " + JSON.stringify(qryDatensammlungenMetadaten));
 			for (a in qryLrBeziehungenMetadaten) {
+				//alert("qryLrBez[x].von_Gruppe: " + JSON.stringify(qryLrBez[x].von_Gruppe));
+				//alert("qryLrBeziehungenMetadaten[a].Gruppe: " + JSON.stringify(qryLrBeziehungenMetadaten[a].Gruppe));
+				//alert("qryLrBez[x].Beziehung: " + JSON.stringify(qryLrBez[x].Beziehung));
+				//alert("qryLrBeziehungenMetadaten[a].Beziehung: " + JSON.stringify(qryLrBeziehungenMetadaten[a].Beziehung));
 				if (qryLrBez[x].von_Gruppe === qryLrBeziehungenMetadaten[a].Gruppe && qryLrBez[x].Beziehung === qryLrBeziehungenMetadaten[a].Beziehung) {
 					LrBeziehungMetadaten = qryLrBeziehungenMetadaten[a];
+					//alert("LrBeziehungMetadaten: " + JSON.stringify(LrBeziehungMetadaten));
 					break;
 				}
 			}
@@ -886,6 +895,7 @@ function importiereBatchLrBeziehungenVonTabelle_2(qryLrBez, qryLrBeziehungenMeta
 			Datensammlung.Beziehungen.push(Beziehung);
 			//Datenbankabfrage ist langsam. Extern aufrufen, 
 			//sonst überholt die for-Schlaufe und Datensammlung ist bis zur saveDoc-Ausführung eine andere!
+			//alert("LrBeziehungMetadaten.Datensammlung: " + LrBeziehungMetadaten.Datensammlung);
 			minimiereLrBez(Datensammlung, LrBeziehungMetadaten.Datensammlung);
 		}
 	}
@@ -930,6 +940,8 @@ function aktualisiereLrBez(bezData, GUID, Datensammlung, dsName) {
 	for (a in window[bezData].rows) {
 		//alert(JSON.stringify(window[bezData].rows[a]));
 		//alert("window[bezData].rows[a].key: " + window[bezData].rows[a].key + " GUID: " + GUID);
+		//alert("dsName: " + dsName);
+		//alert("Datensammlung: " + JSON.stringify(Datensammlung));
 		if (window[bezData].rows[a].key === GUID) {
 			doc = window[bezData].rows[a].doc;
 			//Datensammlung anfügen
@@ -948,9 +960,8 @@ function aktualisiereLrBez(bezData, GUID, Datensammlung, dsName) {
 				//Datensammlung existiert noch nicht
 				doc[dsName] = Datensammlung;
 			}
-			alert("doc: " + JSON.stringify(doc));
-			alert("window[bezData].rows[a]: " + JSON.stringify(window[bezData].rows[a]));
-			window[bezData].rows[a].doc = doc;
+			//alert("doc: " + JSON.stringify(doc));
+			//alert("window[bezData].rows[a]: " + JSON.stringify(window[bezData].rows[a]));
 			break;
 		}
 	}
@@ -959,11 +970,11 @@ function aktualisiereLrBez(bezData, GUID, Datensammlung, dsName) {
 function speichereBezDocs() {
 	$db = $.couch.db("artendb");
 	for (i in window.bezVonData.rows) {
-		alert(JSON.stringify(window.bezVonData.rows[i].doc));
+		//alert(JSON.stringify(window.bezVonData.rows[i].doc));
 		$db.saveDoc(window.bezVonData.rows[i].doc);
 	}
 	for (i in window.bezZuData.rows) {
-		alert(JSON.stringify(window.bezVonData.rows[i].doc));
+		//alert(JSON.stringify(window.bezVonData.rows[i].doc));
 		$db.saveDoc(window.bezZuData.rows[i].doc);
 	}
 }
