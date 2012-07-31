@@ -120,14 +120,10 @@ function ergänzeFloraEingeschlosseneArten() {
 	$db = $.couch.db("artendb");
 	$db.view('artendb/flora?include_docs=true', {
 		success: function (data) {
-			//alert(JSON.stringify(qryEingeschlosseneArten));
-			//alert(JSON.stringify(data));
 			for (i in data.rows) {
 				var Art, ArtNr, eingeschlosseneArten, eingeschlosseneArt;
 				Art = data.rows[i].doc;
-				//alert(JSON.stringify(Art));
 				if (Art.Index.Felder["Eingeschlossene Arten"]) {
-					//alert(JSON.stringify(Art));
 					eingeschlosseneArten = [];
 					for (k in qryEingeschlosseneArten) {
 						if (qryEingeschlosseneArten[k].NO_AGR_SL === Art.Index.Felder["Index ID"]) {
@@ -754,72 +750,72 @@ function fuegeLrDatensammlungZuArt(GUID, DsName, DatensammlungDieserArt) {
 	});
 }
 
-function importiereLrBeziehungen() {
-	var qryLrBeziehungenMetadaten, LrBeziehungenTabellen, qryArtenLr, myDB;
+function importiereLrBeziehungen(tblName) {
+	var qryDatensammlungenMetadaten, qryLrBeziehungenMetadaten, qryBezVonGuid, qryBezZuGuid, qryLrBez, qryAnzLrBez, anzAufrufe, myDB, viewName;
 	//mit der mdb verbinden
 	myDB = verbindeMitMdb();
-	//Metadaten für die Beziehungen abfragen
-	qryLrBeziehungenMetadaten = frageSql(myDB, "SELECT * FROM tblLrBezMetadaten");
-	//Liste der Tabellen abfragen
-	LrBeziehungenTabellen = frageSql(myDB, "SELECT tbl FROM tblLrBezMetadaten group by tbl");
-	//Liste aller GUIDS erstellen, deren Arten/LR aktualisiert werden müssen
-	qryArtenLr = frageSql(myDB, "SELECT GUID FROM LrBezGuid");
-	//alle GUIDS in ArtenDb abfragen
-	$db = $.couch.db("artendb");
-	$db.view('artendb/all_docs?include_docs=true', {
-		success: function (data) {
-			//Array erstellen, der alle Docs enthält, die aktualisiert werden sollen
-			//das ist eine globale Variable, weil nachher viele Funktionen damit arbeiten
-			window.bezDocs = [];
-			for (i in data.rows) {
-				for (y in qryArtenLr) {
-					if (qryArtenLr[y].GUID === data.rows[i].key) {
-						window.bezDocs.push(data.rows[i].doc);
-						break;
-					}
-				}
-				
-			}
-			for (z in LrBeziehungenTabellen) {
-				importiereLrBeziehungenVonTabelle(LrBeziehungenTabellen[z].tbl, qryLrBeziehungenMetadaten, myDB);
-			}
-		}
-	});
-}
-
-function importiereLrBeziehungenVonTabelle(tblName, qryLrBeziehungenMetadaten, myDB) {
-	var qryLrBez, anzLrBez, anzDs, qryAnzLrBez, anzAufrufe, qryDatensammlungMetadaten;
 	//Metadaten der Datensammlung abfragen
 	qryDatensammlungenMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten");
-	//Die Sache in Batches ausführen, damit der Arbeitsspeicher nicht überlastet wird
-	//Datensätze der Tabelle abfragen
-	qryLrBez = frageSql(myDB, "SELECT * FROM " + tblName + "_import");
-	//Datensätze zählen
-	qryAnzLrBez = frageSql(myDB, "SELECT count([von_GUID]) AS Anzahl FROM " + tblName + "_import");
-	anzLrBez = qryAnzLrBez[0].Anzahl;
-	anzAufrufe = Math.ceil(anzLrBez/1250);
-	for (y = 1; y <= anzAufrufe; y++) {
-		importiereBatchLrBeziehungenVonTabelle(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, y, anzAufrufe);
+	//Metadaten für die Beziehungen abfragen
+	qryLrBeziehungenMetadaten = frageSql(myDB, "SELECT * FROM tblLrBezMetadaten");
+	//Liste aller GUIDS erstellen, deren Arten/LR aktualisiert werden müssen
+	qryBezVonGuid = frageSql(myDB, "SELECT [von_GUID] AS [GUID] FROM " + tblName + "_import GROUP BY [von_GUID]");
+	qryBezZuGuid = frageSql(myDB, "SELECT [zu_GUID] AS [GUID] FROM " + tblName + "_import GROUP BY [zu_GUID]");
+	
+	//viewName festlegen
+	if (tblName === "tblLrFaunaBez") {
+		viewName = "fauna";
+	} else if (tblName === "tblLrFloraBez") {
+		viewName = "flora";
+	} else {
+		viewName = "moose";
 	}
+
+	//Objekt "window.bezVonData" erstellen, das alle Arten enthält, die aktualisiert werden sollen
+	$db = $.couch.db("artendb");
+	$db.view('artendb/' + viewName + '?include_docs=true', {
+		success: function (data) {
+			window.bezVonData = data;
+			//Objekt "window.bezZuData" erstellen, das alle LR enthält, die aktualisiert werden sollen
+			$db.view('artendb/lr?include_docs=true', {
+				success: function (data2) {
+					//Array erstellen, der alle Docs enthält, die aktualisiert werden sollen
+					//das ist eine globale Variable, weil nachher viele Funktionen damit arbeiten
+					window.bezZuData = data2;
+
+					//In Batches ausführen, damit der Arbeitsspeicher nicht überlastet wird
+					//Beziehungen der Tabelle abfragen
+					qryLrBez = frageSql(myDB, "SELECT * FROM " + tblName + "_import");
+					//Datensätze zählen
+					qryAnzLrBez = frageSql(myDB, "SELECT count([von_GUID]) AS Anzahl FROM " + tblName + "_import");
+					anzLrBez = qryAnzLrBez[0].Anzahl;
+					anzAufrufe = Math.ceil(anzLrBez/1250);
+					for (y = 1; y <= anzAufrufe; y++) {
+						importiereBatchLrBeziehungenVonTabelle(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, y, anzAufrufe);
+					}
+				}
+			});
+			
+		}
+	});
 }
 
 //Diese Funktion staffelt den Aufruf der folgenden Funktion, um den Arbeitsspeicher nicht zu überlasten
 function importiereBatchLrBeziehungenVonTabelle(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, y, anzAufrufe) {
 	if (y === 1) {
 		importiereBatchLrBeziehungenVonTabelle_2(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, y);
-	} else if (y === anzAufrufe) {
-		setTimeout(function() {
-			importiereBatchLrBeziehungenVonTabelle_2(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, y);
-		}, (y-1)*5000);
-		setTimeout(function() {
-			speichereBezDocs();
-		}, y*5000);
 	} else {
 		//mit jeweils 5s Abstand den nächsten Batch auslösen
 		setTimeout(function() {
 			importiereBatchLrBeziehungenVonTabelle_2(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, y);
 		}, (y-1)*5000);
 	}
+	/*//zuletzt in die DB speichern
+	if (y === anzAufrufe) {
+		setTimeout(function() {
+			speichereBezDocs();
+		}, y*5000);
+	}*/
 }
 
 function importiereBatchLrBeziehungenVonTabelle_2(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, Anz) {
@@ -900,7 +896,6 @@ function minimiereLrBez(Datensammlung, dsName) {
 	var ArtDatensammlung, LrDatensammlung;
 	//zuerst von = Art
 	ArtDatensammlung = Datensammlung;
-	//alert("minimiereLrBez");
 	for (i in ArtDatensammlung.Beziehungen[0]) {
 		if (i.slice(0, 4) === "von_") {
 			//von-Seite entfernen (Informationen zur Art), ist hier nicht nötig
@@ -912,7 +907,7 @@ function minimiereLrBez(Datensammlung, dsName) {
 			delete ArtDatensammlung.Beziehungen[0][i];
 		}
 	}
-	aktualisiereLrBez(Datensammlung.Beziehungen[0].von_GUID, ArtDatensammlung, dsName);
+	aktualisiereLrBez("bezVonData", ArtDatensammlung.Beziehungen[0].GUID, ArtDatensammlung, dsName);
 	//jetzt zu = Lebensraum
 	var LrDatensammlung = Datensammlung;
 	for (i in LrDatensammlung.Beziehungen[0]) {
@@ -926,15 +921,17 @@ function minimiereLrBez(Datensammlung, dsName) {
 			delete LrDatensammlung.Beziehungen[0][i];
 		}
 	}
-	aktualisiereLrBez(Datensammlung.Beziehungen[0].zu_GUID, LrDatensammlung, dsName);
+	aktualisiereLrBez("bezZuData", LrDatensammlung.Beziehungen[0].GUID, LrDatensammlung, dsName);
 }
 
 //aktualisiert bezDocs
-function aktualisiereLrBez(GUID, Datensammlung, dsName) {
+function aktualisiereLrBez(bezData, GUID, Datensammlung, dsName) {
 	var doc;
-	for (a in window.bezDocs) {
-		if (window.bezDocs[a]._id === GUID) {
-			doc = window.bezDocs[a].doc;
+	for (a in window[bezData].rows) {
+		//alert(JSON.stringify(window[bezData].rows[a]));
+		//alert("window[bezData].rows[a].key: " + window[bezData].rows[a].key + " GUID: " + GUID);
+		if (window[bezData].rows[a].key === GUID) {
+			doc = window[bezData].rows[a].doc;
 			//Datensammlung anfügen
 			if (doc[dsName]) {
 				//Datensammlung existiert schon
@@ -951,15 +948,23 @@ function aktualisiereLrBez(GUID, Datensammlung, dsName) {
 				//Datensammlung existiert noch nicht
 				doc[dsName] = Datensammlung;
 			}
+			alert("doc: " + JSON.stringify(doc));
+			alert("window[bezData].rows[a]: " + JSON.stringify(window[bezData].rows[a]));
+			window[bezData].rows[a].doc = doc;
 			break;
 		}
 	}
 }
 
 function speichereBezDocs() {
-	for (i in window.bezDocs) {
-		$db = $.couch.db("artendb");
-		$db.saveDoc(window.bezDocs[i]);
+	$db = $.couch.db("artendb");
+	for (i in window.bezVonData.rows) {
+		alert(JSON.stringify(window.bezVonData.rows[i].doc));
+		$db.saveDoc(window.bezVonData.rows[i].doc);
+	}
+	for (i in window.bezZuData.rows) {
+		alert(JSON.stringify(window.bezVonData.rows[i].doc));
+		$db.saveDoc(window.bezZuData.rows[i].doc);
 	}
 }
 

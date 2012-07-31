@@ -43,7 +43,7 @@
 		<hr />
 		<h3>LR-Beziehungen</h3>
 		 NACH dem Import aller Arten und LR machen:
-		<button id="LrBez">LR-Beziehungen importieren</button>
+		<button id="LrFaunaBez">LR-Fauna</button><button id="LrFloraBez">LR-Flora</button><button id="LrMooseBez">LR-Moose</button><button id="LrBezSpeichern">speichern</button>
 
 		<script>
 			$(document).ready(function () {
@@ -101,8 +101,17 @@
 			$("body").on("click", "#LrParent", function() {
 				aktualisiereLrParent();
 			});
-			$("body").on("click", "#LrBez", function() {
-				importiereLrBeziehungen();
+			$("body").on("click", "#LrFaunaBez", function() {
+				importiereLrBeziehungen("tblLrFaunaBez");
+			});
+			$("body").on("click", "#LrFloraBez", function() {
+				importiereLrBeziehungen("tblLrFloraBez");
+			});
+			$("body").on("click", "#LrMooseBez", function() {
+				importiereLrBeziehungen("tblLrMooseBez");
+			});
+			$("body").on("click", "#LrBezSpeichern", function() {
+				speichereBezDocs();
 			});
 		</script>
 	</body>
