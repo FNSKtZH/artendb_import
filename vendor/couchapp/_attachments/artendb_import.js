@@ -755,16 +755,36 @@ function fuegeLrDatensammlungZuArt(GUID, DsName, DatensammlungDieserArt) {
 }
 
 function importiereLrBeziehungen() {
-	var qryLrBeziehungenMetadaten, LrBeziehungenTabellen, myDB;
+	var qryLrBeziehungenMetadaten, LrBeziehungenTabellen, qryArtenLr, myDB;
 	//mit der mdb verbinden
 	myDB = verbindeMitMdb();
 	//Metadaten für die Beziehungen abfragen
 	qryLrBeziehungenMetadaten = frageSql(myDB, "SELECT * FROM tblLrBezMetadaten");
 	//Liste der Tabellen abfragen
 	LrBeziehungenTabellen = frageSql(myDB, "SELECT tbl FROM tblLrBezMetadaten group by tbl");
-	for (i in LrBeziehungenTabellen) {
-		importiereLrBeziehungenVonTabelle(LrBeziehungenTabellen[i].tbl, qryLrBeziehungenMetadaten, myDB);
-	}
+	//Liste aller GUIDS erstellen, deren Arten/LR aktualisiert werden müssen
+	qryArtenLr = frageSql(myDB, "SELECT GUID FROM LrBezGuid");
+	//alle GUIDS in ArtenDb abfragen
+	$db = $.couch.db("artendb");
+	$db.view('artendb/all_docs?include_docs=true', {
+		success: function (data) {
+			//Array erstellen, der alle Docs enthält, die aktualisiert werden sollen
+			//das ist eine globale Variable, weil nachher viele Funktionen damit arbeiten
+			window.bezDocs = [];
+			for (i in data.rows) {
+				for (y in qryArtenLr) {
+					if (qryArtenLr[y].GUID === data.rows[i].key) {
+						window.bezDocs.push(data.rows[i].doc);
+						break;
+					}
+				}
+				
+			}
+			for (z in LrBeziehungenTabellen) {
+				importiereLrBeziehungenVonTabelle(LrBeziehungenTabellen[z].tbl, qryLrBeziehungenMetadaten, myDB);
+			}
+		}
+	});
 }
 
 function importiereLrBeziehungenVonTabelle(tblName, qryLrBeziehungenMetadaten, myDB) {
@@ -779,20 +799,27 @@ function importiereLrBeziehungenVonTabelle(tblName, qryLrBeziehungenMetadaten, m
 	anzLrBez = qryAnzLrBez[0].Anzahl;
 	anzAufrufe = Math.ceil(anzLrBez/1250);
 	for (y = 1; y <= anzAufrufe; y++) {
-		importiereBatchLrBeziehungenVonTabelle(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, y);
+		importiereBatchLrBeziehungenVonTabelle(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, y, anzAufrufe);
 	}
 }
 
 //Diese Funktion staffelt den Aufruf der folgenden Funktion, um den Arbeitsspeicher nicht zu überlasten
-function importiereBatchLrBeziehungenVonTabelle(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, y) {
-	//if (y === 1) {
+function importiereBatchLrBeziehungenVonTabelle(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, y, anzAufrufe) {
+	if (y === 1) {
 		importiereBatchLrBeziehungenVonTabelle_2(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, y);
-	/*} else {
+	} else if (y === anzAufrufe) {
+		setTimeout(function() {
+			importiereBatchLrBeziehungenVonTabelle_2(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, y);
+		}, (y-1)*5000);
+		setTimeout(function() {
+			speichereBezDocs();
+		}, y*5000);
+	} else {
 		//mit jeweils 5s Abstand den nächsten Batch auslösen
 		setTimeout(function() {
 			importiereBatchLrBeziehungenVonTabelle_2(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, y);
 		}, (y-1)*5000);
-	}*/
+	}
 }
 
 function importiereBatchLrBeziehungenVonTabelle_2(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, Anz) {
@@ -843,7 +870,6 @@ function importiereBatchLrBeziehungenVonTabelle_2(qryLrBez, qryLrBeziehungenMeta
 			//Felder der Beziehung anfügen
 			for (y in qryLrBez[x]) {
 				if (qryLrBez[x][y]) {
-					//alert(y + ", qryLrBez[x][y] = " + qryLrBez[x][y]);
 					if (qryLrBez[x][y] === -1) {
 						//Access macht in Abfragen mit Wenn-Klausel aus true -1 > korrigieren
 						Beziehung[y] = true;
@@ -864,76 +890,77 @@ function importiereBatchLrBeziehungenVonTabelle_2(qryLrBez, qryLrBeziehungenMeta
 			Datensammlung.Beziehungen.push(Beziehung);
 			//Datenbankabfrage ist langsam. Extern aufrufen, 
 			//sonst überholt die for-Schlaufe und Datensammlung ist bis zur saveDoc-Ausführung eine andere!
-			fügeLrBezAn(Datensammlung, LrBeziehungMetadaten.Datensammlung);
+			minimiereLrBez(Datensammlung, LrBeziehungMetadaten.Datensammlung);
 		}
 	}
 }
 
-//fügt einer Art oder Lebensraum Beziehungen an
-function fügeLrBezAn(Datensammlung, dsName) {
-	$db = $.couch.db("artendb");
+//reduziert das Objekt der Beziehung auf das Notwendige
+function minimiereLrBez(Datensammlung, dsName) {
+	var ArtDatensammlung, LrDatensammlung;
 	//zuerst von = Art
-	$db.openDoc(Datensammlung.Beziehungen[0].von_GUID, {
-		success: function (doc) {
-			var ArtDatensammlung = Datensammlung;
-			alert("Datensammlung: " + JSON.stringify(Datensammlung));
-			alert("ArtDatensammlung: " + JSON.stringify(ArtDatensammlung));
-			for (i in ArtDatensammlung.Beziehungen[0]) {
-				alert(i + " = " + ArtDatensammlung.Beziehungen[0][i]);
-				if (i.slice(0, 4) === "von_") {
-					alert(i.slice(0, 4));
-					//von-Seite entfernen, ist hier nicht nötig
-					delete ArtDatensammlung.Beziehungen[0][i];
-				}
-				if (i.slice(0, 3) === "zu_") {
-					//zu_ entfernen
-					alert(i.slice(3));
-					ArtDatensammlung.Beziehungen[0][i.slice(3)] = ArtDatensammlung.Beziehungen[0][i];
-					delete ArtDatensammlung.Beziehungen[0][i];
-				}
-			}
-			fügeLrBezAn_2(ArtDatensammlung, dsName, doc);
+	ArtDatensammlung = Datensammlung;
+	//alert("minimiereLrBez");
+	for (i in ArtDatensammlung.Beziehungen[0]) {
+		if (i.slice(0, 4) === "von_") {
+			//von-Seite entfernen (Informationen zur Art), ist hier nicht nötig
+			delete ArtDatensammlung.Beziehungen[0][i];
 		}
-	});
+		if (i.slice(0, 3) === "zu_") {
+			//zu_ aus dem Feldnamen für die LR-Seite entfernen
+			ArtDatensammlung.Beziehungen[0][i.slice(3)] = ArtDatensammlung.Beziehungen[0][i];
+			delete ArtDatensammlung.Beziehungen[0][i];
+		}
+	}
+	aktualisiereLrBez(Datensammlung.Beziehungen[0].von_GUID, ArtDatensammlung, dsName);
 	//jetzt zu = Lebensraum
-	$db.openDoc(Datensammlung.Beziehungen[0].zu_GUID, {
-		success: function (doc) {
-			var LrDatensammlung = Datensammlung;
-			for (i in LrDatensammlung.Beziehungen[0]) {
-				if (i.slice(0, 3) === "zu_") {
-					//zu-Seite entfernen, ist hier nicht nötig
-					delete LrDatensammlung.Beziehungen[0][i];
-				}
-				if (i.slice(0, 4) === "von_") {
-					//von_ entfernen
-					LrDatensammlung.Beziehungen[0][i.slice(4)] = LrDatensammlung.Beziehungen[0][i];
-					delete LrDatensammlung.Beziehungen[0][i];
-				}
-			}
-			fügeLrBezAn_2(LrDatensammlung, dsName, doc);
+	var LrDatensammlung = Datensammlung;
+	for (i in LrDatensammlung.Beziehungen[0]) {
+		if (i.slice(0, 3) === "zu_") {
+			//zu-Seite entfernen, ist hier nicht nötig
+			delete LrDatensammlung.Beziehungen[0][i];
 		}
-	});
+		if (i.slice(0, 4) === "von_") {
+			//von_ entfernen
+			LrDatensammlung.Beziehungen[0][i.slice(4)] = LrDatensammlung.Beziehungen[0][i];
+			delete LrDatensammlung.Beziehungen[0][i];
+		}
+	}
+	aktualisiereLrBez(Datensammlung.Beziehungen[0].zu_GUID, LrDatensammlung, dsName);
 }
 
-function fügeLrBezAn_2(Datensammlung, dsName, doc) {
-	//Datensammlung anfügen
-	if (doc[dsName]) {
-		//Datensammlung existiert schon
-		//kontrollieren, ob Beziehungen existieren
-		if (doc[dsName].Beziehungen) {
-			//Es gibt schon Beziehungen. Neue pushen
-			doc[dsName].Beziehungen.push(Datensammlung.Beziehungen[0]);
+//aktualisiert bezDocs
+function aktualisiereLrBez(GUID, Datensammlung, dsName) {
+	var doc;
+	for (a in window.bezDocs) {
+		if (window.bezDocs[a]._id === GUID) {
+			doc = window.bezDocs[a].doc;
+			//Datensammlung anfügen
+			if (doc[dsName]) {
+				//Datensammlung existiert schon
+				//kontrollieren, ob Beziehungen existieren
+				if (doc[dsName].Beziehungen) {
+					//Es gibt schon Beziehungen. Neue pushen
+					doc[dsName].Beziehungen.push(Datensammlung.Beziehungen[0]);
 
-		} else {
-			//Es gibt noch keine Beziehungen
-			doc[dsName].Beziehungen = Datensammlung.Beziehungen;
+				} else {
+					//Es gibt noch keine Beziehungen
+					doc[dsName].Beziehungen = Datensammlung.Beziehungen;
+				}
+			} else {
+				//Datensammlung existiert noch nicht
+				doc[dsName] = Datensammlung;
+			}
+			break;
 		}
-	} else {
-		//Datensammlung existiert noch nicht
-		doc[dsName] = Datensammlung;
 	}
-	//in artendb speichern
-	$db.saveDoc(doc);
+}
+
+function speichereBezDocs() {
+	for (i in window.bezDocs) {
+		$db = $.couch.db("artendb");
+		$db.saveDoc(window.bezDocs[i]);
+	}
 }
 
 function initiiereImport(functionName, tblName, Anz) {
