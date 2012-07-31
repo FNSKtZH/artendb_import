@@ -758,7 +758,9 @@ function importiereLrBeziehungen() {
 	var qryLrBeziehungenMetadaten, LrBeziehungenTabellen, myDB;
 	//mit der mdb verbinden
 	myDB = verbindeMitMdb();
+	//Metadaten für die Beziehungen abfragen
 	qryLrBeziehungenMetadaten = frageSql(myDB, "SELECT * FROM tblLrBezMetadaten");
+	//Liste der Tabellen abfragen
 	LrBeziehungenTabellen = frageSql(myDB, "SELECT tbl FROM tblLrBezMetadaten group by tbl");
 	for (i in LrBeziehungenTabellen) {
 		importiereLrBeziehungenVonTabelle(LrBeziehungenTabellen[i].tbl, qryLrBeziehungenMetadaten, myDB);
@@ -767,22 +769,33 @@ function importiereLrBeziehungen() {
 
 function importiereLrBeziehungenVonTabelle(tblName, qryLrBeziehungenMetadaten, myDB) {
 	var qryLrBez, anzLrBez, anzDs, qryAnzLrBez, anzAufrufe, qryDatensammlungMetadaten;
+	//Metadaten der Datensammlung abfragen
+	qryDatensammlungenMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten");
+	//Die Sache in Batches ausführen, damit der Arbeitsspeicher nicht überlastet wird
 	//Datensätze der Tabelle abfragen
 	qryLrBez = frageSql(myDB, "SELECT * FROM " + tblName + "_import");
-	//Die Sache in Batches ausführe, damit der Arbeitsspeicher nicht überlastet wird
-	qryAnzLrBez = frageSql(myDB, "SELECT count(LrId) AS Anzahl FROM " + tblName + "_import");
-	qryDatensammlungenMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten");
+	//Datensätze zählen
+	qryAnzLrBez = frageSql(myDB, "SELECT count([von_GUID]) AS Anzahl FROM " + tblName + "_import");
 	anzLrBez = qryAnzLrBez[0].Anzahl;
 	anzAufrufe = Math.ceil(anzLrBez/1250);
 	for (y = 1; y <= anzAufrufe; y++) {
-		//mit jeweils 5s Abstand den nächsten Batch auslösen
-		setTimeout(function() {
-			importiereBatchLrBeziehungenVonTabelle(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungMetadaten, y);
-		}, (y-1)*5000);
+		importiereBatchLrBeziehungenVonTabelle(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, y);
 	}
 }
 
-function importiereBatchLrBeziehungenVonTabelle(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, Anz) {
+//Diese Funktion staffelt den Aufruf der folgenden Funktion, um den Arbeitsspeicher nicht zu überlasten
+function importiereBatchLrBeziehungenVonTabelle(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, y) {
+	//if (y === 1) {
+		importiereBatchLrBeziehungenVonTabelle_2(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, y);
+	/*} else {
+		//mit jeweils 5s Abstand den nächsten Batch auslösen
+		setTimeout(function() {
+			importiereBatchLrBeziehungenVonTabelle_2(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, y);
+		}, (y-1)*5000);
+	}*/
+}
+
+function importiereBatchLrBeziehungenVonTabelle_2(qryLrBez, qryLrBeziehungenMetadaten, qryDatensammlungenMetadaten, Anz) {
 	var anzDs, LrBeziehungMetadaten, DatensammlungMetadaten, Datensammlung, Beziehung;
 	anzDs = 0;
 	for (x in qryLrBez) {
@@ -793,10 +806,11 @@ function importiereBatchLrBeziehungenVonTabelle(qryLrBez, qryLrBeziehungenMetada
 			//es kann sein, dass die Datensammlung noch nicht existiert
 			//darum wird immer ein vollständiges Objekt gebildet
 			//erst später, wenn das Objekt angefügt wird, wird gelöscht, was schon drin ist
+			
 			//Metadaten für die LrBez holen
 			LrBeziehungMetadaten = {};
-			for  (a in qryLrBeziehungenMetadaten) {
-				if (qryLrBez[x].Gruppe === qryLrBeziehungenMetadaten[a].Gruppe && qryLrBez[x].Beziehung === qryLrBeziehungenMetadaten[a].Beziehung) {
+			for (a in qryLrBeziehungenMetadaten) {
+				if (qryLrBez[x].von_Gruppe === qryLrBeziehungenMetadaten[a].Gruppe && qryLrBez[x].Beziehung === qryLrBeziehungenMetadaten[a].Beziehung) {
 					LrBeziehungMetadaten = qryLrBeziehungenMetadaten[a];
 					break;
 				}
@@ -811,7 +825,6 @@ function importiereBatchLrBeziehungenVonTabelle(qryLrBez, qryLrBeziehungenMetada
 					}
 				}
 			}
-
 			//Datensammlung als Objekt gründen
 			Datensammlung = {};
 			Datensammlung.Typ = "Datensammlung";
@@ -824,31 +837,32 @@ function importiereBatchLrBeziehungenVonTabelle(qryLrBez, qryLrBeziehungenMetada
 			if (DatensammlungMetadaten && DatensammlungMetadaten.DsLink) {
 				Datensammlung["Link"] = DatensammlungMetadaten.DsLink;
 			}
-			//Felder der Datensammlung als Objekt gründen
+			//Für die Beziehungen dieser Datensammlung dieser Art/LR einen Array schaffen
 			Datensammlung.Beziehungen = [];
 			Beziehung = {};
 			//Felder der Beziehung anfügen
 			for (y in qryLrBez[x]) {
-				if (qryLrBez[x][y] !== "" && qryLrBez[x][y] !== null) {
+				if (qryLrBez[x][y]) {
+					//alert(y + ", qryLrBez[x][y] = " + qryLrBez[x][y]);
 					if (qryLrBez[x][y] === -1) {
 						//Access macht in Abfragen mit Wenn-Klausel aus true -1 > korrigieren
-						Datensammlung.Beziehung[y] = true;
+						Beziehung[y] = true;
 					} else if (y === "Wert") {
 						//Feld wie vorgesehen beschriften
 						if (LrBeziehungMetadaten.NameFürWert) {
-							Datensammlung.Beziehung["NameFürWert"] = qryLrBez[x][y];
+							Beziehung[LrBeziehungMetadaten.NameFürWert] = qryLrBez[x][y];
 						} else {
 							//Abfangen, falls kein Name erfasst wurde
-							Datensammlung.Beziehung[y] = qryLrBez[x][y];
+							Beziehung[y] = qryLrBez[x][y];
 						}
 					} else {
 						//Normalfall
-						Datensammlung.Beziehung[y] = qryLrBez[x][y];
+						Beziehung[y] = qryLrBez[x][y];
 					}
 				}
 			}
-			Datensammlung.Beziehungen.push(Datensammlung.Beziehung);
-			//Datenbankabfrage ist langsam. Estern aufrufen, 
+			Datensammlung.Beziehungen.push(Beziehung);
+			//Datenbankabfrage ist langsam. Extern aufrufen, 
 			//sonst überholt die for-Schlaufe und Datensammlung ist bis zur saveDoc-Ausführung eine andere!
 			fügeLrBezAn(Datensammlung, LrBeziehungMetadaten.Datensammlung);
 		}
@@ -858,16 +872,45 @@ function importiereBatchLrBeziehungenVonTabelle(qryLrBez, qryLrBeziehungenMetada
 //fügt einer Art oder Lebensraum Beziehungen an
 function fügeLrBezAn(Datensammlung, dsName) {
 	$db = $.couch.db("artendb");
-	//zuerst von
+	//zuerst von = Art
 	$db.openDoc(Datensammlung.Beziehungen[0].von_GUID, {
 		success: function (doc) {
-			fügeLrBezAn_2(Datensammlung, dsName, doc);
+			var ArtDatensammlung = Datensammlung;
+			alert("Datensammlung: " + JSON.stringify(Datensammlung));
+			alert("ArtDatensammlung: " + JSON.stringify(ArtDatensammlung));
+			for (i in ArtDatensammlung.Beziehungen[0]) {
+				alert(i + " = " + ArtDatensammlung.Beziehungen[0][i]);
+				if (i.slice(0, 4) === "von_") {
+					alert(i.slice(0, 4));
+					//von-Seite entfernen, ist hier nicht nötig
+					delete ArtDatensammlung.Beziehungen[0][i];
+				}
+				if (i.slice(0, 3) === "zu_") {
+					//zu_ entfernen
+					alert(i.slice(3));
+					ArtDatensammlung.Beziehungen[0][i.slice(3)] = ArtDatensammlung.Beziehungen[0][i];
+					delete ArtDatensammlung.Beziehungen[0][i];
+				}
+			}
+			fügeLrBezAn_2(ArtDatensammlung, dsName, doc);
 		}
 	});
-	//jetzt zu
+	//jetzt zu = Lebensraum
 	$db.openDoc(Datensammlung.Beziehungen[0].zu_GUID, {
 		success: function (doc) {
-			fügeLrBezAn_2(Datensammlung, dsName, doc);
+			var LrDatensammlung = Datensammlung;
+			for (i in LrDatensammlung.Beziehungen[0]) {
+				if (i.slice(0, 3) === "zu_") {
+					//zu-Seite entfernen, ist hier nicht nötig
+					delete LrDatensammlung.Beziehungen[0][i];
+				}
+				if (i.slice(0, 4) === "von_") {
+					//von_ entfernen
+					LrDatensammlung.Beziehungen[0][i.slice(4)] = LrDatensammlung.Beziehungen[0][i];
+					delete LrDatensammlung.Beziehungen[0][i];
+				}
+			}
+			fügeLrBezAn_2(LrDatensammlung, dsName, doc);
 		}
 	});
 }
