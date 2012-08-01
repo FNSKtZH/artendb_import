@@ -917,7 +917,7 @@ function minimiereLrBez(Datensammlung, dsName) {
 			delete ArtDatensammlung.Beziehungen[0][i];
 		}
 	}
-	aktualisiereLrBez("bezVonData", ArtDatensammlung.Beziehungen[0].GUID, ArtDatensammlung, dsName);
+	aktualisiereLrBez("bezZuData", ArtDatensammlung.Beziehungen[0].GUID, ArtDatensammlung, dsName);
 	//jetzt zu = Lebensraum
 	var LrDatensammlung = Datensammlung;
 	for (i in LrDatensammlung.Beziehungen[0]) {
@@ -931,7 +931,7 @@ function minimiereLrBez(Datensammlung, dsName) {
 			delete LrDatensammlung.Beziehungen[0][i];
 		}
 	}
-	aktualisiereLrBez("bezZuData", LrDatensammlung.Beziehungen[0].GUID, LrDatensammlung, dsName);
+	aktualisiereLrBez("bezVonData", LrDatensammlung.Beziehungen[0].GUID, LrDatensammlung, dsName);
 }
 
 //aktualisiert bezDocs
@@ -968,15 +968,20 @@ function aktualisiereLrBez(bezData, GUID, Datensammlung, dsName) {
 }
 
 function speichereBezDocs() {
-	$db = $.couch.db("artendb");
+	var bezVonDataDocs = [];
+	var bezZuDataDocs = [];
 	for (i in window.bezVonData.rows) {
 		//alert(JSON.stringify(window.bezVonData.rows[i].doc));
-		$db.saveDoc(window.bezVonData.rows[i].doc);
+		bezVonDataDocs.push(window.bezVonData.rows[i].doc);
 	}
+	alert("bezVonDataDocs: " + JSON.stringify(bezVonDataDocs));
+	importiereJsonObjekt(bezVonDataDocs);
 	for (i in window.bezZuData.rows) {
 		//alert(JSON.stringify(window.bezVonData.rows[i].doc));
-		$db.saveDoc(window.bezZuData.rows[i].doc);
+		bezZuDataDocs.push(window.bezZuData.rows[i].doc);
 	}
+	alert("bezZuDataDocs: " + JSON.stringify(bezZuDataDocs));
+	importiereJsonObjekt(bezZuDataDocs);
 }
 
 function initiiereImport(functionName, tblName, Anz) {
