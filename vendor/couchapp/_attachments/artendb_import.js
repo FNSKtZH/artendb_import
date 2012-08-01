@@ -592,27 +592,27 @@ function aktualisiereLrHierarchie() {
 				var LR, Hierarchie, Objekt;
 				LR = data.rows[i].doc;
 				//Beim export wurde "path" in die Hierarchie geschrieben
-				if (LR.Index.Felder.Hierarchie && LR.Index.Felder.Hierarchie === "path") {
+				if (LR.Methode.Felder.Hierarchie && LR.Methode.Felder.Hierarchie === "path") {
 					Hierarchie = [];
 					Objekt = {};
-					if (LR.Index.Felder.Label) {
-						Objekt.Name = LR.Index.Felder.Label + ": " + LR.Index.Felder.Einheit;
+					if (LR.Methode.Felder.Label) {
+						Objekt.Name = LR.Methode.Felder.Label + ": " + LR.Methode.Felder.Einheit;
 					} else {
-						Objekt.Name = LR.Index.Felder.Einheit;
+						Objekt.Name = LR.Methode.Felder.Einheit;
 					}
 					Objekt.GUID = LR._id;
 					Hierarchie.push(Objekt);
-					if (LR.Index.Felder.Parent) {
-						if (typeof LR.Index.Felder.Parent === "objekt") {
+					if (LR.Methode.Felder.Parent) {
+						if (typeof LR.Methode.Felder.Parent === "objekt") {
 							//Parent wurde schon umgewandelt, ist jetzt Objekt
-							LR.Index.Felder.Hierarchie = ergänzeParentZuHierarchie(data, LR.Index.Felder.Parent.GUID, Hierarchie);
+							LR.Methode.Felder.Hierarchie = ergänzeParentZuHierarchie(data, LR.Methode.Felder.Parent.GUID, Hierarchie);
 						} else {
 							//Parent ist noch ein GUID
-							LR.Index.Felder.Hierarchie = ergänzeParentZuHierarchie(data, LR.Index.Felder.Parent, Hierarchie);
+							LR.Methode.Felder.Hierarchie = ergänzeParentZuHierarchie(data, LR.Methode.Felder.Parent, Hierarchie);
 						}
 					} else {
 						//Kein Parent
-						LR.Index.Felder.Hierarchie = Hierarchie;
+						LR.Methode.Felder.Hierarchie = Hierarchie;
 					}
 					$db.saveDoc(LR);
 				}
@@ -630,21 +630,21 @@ function ergänzeParentZuHierarchie(Lebensräume, parentGUID, Hierarchie) {
 		LR = Lebensräume.rows[i].doc;
 		if (LR._id === parentGUID) {
 			parentObjekt = {};
-			if (LR.Index.Felder.Label) {
-				parentObjekt.Name = LR.Index.Felder.Label + ": " + LR.Index.Felder.Einheit;
+			if (LR.Methode.Felder.Label) {
+				parentObjekt.Name = LR.Methode.Felder.Label + ": " + LR.Methode.Felder.Einheit;
 			} else {
-				parentObjekt.Name = LR.Index.Felder.Einheit;
+				parentObjekt.Name = LR.Methode.Felder.Einheit;
 			}
 			parentObjekt.GUID = LR._id;
 			Hierarchie.push(parentObjekt);
-			if (LR.Index.Felder.Parent) {
+			if (LR.Methode.Felder.Parent) {
 				//die Hierarchie ist noch nicht zu Ende - weitermachen
-				if (typeof LR.Index.Felder.Parent === "objekt") {
+				if (typeof LR.Methode.Felder.Parent === "objekt") {
 					//Parent wurde schon umgewandelt, ist jetzt Objekt
-					return ergänzeParentZuHierarchie(Lebensräume, LR.Index.Felder.Parent.GUID, Hierarchie);
+					return ergänzeParentZuHierarchie(Lebensräume, LR.Methode.Felder.Parent.GUID, Hierarchie);
 				} else {
 					//Parent ist noch ein GUID
-					return ergänzeParentZuHierarchie(Lebensräume, LR.Index.Felder.Parent, Hierarchie);
+					return ergänzeParentZuHierarchie(Lebensräume, LR.Methode.Felder.Parent, Hierarchie);
 				}
 			} else {
 				//jetzt ist die Hierarchie vollständig
@@ -668,16 +668,16 @@ function aktualisiereLrParent() {
 			for (i in data.rows) {
 				var LR, Parent;
 				LR = data.rows[i].doc;
-				if (LR.Index.Felder.Parent) {
+				if (LR.Methode.Felder.Parent) {
 					for (k in qryEinheiten) {
-						if (qryEinheiten[k].GUID === LR.Index.Felder.GUID) {
+						if (qryEinheiten[k].GUID === LR.Methode.Felder.GUID) {
 							Parent = {};
 							Parent.GUID = qryEinheiten[k].GUID;
 							Parent.Name = qryEinheiten[k].Einheit;
 							break;
 						}
 					}
-					LR.Index.Felder.Parent = Parent;
+					LR.Methode.Felder.Parent = Parent;
 					$db.saveDoc(LR);
 				}
 			}
@@ -917,7 +917,7 @@ function minimiereLrBez(Datensammlung, dsName) {
 			delete ArtDatensammlung.Beziehungen[0][i];
 		}
 	}
-	aktualisiereLrBez("bezVonData", ArtDatensammlung.Beziehungen[0].GUID, ArtDatensammlung, dsName);
+	aktualisiereLrBez("bezZuData", ArtDatensammlung.Beziehungen[0].GUID, ArtDatensammlung, dsName);
 	//jetzt zu = Lebensraum
 	var LrDatensammlung = Datensammlung;
 	for (i in LrDatensammlung.Beziehungen[0]) {
@@ -931,7 +931,7 @@ function minimiereLrBez(Datensammlung, dsName) {
 			delete LrDatensammlung.Beziehungen[0][i];
 		}
 	}
-	aktualisiereLrBez("bezZuData", LrDatensammlung.Beziehungen[0].GUID, LrDatensammlung, dsName);
+	aktualisiereLrBez("bezVonData", LrDatensammlung.Beziehungen[0].GUID, LrDatensammlung, dsName);
 }
 
 //aktualisiert bezDocs
@@ -974,13 +974,13 @@ function speichereBezDocs() {
 		//alert(JSON.stringify(window.bezVonData.rows[i].doc));
 		bezVonDataDocs.push(window.bezVonData.rows[i].doc);
 	}
-	//alert("bezVonDataDocs: " + JSON.stringify(bezVonDataDocs));
+	alert("bezVonDataDocs: " + JSON.stringify(bezVonDataDocs));
 	importiereJsonObjekt(bezVonDataDocs);
 	for (i in window.bezZuData.rows) {
 		//alert(JSON.stringify(window.bezVonData.rows[i].doc));
 		bezZuDataDocs.push(window.bezZuData.rows[i].doc);
 	}
-	//alert("bezZuDataDocs: " + JSON.stringify(bezZuDataDocs));
+	alert("bezZuDataDocs: " + JSON.stringify(bezZuDataDocs));
 	importiereJsonObjekt(bezZuDataDocs);
 }
 
@@ -1269,7 +1269,7 @@ function baueIndexSchaltflächenAuf() {
 				html += "<button id='LR" + y;
 				html += "' name='SchaltflächeLRIndex' Tabelle='LR";
 				html += "' Anz='" + y + "' Von='" + anzButtons;
-				html += "'>LR Index";
+				html += "'>LR Methode";
 				if (anzButtons > 1) {
 					html += " (" + y + "/" + anzButtons + ")";
 				}
