@@ -1063,7 +1063,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 			anzDs = qryAnzDs[0].Anzahl;
 			anzButtons = Math.ceil(anzDs/3500);
 			for (y = 1; y <= anzButtons; y++) {
-				html += "<input type='radio' id='";
+				html += "<input type='checkbox' id='";
 				html += DatensammlungenFlora[i].DsTabelle + y;
 				html += "' name='SchaltflächeFloraDatensammlung' Tabelle='" + DatensammlungenFlora[i].DsTabelle;
 				html += "' Anz='" + y + "' Von='" + anzButtons;
@@ -1086,7 +1086,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 			anzDs = qryAnzDs[0].Anzahl;
 			anzButtons = Math.ceil(anzDs/3500);
 			for (y = 1; y <= anzButtons; y++) {
-				html += "<input type='radio' id='";
+				html += "<input type='checkbox' id='";
 				html += DatensammlungenFauna[i].DsTabelle + y;
 				html += "' name='SchaltflächeFaunaDatensammlung' Tabelle='" + DatensammlungenFauna[i].DsTabelle;
 				html += "' Anz='" + y + "' Von='" + anzButtons;
@@ -1109,7 +1109,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 			anzDs = qryAnzDs[0].Anzahl;
 			anzButtons = Math.ceil(anzDs/3500);
 			for (y = 1; y <= anzButtons; y++) {
-				html += "<input type='radio' id='";
+				html += "<input type='checkbox' id='";
 				html += DatensammlungenMoos[i].DsTabelle + y;
 				html += "' name='SchaltflächeMoosDatensammlung' Tabelle='" + DatensammlungenMoos[i].DsTabelle;
 				html += "' Anz='" + y + "' Von='" + anzButtons;
@@ -1132,7 +1132,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 			anzDs = qryAnzDs[0].Anzahl;
 			anzButtons = Math.ceil(anzDs/3500);
 			for (y = 1; y <= anzButtons; y++) {
-				html += "<input type='radio' id='";
+				html += "<input type='checkbox' id='";
 				html += DatensammlungenMacromycetes[i].DsTabelle + y;
 				html += "' name='SchaltflächeMacromycetesDatensammlung' Tabelle='" + DatensammlungenMacromycetes[i].DsTabelle;
 				html += "' Anz='" + y + "' Von='" + anzButtons;
@@ -1155,7 +1155,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 			anzDs = qryAnzDs[0].Anzahl;
 			anzButtons = Math.ceil(anzDs/3500);
 			for (y = 1; y <= anzButtons; y++) {
-				html += "<input type='radio' id='";
+				html += "<input type='checkbox' id='";
 				html += DatensammlungenLR[i].DsTabelle + y;
 				html += "' name='SchaltflächeLRDatensammlung' Tabelle='" + DatensammlungenLR[i].DsTabelle;
 				html += "' Anz='" + y + "' Von='" + anzButtons;
@@ -1186,7 +1186,7 @@ function baueIndexSchaltflächenAuf() {
 			anzDs = qryAnzDs[0].Anzahl;
 			anzButtons = Math.ceil(anzDs/3500);
 			for (y = 1; y <= anzButtons; y++) {
-				html += "<input type='radio' id='tblFloraSisf" + y;
+				html += "<input type='checkbox' id='tblFloraSisf" + y;
 				html += "' name='SchaltflächeFloraIndex' Tabelle='tblFloraSisf";
 				html += "' Anz='" + y + "' Von='" + anzButtons;
 				html += "'>Flora Taxonomie";
@@ -1206,7 +1206,7 @@ function baueIndexSchaltflächenAuf() {
 			anzDs = qryAnzDs[0].Anzahl;
 			anzButtons = Math.ceil(anzDs/3500);
 			for (y = 1; y <= anzButtons; y++) {
-				html += "<input type='radio' id='tblFaunaCscf" + y;
+				html += "<input type='checkbox' id='tblFaunaCscf" + y;
 				html += "' name='SchaltflächeFaunaIndex' Tabelle='tblFaunaCscf";
 				html += "' Anz='" + y + "' Von='" + anzButtons;
 				html += "'>Fauna Taxonomie";
@@ -1226,7 +1226,7 @@ function baueIndexSchaltflächenAuf() {
 			anzDs = qryAnzDs[0].Anzahl;
 			anzButtons = Math.ceil(anzDs/3500);
 			for (y = 1; y <= anzButtons; y++) {
-				html += "<input type='radio' id='tblMooseNism" + y;
+				html += "<input type='checkbox' id='tblMooseNism" + y;
 				html += "' name='SchaltflächeMoosIndex' Tabelle='tblMooseNism";
 				html += "' Anz='" + y + "' Von='" + anzButtons;
 				html += "'>Moose Taxonomie";
@@ -1246,7 +1246,7 @@ function baueIndexSchaltflächenAuf() {
 			anzDs = qryAnzDs[0].Anzahl;
 			anzButtons = Math.ceil(anzDs/3500);
 			for (y = 1; y <= anzButtons; y++) {
-				html += "<input type='radio' id='tblMacromycetes" + y;
+				html += "<input type='checkbox' id='tblMacromycetes" + y;
 				html += "' name='SchaltflächeMacromycetesIndex' Tabelle='tblMacromycetes";
 				html += "' Anz='" + y + "' Von='" + anzButtons;
 				html += "'>Macromycetes Taxonomie";
@@ -1266,7 +1266,7 @@ function baueIndexSchaltflächenAuf() {
 			anzDs = qryAnzDs[0].Anzahl;
 			anzButtons = Math.ceil(anzDs/3500);
 			for (y = 1; y <= anzButtons; y++) {
-				html += "<input type='radio' id='LR" + y;
+				html += "<input type='checkbox' id='LR" + y;
 				html += "' name='SchaltflächeLRIndex' Tabelle='LR";
 				html += "' Anz='" + y + "' Von='" + anzButtons;
 				html += "'>LR Taxonomie";
