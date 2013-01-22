@@ -16,7 +16,7 @@ function importiereFloraIndex(myDB, tblName, Anz) {
 			Art.Gruppe = Index[x].Gruppe;
 			//Datensammlung als Objekt gründen, heisst wie DsName
 			Art[DatensammlungMetadaten[0].DsName] = {};
-			Art[DatensammlungMetadaten[0].DsName].Typ = "Datensammlung";
+			Art[DatensammlungMetadaten[0].DsName].Typ = "Taxonomie";	//war: Datensammlung
 			Art[DatensammlungMetadaten[0].DsName].Beschreibung = DatensammlungMetadaten[0].DsBeschreibung;
 			if (DatensammlungMetadaten[0].DsDatenstand) {
 				Art[DatensammlungMetadaten[0].DsName].Datenstand = DatensammlungMetadaten[0].DsDatenstand;
@@ -61,7 +61,7 @@ function ergänzeFloraDeutscheNamen() {
 			for (i in data.rows) {
 				var Art, ArtNr, deutscheNamen;
 				Art = data.rows[i].doc;
-				ArtNr = Art.Index.Felder["Index ID"];
+				ArtNr = Art["Aktuelle Taxonomie"].Felder["Taxonomie ID"];
 				deutscheNamen = "";
 				for (k in qryDeutscheNamen) {
 					if (qryDeutscheNamen[k].SisfNr === ArtNr) {
@@ -71,8 +71,8 @@ function ergänzeFloraDeutscheNamen() {
 						deutscheNamen += qryDeutscheNamen[k].NOM_COMMUN;
 					}
 				}
-				if (deutscheNamen && deutscheNamen !== Art.Index.Felder["Deutsche Namen"]) {
-					Art.Index.Felder["Deutsche Namen"] = deutscheNamen;
+				if (deutscheNamen && deutscheNamen !== Art["Aktuelle Taxonomie"].Felder["Deutsche Namen"]) {
+					Art["Aktuelle Taxonomie"].Felder["Deutsche Namen"] = deutscheNamen;
 					$db = $.couch.db("artendb");
 					$db.saveDoc(Art);
 				}
@@ -89,21 +89,21 @@ function aktualisiereFloraGültigeNamen() {
 			for (i in data.rows) {
 				Art = data.rows[i].doc;
 				//Liste aller Deutschen Namen bilden
-				if (Art.Index.Felder["Gültige Namen"]) {
-					Nrn = Art.Index.Felder["Gültige Namen"].split(",");
+				if (Art["Aktuelle Taxonomie"].Felder["Gültige Namen"]) {
+					Nrn = Art["Aktuelle Taxonomie"].Felder["Gültige Namen"].split(",");
 					gültigeNamen = [];
 					for (a in Nrn) {
 						for (k in data.rows) {
-							if (data.rows[k].doc.Index.Felder["Index ID"] == parseInt(Nrn[a])) {
+							if (data.rows[k].doc["Aktuelle Taxonomie"].Felder["Taxonomie ID"] == parseInt(Nrn[a])) {
 								gültigeArt = {};
-								gültigeArt.GUID = data.rows[k].doc.Index.Felder.GUID;
-								gültigeArt.Name = data.rows[k].doc.Index.Felder["Artname vollständig"];
+								gültigeArt.GUID = data.rows[k].doc["Aktuelle Taxonomie"].Felder.GUID;
+								gültigeArt.Name = data.rows[k].doc["Aktuelle Taxonomie"].Felder["Artname vollständig"];
 								gültigeNamen.push(gültigeArt);
 							}
 						}
 					}
 					if (gültigeNamen !== []) {
-						Art.Index.Felder["Gültige Namen"] = gültigeNamen;
+						Art["Aktuelle Taxonomie"].Felder["Gültige Namen"] = gültigeNamen;
 						$db.saveDoc(Art);
 					}
 				}
@@ -123,17 +123,17 @@ function ergänzeFloraEingeschlosseneArten() {
 			for (i in data.rows) {
 				var Art, ArtNr, eingeschlosseneArten, eingeschlosseneArt;
 				Art = data.rows[i].doc;
-				if (Art.Index.Felder["Eingeschlossene Arten"]) {
+				if (Art["Aktuelle Taxonomie"].Felder["Eingeschlossene Arten"]) {
 					eingeschlosseneArten = [];
 					for (k in qryEingeschlosseneArten) {
-						if (qryEingeschlosseneArten[k].NO_AGR_SL === Art.Index.Felder["Index ID"]) {
+						if (qryEingeschlosseneArten[k].NO_AGR_SL === Art["Aktuelle Taxonomie"].Felder["Taxonomie ID"]) {
 							eingeschlosseneArt = {};
 							eingeschlosseneArt.GUID = qryEingeschlosseneArten[k].GUID;
 							eingeschlosseneArt.Name = qryEingeschlosseneArten[k]["Artname vollständig"];
 							eingeschlosseneArten.push(eingeschlosseneArt);
 						}
 					}
-					Art.Index.Felder["Eingeschlossene Arten"] = eingeschlosseneArten;
+					Art["Aktuelle Taxonomie"].Felder["Eingeschlossene Arten"] = eingeschlosseneArten;
 					$db.saveDoc(Art);
 				}
 			}
@@ -152,17 +152,17 @@ function ergänzeFloraSynonyme() {
 			for (i in data.rows) {
 				var Art, ArtNr, Synonyme, Synonym;
 				Art = data.rows[i].doc;
-				if (Art.Index.Felder.Synonyme) {
+				if (Art["Aktuelle Taxonomie"].Felder.Synonyme) {
 					Synonyme = [];
 					for (k in qrySynonyme) {
-						if (qrySynonyme[k].NR === Art.Index.Felder["Index ID"]) {
+						if (qrySynonyme[k].NR === Art["Aktuelle Taxonomie"].Felder["Taxonomie ID"]) {
 							Synonym = {};
 							Synonym.GUID = qrySynonyme[k].Synonym_GUID;
 							Synonym.Name = qrySynonyme[k].Synonym_Name;
 							Synonyme.push(Synonym);
 						}
 					}
-					Art.Index.Felder.Synonyme = Synonyme;
+					Art["Aktuelle Taxonomie"].Felder.Synonyme = Synonyme;
 					$db.saveDoc(Art);
 				}
 			}
@@ -240,7 +240,7 @@ function importiereMoosIndex(myDB, tblName, Anz) {
 			Art.Gruppe = Index[x].Gruppe;
 			//Datensammlung als Objekt gründen, heisst wie DsName
 			Art[DatensammlungMetadaten[0].DsName] = {};
-			Art[DatensammlungMetadaten[0].DsName].Typ = "Datensammlung";
+			Art[DatensammlungMetadaten[0].DsName].Typ = "Taxonomie";	//war: Datensammlung
 			Art[DatensammlungMetadaten[0].DsName].Beschreibung = DatensammlungMetadaten[0].DsBeschreibung;
 			if (DatensammlungMetadaten[0].DsDatenstand) {
 				Art[DatensammlungMetadaten[0].DsName].Datenstand = DatensammlungMetadaten[0].DsDatenstand;
@@ -343,7 +343,7 @@ function importiereMacromycetesIndex(myDB, tblName, Anz) {
 			Art.Gruppe = Index[x].Gruppe;
 			//Datensammlung als Objekt gründen, heisst wie DsName
 			Art[DatensammlungMetadaten[0].DsName] = {};
-			Art[DatensammlungMetadaten[0].DsName].Typ = "Datensammlung";
+			Art[DatensammlungMetadaten[0].DsName].Typ = "Taxonomie";	//war: Datensammlung
 			Art[DatensammlungMetadaten[0].DsName].Beschreibung = DatensammlungMetadaten[0].DsBeschreibung;
 			if (DatensammlungMetadaten[0].DsDatenstand) {
 				Art[DatensammlungMetadaten[0].DsName].Datenstand = DatensammlungMetadaten[0].DsDatenstand;
@@ -432,7 +432,7 @@ function importiereFaunaIndex(myDB, tblName, Anz) {
 		//In Häppchen von max. 2500 Datensätzen aufteilen
 		anzDs += 1;
 		//nur importieren, wenn innerhalb des mit Anz übergebenen 3000er Batches
-		if ((anzDs > (Anz*2500-2500)) && (anzDs <= Anz*2500)) {
+		if ((anzDs > (Anz*3500-3500)) && (anzDs <= Anz*3500)) {
 			//Art als Objekt gründen
 			Art = {};
 			//_id soll GUID sein
@@ -440,7 +440,7 @@ function importiereFaunaIndex(myDB, tblName, Anz) {
 			Art.Gruppe = Index[x].Gruppe;
 			//Datensammlung als Objekt gründen, heisst wie DsName
 			Art[DatensammlungMetadaten[0].DsName] = {};
-			Art[DatensammlungMetadaten[0].DsName].Typ = "Datensammlung";
+			Art[DatensammlungMetadaten[0].DsName].Typ = "Taxonomie";	//war: Datensammlung
 			Art[DatensammlungMetadaten[0].DsName].Beschreibung = DatensammlungMetadaten[0].DsBeschreibung;
 			if (DatensammlungMetadaten[0].DsDatenstand) {
 				Art[DatensammlungMetadaten[0].DsName].Datenstand = DatensammlungMetadaten[0].DsDatenstand;
@@ -480,7 +480,7 @@ function importiereFaunaDatensammlungen_02(myDB, tblName, Anz) {
 	for (x in Datensammlung) {
 		anzDs += 1;
 		//nur importieren, wenn innerhalb des mit Anz übergebenen 3000er Batches
-		if ((anzDs > (Anz*2500-2500)) && (anzDs <= Anz*2500)) {
+		if ((anzDs > (Anz*3500-3500)) && (anzDs <= Anz*3500)) {
 			//Datensammlung als Objekt gründen
 			DatensammlungDieserArt = {};
 			DatensammlungDieserArt.Typ = "Datensammlung";
@@ -528,7 +528,7 @@ function importiereLrIndex(myDB, tblName, Anz) {
 	for (x in Index) {
 		anzDs += 1;
 		//nur importieren, wenn innerhalb des mit Anz übergebenen Batches
-		if ((anzDs > (Anz*2500-2500)) && (anzDs <= Anz*2500)) {
+		if ((anzDs > (Anz*3500-3500)) && (anzDs <= Anz*3500)) {
 			//Art als Objekt gründen
 			Art = {};
 			//_id soll GUID sein
@@ -536,7 +536,7 @@ function importiereLrIndex(myDB, tblName, Anz) {
 			Art.Gruppe = Index[x].Gruppe;
 			//Datensammlung als Objekt gründen, heisst wie DsName
 			Art[DatensammlungMetadaten[0].DsName] = {};
-			Art[DatensammlungMetadaten[0].DsName].Typ = "Datensammlung";
+			Art[DatensammlungMetadaten[0].DsName].Typ = "Taxonomie";	//war: Datensammlung
 			if (Art[DatensammlungMetadaten[0].DsName].Beschreibung) {
 				Art[DatensammlungMetadaten[0].DsName].Beschreibung = DatensammlungMetadaten[0].DsBeschreibung;
 			}
@@ -592,27 +592,27 @@ function aktualisiereLrHierarchie() {
 				var LR, Hierarchie, Objekt;
 				LR = data.rows[i].doc;
 				//Beim export wurde "path" in die Hierarchie geschrieben
-				if (LR.Index.Felder.Hierarchie && LR.Index.Felder.Hierarchie === "path") {
+				if (LR.Taxonomie.Felder.Hierarchie && LR.Taxonomie.Felder.Hierarchie === "path") {
 					Hierarchie = [];
 					Objekt = {};
-					if (LR.Index.Felder.Label) {
-						Objekt.Name = LR.Index.Felder.Label + ": " + LR.Index.Felder.Einheit;
+					if (LR.Taxonomie.Felder.Label) {
+						Objekt.Name = LR.Taxonomie.Felder.Label + ": " + LR.Taxonomie.Felder.Einheit;
 					} else {
-						Objekt.Name = LR.Index.Felder.Einheit;
+						Objekt.Name = LR.Taxonomie.Felder.Einheit;
 					}
 					Objekt.GUID = LR._id;
 					Hierarchie.push(Objekt);
-					if (LR.Index.Felder.Parent) {
-						if (typeof LR.Index.Felder.Parent === "objekt") {
+					if (LR.Taxonomie.Felder.Parent) {
+						if (typeof LR.Taxonomie.Felder.Parent === "objekt") {
 							//Parent wurde schon umgewandelt, ist jetzt Objekt
-							LR.Index.Felder.Hierarchie = ergänzeParentZuHierarchie(data, LR.Index.Felder.Parent.GUID, Hierarchie);
+							LR.Taxonomie.Felder.Hierarchie = ergänzeParentZuHierarchie(data, LR.Taxonomie.Felder.Parent.GUID, Hierarchie);
 						} else {
 							//Parent ist noch ein GUID
-							LR.Index.Felder.Hierarchie = ergänzeParentZuHierarchie(data, LR.Index.Felder.Parent, Hierarchie);
+							LR.Taxonomie.Felder.Hierarchie = ergänzeParentZuHierarchie(data, LR.Taxonomie.Felder.Parent, Hierarchie);
 						}
 					} else {
 						//Kein Parent
-						LR.Index.Felder.Hierarchie = Hierarchie;
+						LR.Taxonomie.Felder.Hierarchie = Hierarchie;
 					}
 					$db.saveDoc(LR);
 				}
@@ -630,21 +630,21 @@ function ergänzeParentZuHierarchie(Lebensräume, parentGUID, Hierarchie) {
 		LR = Lebensräume.rows[i].doc;
 		if (LR._id === parentGUID) {
 			parentObjekt = {};
-			if (LR.Index.Felder.Label) {
-				parentObjekt.Name = LR.Index.Felder.Label + ": " + LR.Index.Felder.Einheit;
+			if (LR.Taxonomie.Felder.Label) {
+				parentObjekt.Name = LR.Taxonomie.Felder.Label + ": " + LR.Taxonomie.Felder.Einheit;
 			} else {
-				parentObjekt.Name = LR.Index.Felder.Einheit;
+				parentObjekt.Name = LR.Taxonomie.Felder.Einheit;
 			}
 			parentObjekt.GUID = LR._id;
 			Hierarchie.push(parentObjekt);
-			if (LR.Index.Felder.Parent) {
+			if (LR.Taxonomie.Felder.Parent) {
 				//die Hierarchie ist noch nicht zu Ende - weitermachen
-				if (typeof LR.Index.Felder.Parent === "objekt") {
+				if (typeof LR.Taxonomie.Felder.Parent === "objekt") {
 					//Parent wurde schon umgewandelt, ist jetzt Objekt
-					return ergänzeParentZuHierarchie(Lebensräume, LR.Index.Felder.Parent.GUID, Hierarchie);
+					return ergänzeParentZuHierarchie(Lebensräume, LR.Taxonomie.Felder.Parent.GUID, Hierarchie);
 				} else {
 					//Parent ist noch ein GUID
-					return ergänzeParentZuHierarchie(Lebensräume, LR.Index.Felder.Parent, Hierarchie);
+					return ergänzeParentZuHierarchie(Lebensräume, LR.Taxonomie.Felder.Parent, Hierarchie);
 				}
 			} else {
 				//jetzt ist die Hierarchie vollständig
@@ -668,16 +668,16 @@ function aktualisiereLrParent() {
 			for (i in data.rows) {
 				var LR, Parent;
 				LR = data.rows[i].doc;
-				if (LR.Index.Felder.Parent) {
+				if (LR.Taxonomie.Felder.Parent) {
 					for (k in qryEinheiten) {
-						if (qryEinheiten[k].GUID === LR.Index.Felder.GUID) {
+						if (qryEinheiten[k].GUID === LR.Taxonomie.Felder.GUID) {
 							Parent = {};
 							Parent.GUID = qryEinheiten[k].GUID;
 							Parent.Name = qryEinheiten[k].Einheit;
 							break;
 						}
 					}
-					LR.Index.Felder.Parent = Parent;
+					LR.Taxonomie.Felder.Parent = Parent;
 					$db.saveDoc(LR);
 				}
 			}
@@ -698,7 +698,7 @@ function importiereLrDatensammlungen_02(myDB, tblName, Anz) {
 	for (x in Datensammlung) {
 		anzDs += 1;
 		//nur importieren, wenn innerhalb des mit Anz übergebenen 8000er Batches
-		if ((anzDs > (Anz*2500-2500)) && (anzDs <= Anz*2500)) {
+		if ((anzDs > (Anz*3500-3500)) && (anzDs <= Anz*3500)) {
 			//Datensammlung als Objekt gründen
 			DatensammlungDieserArt = {};
 			DatensammlungDieserArt.Typ = "Datensammlung";
@@ -732,13 +732,13 @@ function importiereLrDatensammlungen_02(myDB, tblName, Anz) {
 			if (anzFelder > 0) {
 				//Datenbankabfrage ist langsam. Estern aufrufen, 
 				//sonst überholt die for-Schlaufe und DatensammlungDieserArt ist bis zur saveDoc-Ausführung eine andere!
-				fuegeLrDatensammlungZuArt(Datensammlung[x].GUID, DatensammlungMetadaten[0].DsName, DatensammlungDieserArt);
+				fuegeDatensammlungZuArt(Datensammlung[x].GUID, DatensammlungMetadaten[0].DsName, DatensammlungDieserArt);
 			}
 		}
 	}
 }
 
-function fuegeLrDatensammlungZuArt(GUID, DsName, DatensammlungDieserArt) {
+function fuegeDatensammlungZuArt(GUID, DsName, DatensammlungDieserArt) {
 	$db = $.couch.db("artendb");
 	$db.openDoc(GUID, {
 		success: function (doc) {
@@ -1061,9 +1061,9 @@ function baueDatensammlungenSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(" + DatensammlungenFlora[i].DsBeziehungsfeldDs + ") AS Anzahl FROM " + DatensammlungenFlora[i].DsTabelle);
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/2500);
+			anzButtons = Math.ceil(anzDs/3500);
 			for (y = 1; y <= anzButtons; y++) {
-				html += "<button id='";
+				html += "<input type='radio' id='";
 				html += DatensammlungenFlora[i].DsTabelle + y;
 				html += "' name='SchaltflächeFloraDatensammlung' Tabelle='" + DatensammlungenFlora[i].DsTabelle;
 				html += "' Anz='" + y + "' Von='" + anzButtons;
@@ -1072,7 +1072,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 				if (anzButtons > 1) {
 					html += " (" + y + "/" + anzButtons + ")";
 				}
-				html += "</button>";
+				html += "<br>";
 			}
 		}
 		$("#SchaltflächenFloraDatensammlungen").html(html);
@@ -1084,9 +1084,9 @@ function baueDatensammlungenSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(" + DatensammlungenFauna[i].DsBeziehungsfeldDs + ") AS Anzahl FROM " + DatensammlungenFauna[i].DsTabelle);
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/2500);
+			anzButtons = Math.ceil(anzDs/3500);
 			for (y = 1; y <= anzButtons; y++) {
-				html += "<button id='";
+				html += "<input type='radio' id='";
 				html += DatensammlungenFauna[i].DsTabelle + y;
 				html += "' name='SchaltflächeFaunaDatensammlung' Tabelle='" + DatensammlungenFauna[i].DsTabelle;
 				html += "' Anz='" + y + "' Von='" + anzButtons;
@@ -1095,7 +1095,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 				if (anzButtons > 1) {
 					html += " (" + y + "/" + anzButtons + ")";
 				}
-				html += "</button>";
+				html += "<br>";
 			}
 		}
 		$("#SchaltflächenFaunaDatensammlungen").html(html);
@@ -1107,9 +1107,9 @@ function baueDatensammlungenSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(" + DatensammlungenMoos[i].DsBeziehungsfeldDs + ") AS Anzahl FROM " + DatensammlungenMoos[i].DsTabelle);
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/2500);
+			anzButtons = Math.ceil(anzDs/3500);
 			for (y = 1; y <= anzButtons; y++) {
-				html += "<button id='";
+				html += "<input type='radio' id='";
 				html += DatensammlungenMoos[i].DsTabelle + y;
 				html += "' name='SchaltflächeMoosDatensammlung' Tabelle='" + DatensammlungenMoos[i].DsTabelle;
 				html += "' Anz='" + y + "' Von='" + anzButtons;
@@ -1118,7 +1118,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 				if (anzButtons > 1) {
 					html += " (" + y + "/" + anzButtons + ")";
 				}
-				html += "</button>";
+				html += "<br>";
 			}
 		}
 		$("#SchaltflächenMoosDatensammlungen").html(html);
@@ -1130,9 +1130,9 @@ function baueDatensammlungenSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(" + DatensammlungenMacromycetes[i].DsBeziehungsfeldDs + ") AS Anzahl FROM " + DatensammlungenMacromycetes[i].DsTabelle);
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/2500);
+			anzButtons = Math.ceil(anzDs/3500);
 			for (y = 1; y <= anzButtons; y++) {
-				html += "<button id='";
+				html += "<input type='radio' id='";
 				html += DatensammlungenMacromycetes[i].DsTabelle + y;
 				html += "' name='SchaltflächeMacromycetesDatensammlung' Tabelle='" + DatensammlungenMacromycetes[i].DsTabelle;
 				html += "' Anz='" + y + "' Von='" + anzButtons;
@@ -1141,7 +1141,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 				if (anzButtons > 1) {
 					html += " (" + y + "/" + anzButtons + ")";
 				}
-				html += "</button>";
+				html += "<br>";
 			}
 		}
 		$("#SchaltflächenMacromycetesDatensammlungen").html(html);
@@ -1153,9 +1153,9 @@ function baueDatensammlungenSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(" + DatensammlungenLR[i].DsBeziehungsfeldDs + ") AS Anzahl FROM " + DatensammlungenLR[i].DsTabelle);
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/2500);
+			anzButtons = Math.ceil(anzDs/3500);
 			for (y = 1; y <= anzButtons; y++) {
-				html += "<button id='";
+				html += "<input type='radio' id='";
 				html += DatensammlungenLR[i].DsTabelle + y;
 				html += "' name='SchaltflächeLRDatensammlung' Tabelle='" + DatensammlungenLR[i].DsTabelle;
 				html += "' Anz='" + y + "' Von='" + anzButtons;
@@ -1164,7 +1164,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 				if (anzButtons > 1) {
 					html += " (" + y + "/" + anzButtons + ")";
 				}
-				html += "</button>";
+				html += "<br>";
 			}
 		}
 		$("#SchaltflächenLRDatensammlungen").html(html);
@@ -1184,16 +1184,16 @@ function baueIndexSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(GUID) AS Anzahl FROM tblFloraSisf_import");
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/2500);
+			anzButtons = Math.ceil(anzDs/3500);
 			for (y = 1; y <= anzButtons; y++) {
-				html += "<button id='tblFloraSisf" + y;
+				html += "<input type='radio' id='tblFloraSisf" + y;
 				html += "' name='SchaltflächeFloraIndex' Tabelle='tblFloraSisf";
 				html += "' Anz='" + y + "' Von='" + anzButtons;
-				html += "'>Flora Index";
+				html += "'>Flora Taxonomie";
 				if (anzButtons > 1) {
 					html += " (" + y + "/" + anzButtons + ")";
 				}
-				html += "</button>";
+				html += "<br>";
 			}
 		}
 		$("#SchaltflächenFloraIndex").html(html);
@@ -1204,16 +1204,16 @@ function baueIndexSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(GUID) AS Anzahl FROM tblFaunaCscf_import");
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/2500);
+			anzButtons = Math.ceil(anzDs/3500);
 			for (y = 1; y <= anzButtons; y++) {
-				html += "<button id='tblFaunaCscf" + y;
+				html += "<input type='radio' id='tblFaunaCscf" + y;
 				html += "' name='SchaltflächeFaunaIndex' Tabelle='tblFaunaCscf";
 				html += "' Anz='" + y + "' Von='" + anzButtons;
-				html += "'>Fauna Index";
+				html += "'>Fauna Taxonomie";
 				if (anzButtons > 1) {
 					html += " (" + y + "/" + anzButtons + ")";
 				}
-				html += "</button>";
+				html += "<br>";
 			}
 		}
 		$("#SchaltflächenFaunaIndex").html(html);
@@ -1224,16 +1224,16 @@ function baueIndexSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(TAXONNO) AS Anzahl FROM tblMooseNism");
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/2500);
+			anzButtons = Math.ceil(anzDs/3500);
 			for (y = 1; y <= anzButtons; y++) {
-				html += "<button id='tblMooseNism" + y;
+				html += "<input type='radio' id='tblMooseNism" + y;
 				html += "' name='SchaltflächeMoosIndex' Tabelle='tblMooseNism";
 				html += "' Anz='" + y + "' Von='" + anzButtons;
-				html += "'>Moose Index";
+				html += "'>Moose Taxonomie";
 				if (anzButtons > 1) {
 					html += " (" + y + "/" + anzButtons + ")";
 				}
-				html += "</button>";
+				html += "<br>";
 			}
 		}
 		$("#SchaltflächenMoosIndex").html(html);
@@ -1244,16 +1244,16 @@ function baueIndexSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(GUID) AS Anzahl FROM tblMacromycetes");
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/2500);
+			anzButtons = Math.ceil(anzDs/3500);
 			for (y = 1; y <= anzButtons; y++) {
-				html += "<button id='tblMacromycetes" + y;
+				html += "<input type='radio' id='tblMacromycetes" + y;
 				html += "' name='SchaltflächeMacromycetesIndex' Tabelle='tblMacromycetes";
 				html += "' Anz='" + y + "' Von='" + anzButtons;
-				html += "'>Macromycetes Index";
+				html += "'>Macromycetes Taxonomie";
 				if (anzButtons > 1) {
 					html += " (" + y + "/" + anzButtons + ")";
 				}
-				html += "</button>";
+				html += "<br>";
 			}
 		}
 		$("#SchaltflächenMacromycetesIndex").html(html);
@@ -1264,16 +1264,16 @@ function baueIndexSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(GUID) AS Anzahl FROM LR");
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/2500);
+			anzButtons = Math.ceil(anzDs/3500);
 			for (y = 1; y <= anzButtons; y++) {
-				html += "<button id='LR" + y;
+				html += "<input type='radio' id='LR" + y;
 				html += "' name='SchaltflächeLRIndex' Tabelle='LR";
 				html += "' Anz='" + y + "' Von='" + anzButtons;
-				html += "'>LR Index";
+				html += "'>LR Taxonomie";
 				if (anzButtons > 1) {
 					html += " (" + y + "/" + anzButtons + ")";
 				}
-				html += "</button>";
+				html += "<br>";
 			}
 		}
 		$("#SchaltflächenLRIndex").html(html);
