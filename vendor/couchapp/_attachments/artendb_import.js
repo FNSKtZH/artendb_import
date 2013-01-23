@@ -528,10 +528,9 @@ function importiereFaunaDatensammlungen_02(myDB, tblName, Anz) {
 }
 
 function importiereLrIndex(myDB, tblName, Anz) {
-	var DatensammlungMetadaten, Index, Art, anzDs, Parent, parentArt, parentObjekt, Objekt, Hierarchie;
-	//tblName wird ignoriert
+	var DatensammlungMetadaten, Index, Art, anzDs;
 	DatensammlungMetadaten = frageSql(myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'LR'");
-	//Index importieren
+	//Index importieren, tblName wird ignoriert
 	Index = frageSql(myDB, "SELECT * FROM LR_import");
 	anzDs = 0;
 	for (x in Index) {
@@ -603,7 +602,7 @@ function aktualisiereLrHierarchie() {
 				var LR, Hierarchie, Objekt;
 				LR = data.rows[i].doc;
 				//Beim export wurde "path" in die Hierarchie geschrieben
-				if (LR.Taxonomie.Felder.Hierarchie && LR.Taxonomie.Felder.Hierarchie === "path") {
+				if (LR.Taxonomie.Felder.Hierarchie === "path") {
 					Hierarchie = [];
 					Objekt = {};
 					if (LR.Taxonomie.Felder.Label) {
@@ -613,17 +612,21 @@ function aktualisiereLrHierarchie() {
 					}
 					Objekt.GUID = LR._id;
 					Hierarchie.push(Objekt);
-					if (LR.Taxonomie.Felder.Parent) {
-						if (typeof LR.Taxonomie.Felder.Parent === "objekt") {
-							//Parent wurde schon umgewandelt, ist jetzt Objekt
+					//hierarchie schon mal setzen, weil beim obersten node das sonst nicht mehr passiert
+					//bei anderen nodes wird dieser Wert später überschrieben
+					LR.Taxonomie.Felder.Hierarchie = Hierarchie;
+					if (typeof LR.Taxonomie.Felder.Parent === "objekt") {
+						//Parent wurde schon umgewandelt, ist jetzt Objekt
+						//Wenn id = Parent, ist das der oberste node. Dann nicht mehr weitermachen
+						if (LR._id !== LR.Taxonomie.Felder.Parent.GUID) {
 							LR.Taxonomie.Felder.Hierarchie = ergänzeParentZuHierarchie(data, LR.Taxonomie.Felder.Parent.GUID, Hierarchie);
-						} else {
-							//Parent ist noch ein GUID
-							LR.Taxonomie.Felder.Hierarchie = ergänzeParentZuHierarchie(data, LR.Taxonomie.Felder.Parent, Hierarchie);
 						}
 					} else {
-						//Kein Parent
-						LR.Taxonomie.Felder.Hierarchie = Hierarchie;
+						//Parent ist noch ein GUID
+						//Wenn id = Parent, ist das der oberste node. Dann nicht mehr weitermachen
+						if (LR._id !== LR.Taxonomie.Felder.Parent) {
+							LR.Taxonomie.Felder.Hierarchie = ergänzeParentZuHierarchie(data, LR.Taxonomie.Felder.Parent, Hierarchie);
+						}
 					}
 					$db.saveDoc(LR);
 				}
@@ -637,7 +640,7 @@ function aktualisiereLrHierarchie() {
 //ruft sich selbst rekursiv auf, bis das oberste Hierarchieelement erreicht ist
 function ergänzeParentZuHierarchie(Lebensräume, parentGUID, Hierarchie) {
 	for (i in Lebensräume.rows) {
-		var LR, Hierarchie, parentObjekt;
+		var LR, parentObjekt;
 		LR = Lebensräume.rows[i].doc;
 		if (LR._id === parentGUID) {
 			parentObjekt = {};
@@ -648,7 +651,7 @@ function ergänzeParentZuHierarchie(Lebensräume, parentGUID, Hierarchie) {
 			}
 			parentObjekt.GUID = LR._id;
 			Hierarchie.push(parentObjekt);
-			if (LR.Taxonomie.Felder.Parent) {
+			if (LR.Taxonomie.Felder.Parent !== LR._id) {
 				//die Hierarchie ist noch nicht zu Ende - weitermachen
 				if (typeof LR.Taxonomie.Felder.Parent === "objekt") {
 					//Parent wurde schon umgewandelt, ist jetzt Objekt
@@ -661,6 +664,7 @@ function ergänzeParentZuHierarchie(Lebensräume, parentGUID, Hierarchie) {
 				//jetzt ist die Hierarchie vollständig
 				//sie ist aber verkehrt - umkehren
 				return Hierarchie.reverse();
+				//return Hierarchie;
 			}
 		}
 	}
@@ -681,7 +685,7 @@ function aktualisiereLrParent() {
 				LR = data.rows[i].doc;
 				if (LR.Taxonomie.Felder.Parent) {
 					for (k in qryEinheiten) {
-						if (qryEinheiten[k].GUID === LR.Taxonomie.Felder.GUID) {
+						if (qryEinheiten[k].GUID === LR.Taxonomie.Felder.Parent) {
 							Parent = {};
 							Parent.GUID = qryEinheiten[k].GUID;
 							Parent.Name = qryEinheiten[k].Einheit;
@@ -1255,7 +1259,7 @@ function baueIndexSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(GUID) AS Anzahl FROM tblMacromycetes");
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/DatensammlungMacromycetes[i].DsAnzDs);
+			anzButtons = Math.ceil(anzDs/DatensammlungMacromycetes[0].DsAnzDs);
 			for (y = 1; y <= anzButtons; y++) {
 				html += "<input type='checkbox' id='tblMacromycetes" + y;
 				html += "' name='SchaltflächeMacromycetesIndex' Tabelle='tblMacromycetes";
@@ -1275,7 +1279,7 @@ function baueIndexSchaltflächenAuf() {
 			//Anzahl Datensätze ermitteln
 			qryAnzDs = frageSql(myDB, "SELECT Count(GUID) AS Anzahl FROM LR");
 			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/DatensammlungLR[i].DsAnzDs);
+			anzButtons = Math.ceil(anzDs/DatensammlungLR[0].DsAnzDs);
 			for (y = 1; y <= anzButtons; y++) {
 				html += "<input type='checkbox' id='LR" + y;
 				html += "' name='SchaltflächeLRIndex' Tabelle='LR";
