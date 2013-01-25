@@ -2,23 +2,23 @@
 <html lang="de">
 	<head>
 		<meta charset="utf-8">
-		<script type="text/javascript" src="vendor/couchapp/jquery.js"></script>
-		<script type="text/javascript" src="vendor/couchapp/jquery.couch.js"></script>
-		<script type="text/javascript" src="vendor/couchapp/accessdb.js"></script>
-		<script type="text/javascript" src="vendor/couchapp/artendb_import.js"></script>
+		<script src="vendor/couchapp/jquery.js"></script>
+		<script src="vendor/couchapp/jquery.couch.js"></script>
+		<script src="vendor/couchapp/accessdb.js"></script>
+		<script src="vendor/couchapp/artendb_import.js"></script>
 		<title>Import aus ArtenDb</title>
 	</head>
 	<body>
 		<h2>Import von ArtenDb.mdb in die Couch der ArtenDb</h2>
 		<label id="dbpfad_label" for='beob_Autor'>Pfad zur Import-mdb: (Achtung: backslashes verdoppeln!)</label>
-		<input id="dbpfad" type="text" style="width:90%;" placeholder="z.B.: C:\\Users\\alex\\artendb_import\\export_in_json.mdb"/><br><br>
-		<hr />
+		<input id="dbpfad" type="text" style="width:90%;" placeholder="z.B.: C:\\Users\\alex\\artendb_import\\export_in_json.mdb"><br><br>
+		<hr>
 		<h3>Fauna</h3>
 		<div style="column-width:250px;">
 			<div id="SchaltflächenFaunaIndex">hier kommt die Fauna</div><br><br>
 			<div id="SchaltflächenFaunaDatensammlungen"></div><br><br>
 		</div>
-		<hr />
+		<hr>
 		<h3>Flora</h3>
 		<div style="column-width:250px;">
 			<div id="SchaltflächenFloraIndex">hier kommt die Flora</div><br>
@@ -29,19 +29,19 @@
 			<input type='checkbox' id="FloraSynonyme">Synonyme ergänzen<br><br>
 			<div id="SchaltflächenFloraDatensammlungen"></div><br>
 		</div>
-		<hr />
+		<hr>
 		<h3>Moose</h3>
 		<div style="column-width:250px;">
 			<div id="SchaltflächenMoosIndex">hier kommen die Moose</div><br><br>
 			<div id="SchaltflächenMoosDatensammlungen"></div><br><br>
 		</div>
-		<hr />
+		<hr>
 		<h3>Pilze</h3>
 		<div style="column-width:250px;">
 			<div id="SchaltflächenMacromycetesIndex">hier kommen die Pilze</div><br><br>
 			<div id="SchaltflächenMacromycetesDatensammlungen"></div><br><br>
 		</div>
-		<hr />
+		<hr>
 		<h3>Lebensräume</h3>
 		<div style="column-width:250px;">
 			<div id="SchaltflächenLRIndex">hier kommen die Lebensräume</div><br>
@@ -50,7 +50,7 @@
 			<input type='checkbox' id="LrParent">Parent aktualisieren<br><br>
 			<div id="SchaltflächenLRDatensammlungen"></div><br><br>
 		</div>
-		<hr />
+		<hr>
 		<h3>LR-Beziehungen</h3>
 		NACH dem Import aller Arten und LR machen:
 		<div style="column-width:250px;">
