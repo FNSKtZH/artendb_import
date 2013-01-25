@@ -8,7 +8,7 @@ Idee:
 - In Access wird eine Import-mdb erstellt, welche die Tabellen der ArtenDb.mdb einbindet und daraus Importtabellen generiert
 - Eine [CouchApp](http://couchapp.org) verbindet mit den gewählten Tabellen der Access-Datenbank
 - Sie wandelt die Arten- und Lebensraumeigenschaften ins JSON-Format um und importiert sie in die CouchDb-Datenbank [der künftigen Artendatenbank](https://github.com/barbalex/artendb)
-- Später soll aus artendb_import ein Tool entstehen, mit dem Datensammlungen von den jeweiligen Datenherren hinzugefügt oder aktualisiert werden können
+- Die künftige ArtenDb wird auch Importe anbieten: Man kann csv-Dateien uploaden und daraus die Eigenschaften importieren. Das funktioniert dann ohne ActiveX und ohne die nachfolgend beschriebenen Probleme
 
 Voraussetzungen:
 
