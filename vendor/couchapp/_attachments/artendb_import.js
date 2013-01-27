@@ -185,8 +185,7 @@ function importiereFloraDatensammlungen_02(myDB, tblName, Anz) {
 	anzDs = 0;
 	for (x in Datensammlung) {
 		anzDs += 1;
-		//nur importieren, wenn innerhalb des mit Anz übergebenen 2500er Batches
-		//Batch muss klein sein wegen Zeigerwerte 2010
+		//nur importieren, wenn innerhalb des mit Anz übergebenen Batches
 		if ((anzDs > (Anz*DatensammlungMetadaten[0].DsAnzDs-DatensammlungMetadaten[0].DsAnzDs)) && (anzDs <= Anz*DatensammlungMetadaten[0].DsAnzDs)) {
 			//Datensammlung als Objekt gründen
 			DatensammlungDieserArt = {};
@@ -541,7 +540,7 @@ function importiereLrIndex(myDB, tblName, Anz) {
 			Art = {};
 			//_id soll GUID sein
 			Art._id = Index[x].GUID;
-			Art.Gruppe = Index[x].Gruppe;
+			Art.Gruppe = "Lebensräume";
 			//Bezeichnet den Typ des Dokuments. Objekt = Art oder Lebensaum. Im Gegensatz zu Beziehung
 			Art.Typ = "Objekt";
 			//Datensammlung als Objekt gründen, heisst wie DsName
@@ -564,22 +563,26 @@ function importiereLrIndex(myDB, tblName, Anz) {
 					if (Index[x][y] === -1) {
 						//Access wandelt in Abfragen Felder mit Wenn() in Zahlen um. Umkehren
 						Art[DatensammlungMetadaten[0].DsName].Felder[y] = true;
-					/*} else if (y === "Hierarchie") {
-						Hierarchie = [];
-						Objekt = {};
-						if (Index[x].Label) {
-							Objekt.Name = Index[x].Label + ": " + Index[x].Einheit;
-						} else {
-							Objekt.Name = Index[x].Einheit;
-						}
-						Objekt.GUID = Index[x].GUID;
-						Hierarchie.push(Objekt);
-						if (Index[x].Parent) {
-							Art[DatensammlungMetadaten[0].DsName].Felder[y] = holeLrHierarchie(myDB, Index[x].GUID, Hierarchie);
-						} else {
-							//Kein Parent
-							Art[DatensammlungMetadaten[0].DsName].Felder[y] = Hierarchie;
-						}*/
+					} else if (y === "Einheit-Nrn FNS von" || y === "Einheit-Nrn FNS bis") {
+						//access hat irgendwie aus Zahlen Zeichen gemacht
+						Art[DatensammlungMetadaten[0].DsName].Felder[y] = parseInt(Index[x][y]);
+					} else if (y === "Beschreibung" && Index[x][y]) {
+						//komische Inhalte ersetzen
+						Art[DatensammlungMetadaten[0].DsName].Felder[y] = Index[x][y]
+							.replace("http://www.wsl.ch/floraindicativa/index_DE#http://www.wsl.ch/floraindicativa/index_DE#", "http://www.wsl.ch/floraindicativa/index_DE")
+							.replace("http://www.cscf.ch/webdav/site/cscf/shared/documents/vademecum.pdf#http://www.cscf.ch/webdav/site/cscf/shared/documents/vademecum.pdf#", "http://www.cscf.ch/webdav/site/cscf/shared/documents/vademecum.pdf")
+							.replace("#http://www.bafu.admin.ch/gis/02911/07403/index.html?lang=de#", "")
+							.replace("#G:\\FNS\\_Migration\\BereichA\\Alex\\Biotope\\Kartierschlüssel\\Wiesenkartierschlüssel Aargau 2004#", "")
+							.replace("#G:\\FNS\\_Migration\\BereichA\\Alex\\Biotope\\Kartierschlüssel\\TS_Oberland_91#", "")
+							.replace("#G:\\FNS\\_Migration\\BereichA\\Alex\\Biotope\\Kartierschlüssel\\Feuchtgebietskartierung_7677\\1978InventarFeuchtgebieteBerichtBur", "")
+							.replace("#G:\\FNS\\_Migration\\BereichA\\Alex\\Biotope\\Kartierschlüssel\\Feuchtgebietskartierung_7677\\1978InventarFeuchtgebieteBerichtBur", "")
+							.replace("#G:\\FNS\\_Migration\\BereichA\\Alex\\Biotope\\Kartierschlüssel\\Feuchtgebietskartierung_7677\\1978InventarFeuchtgebieteBerichtBurnandZüst.pdf#", "")
+							.replace("#G:\\FNS\\_Migration\\BereichA\\Alex\\Biotope\\Kartierschlüssel\\Bachtel_08_Schlüssel.pdf#", "")
+							.replace("#\\\\sbd3201\\data$\\aln\\FNS\\_Migration\\BereichA\\Alex\\Biotope\\Kartierschlüssel\\Bachtel_08_Schlüssel.pdf#", "")
+							.replace("#http://www.bafu.admin.ch/gis/02911/index.html?lang=de#", "")
+							.replace("ART - Definitionen zu den Artlisten#http://www.art.admin.ch/themen/00563/00677/00679/index.html?lang=de#sprungmarke0_9", "ART - Definitionen zu den Artlisten: http://www.art.admin.ch/themen/00563/00677/00679/index.html?lang=de#sprungmarke0_9")
+							.replace("#http://Ablage: 5.202 [4] N, Bibl. Naturschutz [4]#", "")
+							.replace(/#/g, "");
 					} else {
 						Art[DatensammlungMetadaten[0].DsName].Felder[y] = Index[x][y];
 					}
@@ -1295,4 +1298,24 @@ function baueIndexSchaltflächenAuf() {
 	} else {
 		alert("Bitte den Pfad zur .mdb erfassen");
 	}
+}
+
+function löscheLr() {
+	$db = $.couch.db("artendb");
+	$db.view('artendb/lr', {
+		success: function (data) {
+			for (i in data.rows) {
+				löscheDokument(data.rows[i].key);
+			}
+		}
+	});
+}
+
+function löscheDokument(DocId) {
+	$db = $.couch.db("artendb");
+	$db.openDoc(DocId, {
+		success: function (document) {
+			$db.removeDoc(document);
+		}
+	});
 }

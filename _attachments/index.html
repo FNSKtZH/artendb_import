@@ -48,7 +48,8 @@
 			Jetzt views uploaden, dann:<br>
 			<input type='checkbox' id="LrHierarchie">Hierarchie aktualisieren<br>
 			<input type='checkbox' id="LrParent">Parent aktualisieren<br><br>
-			<div id="SchaltflächenLRDatensammlungen"></div><br><br>
+			<div id="SchaltflächenLRDatensammlungen"></div><br><br><br>
+			<input type='checkbox' id="LrLöschen">alle Lebenräume löschen<br><br>
 		</div>
 		<hr>
 		<h3>LR-Beziehungen</h3>
@@ -112,6 +113,9 @@
 			});
 			$("body").on("click", "#LrParent", function() {
 				aktualisiereLrParent();
+			});
+			$("body").on("click", "#LrLöschen", function() {
+				löscheLr();
 			});
 			$("body").on("click", "#LrFaunaBez", function() {
 				importiereLrBeziehungen("tblLrFaunaBez");
