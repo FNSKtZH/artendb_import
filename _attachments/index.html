@@ -42,16 +42,25 @@
 			<div id="SchaltflächenMacromycetesDatensammlungen"></div><br><br>
 		</div>
 		<hr>
+
 		<h3>Lebensräume</h3>
+		Zuerst view uploaden, dann:
 		<div style="column-width:250px;">
 			<div id="SchaltflächenLRIndex">hier kommen die Lebensräume</div><br>
-			Jetzt views uploaden, dann:<br>
 			<input type='checkbox' id="LrHierarchie">Hierarchie aktualisieren<br>
-			<input type='checkbox' id="LrParent">Parent aktualisieren<br><br>
+			<input type='checkbox' id="LrParent">Parent aktualisieren<br>
 			<div id="SchaltflächenLRDatensammlungen"></div><br><br><br>
-			<input type='checkbox' id="LrLöschen">alle Lebenräume löschen<br><br>
+			<input type='checkbox' id="LrLöschen">Lebenräume löschen<br><br>
 		</div>
 		<hr>
+
+		<h3>Beziehungen Flora-Fauna</h3>
+		<div style="column-width:250px;">
+			<div id="SchaltflächenFloraFaunaBez"></div><br><br>
+			<input type='checkbox' id="FloraFaunaBezLöschen">Flora-Fauna-Beziehungen löschen<br><br>
+		</div>
+		<hr>
+
 		<h3>LR-Beziehungen</h3>
 		NACH dem Import aller Arten und LR machen:
 		<div style="column-width:250px;">
@@ -67,19 +76,19 @@
 				baueDatensammlungenSchaltflächenAuf();
 			});
 			$("body").on("click", "[name='SchaltflächeFaunaIndex']", function() {
-				initiiereImport("importiereFaunaIndex", "tblName", $("#" + this.id).attr("Anz"));
+				importiereFaunaIndex($("#" + this.id).attr("Anz"));
 			});
 			$("body").on("click", "[name='SchaltflächeFloraIndex']", function() {
-				initiiereImport("importiereFloraIndex", "tblName", $("#" + this.id).attr("Anz"));
+				importiereFloraIndex($("#" + this.id).attr("Anz"));
 			});
 			$("body").on("click", "[name='SchaltflächeMoosIndex']", function() {
-				initiiereImport("importiereMoosIndex", "tblName", $("#" + this.id).attr("Anz"));
+				importiereMoosIndex($("#" + this.id).attr("Anz"));
 			});
 			$("body").on("click", "[name='SchaltflächeMacromycetesIndex']", function() {
-				initiiereImport("importiereMacromycetesIndex", "tblName", $("#" + this.id).attr("Anz"));
+				importiereMacromycetesIndex($("#" + this.id).attr("Anz"));
 			});
 			$("body").on("click", "[name='SchaltflächeLRIndex']", function() {
-				initiiereImport("importiereLrIndex", "tblName", $("#" + this.id).attr("Anz"));
+				importiereLrIndex($("#" + this.id).attr("Anz"));
 			});
 			$("body").on("click", "[name='SchaltflächeFaunaDatensammlung']", function() {
 				importiereFaunaDatensammlungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("Anz"));
@@ -116,6 +125,12 @@
 			});
 			$("body").on("click", "#LrLöschen", function() {
 				löscheLr();
+			});
+			$("body").on("click", "[name='FloraFaunaBez']", function() {
+				importiereFloraFaunaBeziehungen($("#" + this.id).attr("Anz"));
+			});
+			$("body").on("click", "#FloraFaunaBezLöschen", function() {
+				löscheFloraFaunaBeziehungen();
 			});
 			$("body").on("click", "#LrFaunaBez", function() {
 				importiereLrBeziehungen("tblLrFaunaBez");
