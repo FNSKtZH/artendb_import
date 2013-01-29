@@ -835,17 +835,17 @@ function importiereFloraFaunaBeziehungen(Anz) {
 				Beziehung["GUID"] = window.tblFloraFaunaBez[x].GUID;
 				//Bezeichnet den Typ des Dokuments
 				Beziehung.Typ = "Beziehung";
-				
+
 				//Arten aufbauen, dann als Beziehungspartner anfügen
 				Beziehung.Partner = [];
 				var Flora = {};
 				Flora.Gruppe = "Flora";
-				Flora.Name = window.tblFloraFaunaBez[x]["Flora Artname"];
+				Flora.Name = window.tblFloraFaunaBez[x]["Flora Name"];
 				Flora.GUID = window.tblFloraFaunaBez[x]["Flora GUID"];
 				Beziehung.Partner.push(Flora);
 				var Fauna = {};
 				Fauna.Gruppe = "Fauna";
-				Fauna.Name = window.tblFloraFaunaBez[x]["Fauna Artname"];
+				Fauna.Name = window.tblFloraFaunaBez[x]["Fauna Name"];
 				Fauna.GUID = window.tblFloraFaunaBez[x]["Fauna GUID"];
 				Beziehung.Partner.push(Fauna);
 				
@@ -883,6 +883,74 @@ function importiereFloraFaunaBeziehungen(Anz) {
 function löscheFloraFaunaBeziehungen() {
 	$db = $.couch.db("artendb");
 	$db.view('artendb/flora_fauna_bez', {
+		success: function (data) {
+			for (i in data.rows) {
+				löscheDokument(data.rows[i].key);
+			}
+		}
+	});
+}
+
+function importiereLrFaunaBeziehungen(Anz) {
+	$.when(initiiereImport()).then(function() {
+		var Beziehung, anzDs, anzDsMax;
+		//Beziehungen importieren, aber nur, wenn nicht schon vorhanden
+		if (!window.tblLrFaunaBez) {
+			window.tblLrFaunaBez = frageSql(window.myDB, "SELECT * FROM tblLrFaunaBez_import");
+		}
+		anzDs = 0;
+		for (x in window.tblLrFaunaBez) {
+			//In Häppchen von max. 4000 Datensätzen aufteilen
+			anzDs += 1;
+			//nur importieren, wenn innerhalb des mit Anz übergebenen 4000er Batches
+			if ((anzDs > (Anz*4000-4000)) && (anzDs <= Anz*4000)) {
+				//Beziehung als Objekt gründen
+				Beziehung = {};
+				Beziehung._id = window.tblLrFaunaBez[x].GUID;
+				Beziehung["GUID"] = window.tblLrFaunaBez[x].GUID;
+				//Bezeichnet den Typ des Dokuments
+				Beziehung.Typ = "Beziehung";
+
+				//Arten aufbauen, dann als Beziehungspartner anfügen
+				Beziehung.Partner = [];
+				var LR = {};
+				LR.Gruppe = "Lebensräume";
+				LR.Name = window.tblLrFaunaBez[x]["LR Name"];
+				LR.GUID = window.tblLrFaunaBez[x]["LR GUID"];
+				Beziehung.Partner.push(LR);
+				var Fauna = {};
+				Fauna.Gruppe = "Fauna";
+				Fauna.Name = window.tblLrFaunaBez[x]["Fauna Name"];
+				Fauna.GUID = window.tblLrFaunaBez[x]["Fauna GUID"];
+				Beziehung.Partner.push(Fauna);
+				
+				//Datensammlung schreiben
+				Beziehung.Datensammlung = {};
+				Beziehung.Datensammlung.Name = window.tblLrFaunaBez[x]["DsTitel"];
+
+				//Felder der Datensammlung schreiben, wenn sie Werte enthalten
+				Beziehung.Felder = {};
+				var Feldnamen = ["Art der Beziehung", "Wert für die Beziehung", "Bemerkungen"];
+				$.each(Feldnamen, function(index, value) {
+					if (window.tblLrFaunaBez[x][value] !== "" && window.tblLrFaunaBez[x][value] !== null) {
+						Beziehung.Felder[value] = window.tblLrFaunaBez[x][value];
+					}
+				});
+
+				//speichern
+				$db = $.couch.db("artendb");
+				$db.saveDoc(Beziehung);
+				if (anzDs === Anz*4000 || anzDs === window.tblLrFaunaBez.length) {
+					alert("Import fertig: anzDs = " + anzDs);
+				}
+			}
+		}
+	});
+}
+
+function löscheLrFaunaBeziehungen() {
+	$db = $.couch.db("artendb");
+	$db.view('artendb/lr_fauna_bez', {
 		success: function (data) {
 			for (i in data.rows) {
 				löscheDokument(data.rows[i].key);
@@ -1333,6 +1401,26 @@ function baueDatensammlungenSchaltflächenAuf() {
 				html += "<br>";
 			}
 			$("#SchaltflächenFloraFaunaBez").html(html);
+
+			//jetzt LR-Bauna-Beziehungen
+			//Anzahl Datensätze ermitteln
+			html = "";
+			qryAnzDs = frageSql(window.myDB, "SELECT Count(DsTitel) AS Anzahl FROM tblLrFaunaBez_import");
+			anzDs = qryAnzDs[0].Anzahl;
+			anzButtons = Math.ceil(anzDs/4000);
+			for (y = 1; y <= anzButtons; y++) {
+				html += "<input type='checkbox' id='LrFaunaBez";
+				html += y;
+				html += "' name='LrFaunaBez' Tabelle='tblLrFaunaBez_import";
+				html += "' Anz='" + y + "' Von='" + anzButtons;
+				html += "'>";
+				html += "LR-Bauna-Beziehungen";
+				if (anzButtons > 1) {
+					html += " (" + y + "/" + anzButtons + ")";
+				}
+				html += "<br>";
+			}
+			$("#SchaltflächenLrFaunaBez").html(html);
 		} else {
 			alert("Bitte den Pfad zur .mdb erfassen");
 		}
