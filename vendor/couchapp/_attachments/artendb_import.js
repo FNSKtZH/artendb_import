@@ -46,7 +46,8 @@ function importiereFloraIndex(Anz) {
 							offizielleArt.GUID = window.tblFloraSisf[x][y];
 							offizielleArt.Name = andereArt[0].Artname;
 							Art[window.tblDatensammlungMetadaten[0].DsName].Felder[y] = offizielleArt;
-						} else {
+						} else if (y !== "GUID") {
+							//GUID ist _id, kein eigenes Feld
 							Art[window.tblDatensammlungMetadaten[0].DsName].Felder[y] = window.tblFloraSisf[x][y];
 						}
 					}
@@ -282,7 +283,7 @@ function importiereMoosIndex(Anz) {
 						} else if (window.tblMooseNism[x][y] === -1) {
 							//Access wadelt in Abfragen Felder mit Wenn() in Zahlen um. Umkehren
 							Art[window.DatensammlungMetadatenMoose[0].DsName].Felder[y] = true;
-						} else {
+						} else if (y !== "GUID") {
 							Art[window.DatensammlungMetadatenMoose[0].DsName].Felder[y] = window.tblMooseNism[x][y];
 						}
 					}
@@ -387,7 +388,7 @@ function importiereMacromycetesIndex(Anz) {
 						if (window.tblMacromycetes[x][y] === -1) {
 							//Access wadelt in Abfragen Felder mit Wenn() in Zahlen um. Umkehren
 							Art[window.MacromycetesMetadaten[0].DsName].Felder[y] = true;
-						} else {
+						} else if (y !== "GUID") {
 							Art[window.MacromycetesMetadaten[0].DsName].Felder[y] = window.tblMacromycetes[x][y];
 						}
 					}
@@ -493,7 +494,7 @@ function importiereFaunaIndex(Anz) {
 						if (window.tblFaunaCscf[x][y] === -1) {
 							//Access wadelt in Abfragen Felder mit Wenn() in Zahlen um. Umkehren
 							Art[window.FaunaMetadaten[0].DsName].Felder[y] = true;
-						} else {
+						} else if (y !== "GUID") {
 							Art[window.FaunaMetadaten[0].DsName].Felder[y] = window.tblFaunaCscf[x][y];
 						}
 					}
@@ -620,7 +621,7 @@ function importiereLrIndex(Anz) {
 								.replace("ART - Definitionen zu den Artlisten#http://www.art.admin.ch/themen/00563/00677/00679/index.html?lang=de#sprungmarke0_9", "ART - Definitionen zu den Artlisten: http://www.art.admin.ch/themen/00563/00677/00679/index.html?lang=de#sprungmarke0_9")
 								.replace("#http://Ablage: 5.202 [4] N, Bibl. Naturschutz [4]#", "")
 								.replace(/#/g, "");
-						} else {
+						} else if (y !== "GUID") {
 							Art[window.LrMetadaten[0].DsName].Felder[y] = window.tblLr[x][y];
 						}
 					}
@@ -832,7 +833,6 @@ function importiereFloraFaunaBeziehungen(Anz) {
 				//Beziehung als Objekt gründen
 				Beziehung = {};
 				Beziehung._id = window.tblFloraFaunaBez[x].GUID;
-				Beziehung["GUID"] = window.tblFloraFaunaBez[x].GUID;
 				//Bezeichnet den Typ des Dokuments
 				Beziehung.Typ = "Beziehung";
 
@@ -907,7 +907,6 @@ function importiereLrFaunaBeziehungen(Anz) {
 				//Beziehung als Objekt gründen
 				Beziehung = {};
 				Beziehung._id = window.tblLrFaunaBez[x].GUID;
-				Beziehung["GUID"] = window.tblLrFaunaBez[x].GUID;
 				//Bezeichnet den Typ des Dokuments
 				Beziehung.Typ = "Beziehung";
 
@@ -975,7 +974,6 @@ function importiereLrFloraBeziehungen(Anz) {
 				//Beziehung als Objekt gründen
 				Beziehung = {};
 				Beziehung._id = window.tblLrFloraBez[x].GUID;
-				Beziehung["GUID"] = window.tblLrFloraBez[x].GUID;
 				//Bezeichnet den Typ des Dokuments
 				Beziehung.Typ = "Beziehung";
 
@@ -1043,7 +1041,6 @@ function importiereLrMooseBeziehungen(Anz) {
 				//Beziehung als Objekt gründen
 				Beziehung = {};
 				Beziehung._id = window.tblLrMooseBez[x].GUID;
-				Beziehung["GUID"] = window.tblLrMooseBez[x].GUID;
 				//Bezeichnet den Typ des Dokuments
 				Beziehung.Typ = "Beziehung";
 
