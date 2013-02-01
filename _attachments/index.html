@@ -68,6 +68,20 @@
 		</div>
 		<hr>
 
+		<h3>Beziehungen LR-Flora</h3>
+		<div style="column-width:250px;">
+			<div id="SchaltflächenLrFloraBez"></div><br><br>
+			<input type='checkbox' id="LrFloraBezLöschen">LR-Flora-Beziehungen löschen<br><br>
+		</div>
+		<hr>
+
+		<h3>Beziehungen LR-Moose</h3>
+		<div style="column-width:250px;">
+			<div id="SchaltflächenLrMooseBez"></div><br><br>
+			<input type='checkbox' id="LrMooseBezLöschen">LR-Moose-Beziehungen löschen<br><br>
+		</div>
+		<hr>
+
 		<h3>LR-Beziehungen</h3>
 		NACH dem Import aller Arten und LR machen:
 		<div style="column-width:250px;">
@@ -142,8 +156,20 @@
 			$("body").on("click", "[name='LrFaunaBez']", function() {
 				importiereLrFaunaBeziehungen($("#" + this.id).attr("Anz"));
 			});
+			$("body").on("click", "[name='LrFloraBez']", function() {
+				importiereLrFloraBeziehungen($("#" + this.id).attr("Anz"));
+			});
+			$("body").on("click", "[name='LrMooseBez']", function() {
+				importiereLrMooseBeziehungen($("#" + this.id).attr("Anz"));
+			});
 			$("body").on("click", "#LrFaunaBezLöschen", function() {
 				löscheLrFaunaBeziehungen();
+			});
+			$("body").on("click", "#LrFloraBezLöschen", function() {
+				löscheLrFloraBeziehungen();
+			});
+			$("body").on("click", "#LrMooseBezLöschen", function() {
+				löscheLrMooseBeziehungen();
 			});
 			$("body").on("click", "#LrFaunaBez", function() {
 				importiereLrBeziehungen("tblLrFaunaBez");
