@@ -62,21 +62,21 @@
 		<hr>
 
 		<h3>Beziehungen LR-Fauna</h3>
-		<div style="column-width:250px;">
+		<div style="column-width:450px;">
 			<div id="SchaltflächenLrFaunaBez"></div><br><br>
 			<input type='checkbox' id="LrFaunaBezLöschen">LR-Fauna-Beziehungen löschen<br><br>
 		</div>
 		<hr>
 
 		<h3>Beziehungen LR-Flora</h3>
-		<div style="column-width:250px;">
+		<div style="column-width:450px;">
 			<div id="SchaltflächenLrFloraBez"></div><br><br>
 			<input type='checkbox' id="LrFloraBezLöschen">LR-Flora-Beziehungen löschen<br><br>
 		</div>
 		<hr>
 
 		<h3>Beziehungen LR-Moose</h3>
-		<div style="column-width:250px;">
+		<div style="column-width:450px;">
 			<div id="SchaltflächenLrMooseBez"></div><br><br>
 			<input type='checkbox' id="LrMooseBezLöschen">LR-Moose-Beziehungen löschen<br><br>
 		</div>
@@ -148,19 +148,19 @@
 				löscheLr();
 			});
 			$("body").on("click", "[name='FloraFaunaBez']", function() {
-				importiereFloraFaunaBeziehungen($("#" + this.id).attr("Anz"));
+				importiereFloraFaunaBeziehungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("Anz"));
 			});
 			$("body").on("click", "#FloraFaunaBezLöschen", function() {
 				löscheFloraFaunaBeziehungen();
 			});
 			$("body").on("click", "[name='LrFaunaBez']", function() {
-				importiereLrFaunaBeziehungen($("#" + this.id).attr("Anz"));
+				importiereLrFaunaBeziehungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("BeziehungNr"), $("#" + this.id).attr("Anz"));
 			});
 			$("body").on("click", "[name='LrFloraBez']", function() {
-				importiereLrFloraBeziehungen($("#" + this.id).attr("Anz"));
+				importiereLrFloraBeziehungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("BeziehungNr"), $("#" + this.id).attr("Anz"));
 			});
 			$("body").on("click", "[name='LrMooseBez']", function() {
-				importiereLrMooseBeziehungen($("#" + this.id).attr("Anz"));
+				importiereLrMooseBeziehungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("BeziehungNr"), $("#" + this.id).attr("Anz"));
 			});
 			$("body").on("click", "#LrFaunaBezLöschen", function() {
 				löscheLrFaunaBeziehungen();
