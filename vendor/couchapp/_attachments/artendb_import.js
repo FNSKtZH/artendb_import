@@ -898,14 +898,10 @@ function löscheFloraFaunaBeziehungen() {
 function importiereLrFaunaBeziehungen(tblName, beziehung_nr, Anz) {
 	$.when(initiiereImport()).then(function() {
 		var Beziehung, anzDs, anzDsMax;
-		console.log("tblName = " + tblName);
-		console.log("beziehung_nr = " + beziehung_nr);
-		console.log("Anz = " + Anz);
 		//Informationen zur Datensammlung holen
 		if (!window["DatensammlungMetadaten" + tblName + beziehung_nr]) {
-			window["DatensammlungMetadaten" + tblName + beziehung_nr] = frageSql(window.myDB, "SELECT * FROM qryBezMetadaten WHERE DsTabelle = '" + tblName + "' AND BeziehungNr=" + beziehung_nr);
+			window["DatensammlungMetadaten" + tblName + beziehung_nr] = frageSql(window.myDB, "SELECT * FROM qryBezMetadaten WHERE DsTabelle = '" + tblName + "' AND Beziehungen=1 AND BeziehungNr=" + beziehung_nr);
 		}
-		console.log("DatensammlungMetadaten" + tblName + beziehung_nr + " = " + JSON.stringify(window["DatensammlungMetadaten" + tblName + beziehung_nr]))
 		//Beziehungen importieren, aber nur, wenn nicht schon vorhanden
 		if (!window["tblLrFaunaBez" + tblName + beziehung_nr]) {
 			window["tblLrFaunaBez" + tblName + beziehung_nr] = frageSql(window.myDB, "SELECT * FROM tblLrFaunaBez_import WHERE DsTabelle='" + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsTabelle + "' AND BeziehungNr=" + beziehung_nr);
@@ -950,8 +946,14 @@ function importiereLrFaunaBeziehungen(tblName, beziehung_nr, Anz) {
 				Beziehung.Felder = {};
 				var Feldnamen = ["Art der Beziehung", "Wert für die Beziehung", "Bemerkungen"];
 				$.each(Feldnamen, function(index, value) {
+					//Leerwerte ausschliessen, aber nicht die 0
 					if (window["tblLrFaunaBez" + tblName + beziehung_nr][x][value] !== "" && window["tblLrFaunaBez" + tblName + beziehung_nr][x][value] !== null) {
-						Beziehung.Felder[value] = window["tblLrFaunaBez" + tblName + beziehung_nr][x][value];
+						//Bei AP FM soll das Feld "Wert für die Beziehung" "Biotopbindung" heissen
+						if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsTabelle === "tblFaunaFnsApFm") {
+							Beziehung.Felder.Biotopbindung = window["tblLrFaunaBez" + tblName + beziehung_nr][x][value];
+						} else {
+							Beziehung.Felder[value] = window["tblLrFaunaBez" + tblName + beziehung_nr][x][value];
+						}
 					}
 				});
 
@@ -980,14 +982,10 @@ function löscheLrFaunaBeziehungen() {
 function importiereLrFloraBeziehungen(tblName, beziehung_nr, Anz) {
 	$.when(initiiereImport()).then(function() {
 		var Beziehung, anzDs, anzDsMax;
-		console.log("tblName = " + tblName);
-		console.log("beziehung_nr = " + beziehung_nr);
-		console.log("Anz = " + Anz);
 		//Informationen zur Datensammlung holen
 		if (!window["DatensammlungMetadaten" + tblName + beziehung_nr]) {
 			window["DatensammlungMetadaten" + tblName + beziehung_nr] = frageSql(window.myDB, "SELECT * FROM qryBezMetadaten WHERE DsTabelle = '" + tblName + "' AND BeziehungNr=" + beziehung_nr);
 		}
-		console.log("DatensammlungMetadaten" + tblName + beziehung_nr + " = " + JSON.stringify(window["DatensammlungMetadaten" + tblName + beziehung_nr]))
 		//Beziehungen importieren, aber nur, wenn nicht schon vorhanden
 		if (!window["tblLrFloraBez" + tblName + beziehung_nr]) {
 			window["tblLrFloraBez" + tblName + beziehung_nr] = frageSql(window.myDB, "SELECT * FROM tblLrFloraBez_import WHERE DsTabelle='" + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsTabelle + "' AND BeziehungNr=" + beziehung_nr);
@@ -1032,8 +1030,14 @@ function importiereLrFloraBeziehungen(tblName, beziehung_nr, Anz) {
 				Beziehung.Felder = {};
 				var Feldnamen = ["Art der Beziehung", "Wert für die Beziehung", "Bemerkungen"];
 				$.each(Feldnamen, function(index, value) {
+					//Leerwerte ausschliessen, aber nicht die 0
 					if (window["tblLrFloraBez" + tblName + beziehung_nr][x][value] !== "" && window["tblLrFloraBez" + tblName + beziehung_nr][x][value] !== null) {
-						Beziehung.Felder[value] = window["tblLrFloraBez" + tblName + beziehung_nr][x][value];
+						//Bei AP FM soll das Feld "Wert für die Beziehung" "Biotopbindung" heissen
+						if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsTabelle === "tblFloraFnsApFm") {
+							Beziehung.Felder.Biotopbindung = window["tblLrFloraBez" + tblName + beziehung_nr][x][value];
+						} else {
+							Beziehung.Felder[value] = window["tblLrFloraBez" + tblName + beziehung_nr][x][value];
+						}
 					}
 				});
 
@@ -1062,14 +1066,10 @@ function löscheLrFloraBeziehungen() {
 function importiereLrMooseBeziehungen(tblName, beziehung_nr, Anz) {
 	$.when(initiiereImport()).then(function() {
 		var Beziehung, anzDs, anzDsMax;
-		console.log("tblName = " + tblName);
-		console.log("beziehung_nr = " + beziehung_nr);
-		console.log("Anz = " + Anz);
 		//Informationen zur Datensammlung holen
 		if (!window["DatensammlungMetadaten" + tblName + beziehung_nr]) {
 			window["DatensammlungMetadaten" + tblName + beziehung_nr] = frageSql(window.myDB, "SELECT * FROM qryBezMetadaten WHERE DsTabelle = '" + tblName + "' AND BeziehungNr=" + beziehung_nr);
 		}
-		console.log("DatensammlungMetadaten" + tblName + beziehung_nr + " = " + JSON.stringify(window["DatensammlungMetadaten" + tblName + beziehung_nr]))
 		//Beziehungen importieren, aber nur, wenn nicht schon vorhanden
 		if (!window["tblLrMooseBez" + tblName + beziehung_nr]) {
 			window["tblLrMooseBez" + tblName + beziehung_nr] = frageSql(window.myDB, "SELECT * FROM tblLrMooseBez_import WHERE DsTabelle='" + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsTabelle + "' AND BeziehungNr=" + beziehung_nr);
@@ -1114,8 +1114,13 @@ function importiereLrMooseBeziehungen(tblName, beziehung_nr, Anz) {
 				Beziehung.Felder = {};
 				var Feldnamen = ["Art der Beziehung", "Wert für die Beziehung", "Bemerkungen"];
 				$.each(Feldnamen, function(index, value) {
-					if (window["tblLrMooseBez" + tblName + beziehung_nr][x][value] !== "" && window["tblLrMooseBez" + tblName + beziehung_nr][x][value] !== null) {
-						Beziehung.Felder[value] = window["tblLrMooseBez" + tblName + beziehung_nr][x][value];
+					//Leerwerte ausschliessen, aber nicht die 0
+					if (window["tblLrMooseBez" + tblName + beziehung_nr][x][value] !== "" && window["tblLrMooseBez" + tblName + beziehung_nr][x][value] !== null) {//Bei AP FM soll das Feld "Wert für die Beziehung" "Biotopbindung" heissen
+						if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsTabelle === "tblMooseFnsApFm") {
+							Beziehung.Felder.Biotopbindung = window["tblLrMooseBez" + tblName + beziehung_nr][x][value];
+						} else {
+							Beziehung.Felder[value] = window["tblLrMooseBez" + tblName + beziehung_nr][x][value];
+						}
 					}
 				});
 
@@ -1132,7 +1137,7 @@ function importiereLrMooseBeziehungen(tblName, beziehung_nr, Anz) {
 
 function löscheLrMooseBeziehungen() {
 	$db = $.couch.db("artendb");
-	$db.view('artendb/lr_Moose_bez', {
+	$db.view('artendb/lr_moose_bez', {
 		success: function (data) {
 			for (i in data.rows) {
 				löscheDokument(data.rows[i].key);
@@ -1336,7 +1341,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 			//jetzt Flora-Bauna-Beziehungen
 			sqlDatensammlungenFloraFaunaBez = "SELECT * FROM tblDatensammlungMetadaten WHERE DsIndex='tblFloraFaunaBez' ORDER BY DsReihenfolge";
 			DatensammlungenFloraFaunaBez = frageSql(window.myDB, sqlDatensammlungenFloraFaunaBez);
-			html = "Flora-Fauna-Beziehungen Datensammlungen:<br>";
+			html = "";
 			for (i in DatensammlungenFloraFaunaBez) {
 				//Anzahl Datensätze ermitteln
 				qryAnzDs = frageSql(window.myDB, "SELECT Count(*) AS Anzahl FROM tblFloraFaunaBez_import WHERE DsTabelle='" + DatensammlungenFloraFaunaBez[i].DsTabelle + "'");
@@ -1358,18 +1363,12 @@ function baueDatensammlungenSchaltflächenAuf() {
 			$("#SchaltflächenFloraFaunaBez").html(html);
 
 			//jetzt LR-Fauna-Beziehungen
-			sqlDatensammlungenLrFaunaBez = "SELECT * FROM qryBezMetadaten WHERE DsIndex='tblFaunaCscf' AND Beziehungen=1 ORDER BY DsReihenfolge";
+			sqlDatensammlungenLrFaunaBez = "SELECT * FROM qryBezMetadaten WHERE DsIndex='tblFaunaCscf' ORDER BY DsReihenfolge";
 			DatensammlungenLrFaunaBez = frageSql(window.myDB, sqlDatensammlungenLrFaunaBez);
-			console.log("DatensammlungenLrFaunaBez = " + JSON.stringify(DatensammlungenLrFaunaBez));
-			html = "Lebensraum-Fauna-Beziehungen Datensammlungen:<br>";
+			html = "";
 			for (i in DatensammlungenLrFaunaBez) {
-				console.log("i = " + i);
-				console.log("DatensammlungenLrFaunaBez[i].DsTabelle=" + DatensammlungenLrFaunaBez[i].DsTabelle);
-				console.log("DatensammlungenLrFaunaBez[i].Beziehung=" + DatensammlungenLrFaunaBez[i].Beziehung);
-				console.log("DatensammlungenLrFaunaBez[i].BeziehungNr=" + DatensammlungenLrFaunaBez[i].BeziehungNr);
 				//Anzahl Datensätze ermitteln
 				qryAnzDs = frageSql(window.myDB, "SELECT Count(*) AS Anzahl FROM tblLrFaunaBez_import WHERE DsTabelle='" + DatensammlungenLrFaunaBez[i].DsTabelle + "' AND BeziehungNr=" + DatensammlungenLrFaunaBez[i].BeziehungNr);
-				console.log("qryAnzDs = " + JSON.stringify(qryAnzDs));
 				anzDs = qryAnzDs[0].Anzahl;
 				anzButtons = Math.ceil(anzDs/DatensammlungenLrFaunaBez[i].DsAnzDs);
 				for (y = 1; y <= anzButtons; y++) {
@@ -1378,7 +1377,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 					html += "' name='LrFaunaBez' Tabelle='" + DatensammlungenLrFaunaBez[i].DsTabelle;
 					html += "' BeziehungNr=" + DatensammlungenLrFaunaBez[i].BeziehungNr + " Anz='" + y + "' Von='" + anzButtons;
 					html += "'>";
-					html += DatensammlungenLrFaunaBez[i].DsName + ": " + DatensammlungenLrFaunaBez[i].Beziehung;
+					html += DatensammlungenLrFaunaBez[i].DsName + ": " + qryAnzDs[0].Anzahl + " " + DatensammlungenLrFaunaBez[i].Beziehung;
 					if (anzButtons > 1) {
 						html += " (" + y + "/" + anzButtons + ")";
 					}
@@ -1388,18 +1387,12 @@ function baueDatensammlungenSchaltflächenAuf() {
 			$("#SchaltflächenLrFaunaBez").html(html);
 
 			//jetzt LR-Flora-Beziehungen
-			sqlDatensammlungenLrFloraBez = "SELECT * FROM qryBezMetadaten WHERE DsIndex='tblFloraSisf' AND Beziehungen=1 ORDER BY DsReihenfolge";
+			sqlDatensammlungenLrFloraBez = "SELECT * FROM qryBezMetadaten WHERE DsIndex='tblFloraSisf' ORDER BY DsReihenfolge";
 			DatensammlungenLrFloraBez = frageSql(window.myDB, sqlDatensammlungenLrFloraBez);
-			console.log("DatensammlungenLrFloraBez = " + JSON.stringify(DatensammlungenLrFloraBez));
-			html = "Lebensraum-Flora-Beziehungen Datensammlungen:<br>";
+			html = "";
 			for (i in DatensammlungenLrFloraBez) {
-				console.log("i = " + i);
-				console.log("DatensammlungenLrFloraBez[i].DsTabelle=" + DatensammlungenLrFloraBez[i].DsTabelle);
-				console.log("DatensammlungenLrFloraBez[i].Beziehung=" + DatensammlungenLrFloraBez[i].Beziehung);
-				console.log("DatensammlungenLrFloraBez[i].BeziehungNr=" + DatensammlungenLrFloraBez[i].BeziehungNr);
 				//Anzahl Datensätze ermitteln
 				qryAnzDs = frageSql(window.myDB, "SELECT Count(*) AS Anzahl FROM tblLrFloraBez_import WHERE DsTabelle='" + DatensammlungenLrFloraBez[i].DsTabelle + "' AND BeziehungNr=" + DatensammlungenLrFloraBez[i].BeziehungNr);
-				console.log("qryAnzDs = " + JSON.stringify(qryAnzDs));
 				anzDs = qryAnzDs[0].Anzahl;
 				anzButtons = Math.ceil(anzDs/DatensammlungenLrFloraBez[i].DsAnzDs);
 				for (y = 1; y <= anzButtons; y++) {
@@ -1408,7 +1401,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 					html += "' name='LrFloraBez' Tabelle='" + DatensammlungenLrFloraBez[i].DsTabelle;
 					html += "' BeziehungNr=" + DatensammlungenLrFloraBez[i].BeziehungNr + " Anz='" + y + "' Von='" + anzButtons;
 					html += "'>";
-					html += DatensammlungenLrFloraBez[i].DsName + ": " + DatensammlungenLrFloraBez[i].Beziehung;
+					html += DatensammlungenLrFloraBez[i].DsName + ": " + qryAnzDs[0].Anzahl + " " + DatensammlungenLrFloraBez[i].Beziehung;
 					if (anzButtons > 1) {
 						html += " (" + y + "/" + anzButtons + ")";
 					}
@@ -1418,18 +1411,12 @@ function baueDatensammlungenSchaltflächenAuf() {
 			$("#SchaltflächenLrFloraBez").html(html);
 
 			//jetzt LR-Moose-Beziehungen
-			sqlDatensammlungenLrMooseBez = "SELECT * FROM qryBezMetadaten WHERE DsIndex='tblMooseNism' AND Beziehungen=1 ORDER BY DsReihenfolge";
+			sqlDatensammlungenLrMooseBez = "SELECT * FROM qryBezMetadaten WHERE DsIndex='tblMooseNism' ORDER BY DsReihenfolge";
 			DatensammlungenLrMooseBez = frageSql(window.myDB, sqlDatensammlungenLrMooseBez);
-			console.log("DatensammlungenLrMooseBez = " + JSON.stringify(DatensammlungenLrMooseBez));
-			html = "Lebensraum-Moose-Beziehungen Datensammlungen:<br>";
+			html = "";
 			for (i in DatensammlungenLrMooseBez) {
-				console.log("i = " + i);
-				console.log("DatensammlungenLrMooseBez[i].DsTabelle=" + DatensammlungenLrMooseBez[i].DsTabelle);
-				console.log("DatensammlungenLrMooseBez[i].Beziehung=" + DatensammlungenLrMooseBez[i].Beziehung);
-				console.log("DatensammlungenLrMooseBez[i].BeziehungNr=" + DatensammlungenLrMooseBez[i].BeziehungNr);
 				//Anzahl Datensätze ermitteln
 				qryAnzDs = frageSql(window.myDB, "SELECT Count(*) AS Anzahl FROM tblLrMooseBez_import WHERE DsTabelle='" + DatensammlungenLrMooseBez[i].DsTabelle + "' AND BeziehungNr=" + DatensammlungenLrMooseBez[i].BeziehungNr);
-				console.log("qryAnzDs = " + JSON.stringify(qryAnzDs));
 				anzDs = qryAnzDs[0].Anzahl;
 				anzButtons = Math.ceil(anzDs/DatensammlungenLrMooseBez[i].DsAnzDs);
 				for (y = 1; y <= anzButtons; y++) {
@@ -1438,7 +1425,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 					html += "' name='LrMooseBez' Tabelle='" + DatensammlungenLrMooseBez[i].DsTabelle;
 					html += "' BeziehungNr=" + DatensammlungenLrMooseBez[i].BeziehungNr + " Anz='" + y + "' Von='" + anzButtons;
 					html += "'>";
-					html += DatensammlungenLrMooseBez[i].DsName + ": " + DatensammlungenLrMooseBez[i].Beziehung;
+					html += DatensammlungenLrMooseBez[i].DsName + ": " + qryAnzDs[0].Anzahl + " " + DatensammlungenLrMooseBez[i].Beziehung;
 					if (anzButtons > 1) {
 						html += " (" + y + "/" + anzButtons + ")";
 					}
