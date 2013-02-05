@@ -922,6 +922,7 @@ function importiereLrFaunaBeziehungen(tblName, beziehung_nr, Anz) {
 				Beziehung.Partner = [];
 				var LR = {};
 				LR.Gruppe = "Lebensräume";
+				LR.Taxonomie = window["tblLrFaunaBez" + tblName + beziehung_nr][x]["LR Taxonomie"];
 				LR.Name = window["tblLrFaunaBez" + tblName + beziehung_nr][x]["LR Name"];
 				LR.GUID = window["tblLrFaunaBez" + tblName + beziehung_nr][x]["LR GUID"];
 				Beziehung.Partner.push(LR);
@@ -1006,6 +1007,7 @@ function importiereLrFloraBeziehungen(tblName, beziehung_nr, Anz) {
 				Beziehung.Partner = [];
 				var LR = {};
 				LR.Gruppe = "Lebensräume";
+				LR.Taxonomie = window["tblLrFaunaBez" + tblName + beziehung_nr][x]["LR Taxonomie"];
 				LR.Name = window["tblLrFloraBez" + tblName + beziehung_nr][x]["LR Name"];
 				LR.GUID = window["tblLrFloraBez" + tblName + beziehung_nr][x]["LR GUID"];
 				Beziehung.Partner.push(LR);
@@ -1090,6 +1092,7 @@ function importiereLrMooseBeziehungen(tblName, beziehung_nr, Anz) {
 				Beziehung.Partner = [];
 				var LR = {};
 				LR.Gruppe = "Lebensräume";
+				LR.Taxonomie = window["tblLrFaunaBez" + tblName + beziehung_nr][x]["LR Taxonomie"];
 				LR.Name = window["tblLrMooseBez" + tblName + beziehung_nr][x]["LR Name"];
 				LR.GUID = window["tblLrMooseBez" + tblName + beziehung_nr][x]["LR GUID"];
 				Beziehung.Partner.push(LR);
