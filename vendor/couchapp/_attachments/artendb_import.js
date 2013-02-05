@@ -1195,7 +1195,7 @@ function importiereLrLrBeziehungen(Anz) {
 				//Es gibt nur das Feld "Art der Beziehung"
 				Beziehung.Felder = {};
 				//es gibt keine Leerwerte
-				if (window.tblLrLrBez[x] === "Synonym von") {
+				if (window.tblLrLrBez[x]["Art der Beziehung"] === "Synonym von") {
 					Beziehung.Felder["Art der Beziehung"] = "synonym";
 				} else {
 					//Wert ist "Untereinheit von"
