@@ -87,6 +87,13 @@
 			<div id="SchaltflächenLrMooseBez"></div><br><br>
 			<input type='checkbox' id="LrMooseBezLöschen">LR-Moose-Beziehungen löschen<br><br>
 		</div>
+		<hr>
+
+		<h3>Beziehungen LR-LR</h3>
+		<div style="column-width:550px;">
+			<div id="SchaltflächenLrLrBez"></div><br><br>
+			<input type='checkbox' id="LrLrBezLöschen">LR-LR-Beziehungen löschen<br><br>
+		</div>
 
 		<script>
 			$(document).ready(function () {
@@ -162,6 +169,9 @@
 			$("body").on("click", "[name='LrMooseBez']", function() {
 				importiereLrMooseBeziehungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("BeziehungNr"), $("#" + this.id).attr("Anz"));
 			});
+			$("body").on("click", "[name='LrLrBez']", function() {
+				importiereLrLrBeziehungen($("#" + this.id).attr("Anz"));
+			});
 			$("body").on("click", "#LrFaunaBezLöschen", function() {
 				löscheLrFaunaBeziehungen();
 			});
@@ -170,6 +180,10 @@
 			});
 			$("body").on("click", "#LrMooseBezLöschen", function() {
 				löscheLrMooseBeziehungen();
+			});
+
+			$("body").on("click", "#LrLrBezLöschen", function() {
+				löscheLrLrBeziehungen();
 			});
 			$("body").on("click", "#LrFaunaBez", function() {
 				importiereLrBeziehungen("tblLrFaunaBez");
