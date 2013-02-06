@@ -1188,7 +1188,13 @@ function importiereLrLrBeziehungen(Anz) {
 				
 				//Datensammlung schreiben
 				Beziehung.Datensammlung = {};
-				Beziehung.Datensammlung.Name = "Beziehungen zu anderen Lebensräumen";
+				if (window.tblLrLrBez[x]["Art der Beziehung"] === "Synonym von") {
+					Beziehung.Datensammlung.Name = "Synonyme Lebensräume";
+				} else if (window.tblLrLrBez[x]["Art der Beziehung"] === "Untereinheit von") {
+					Beziehung.Datensammlung.Name = "Hierarchisch über-/untergeordnete Lebensräume";
+				} else {
+					Beziehung.Datensammlung.Name = "Beziehungen zu anderen Lebensräumen";
+				}
 				Beziehung.Datensammlung.Beschreibung = "Diese Datensammlung ist nicht beschrieben";
 
 				//Felder der Datensammlung schreiben, wenn sie Werte enthalten
