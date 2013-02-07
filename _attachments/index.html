@@ -28,6 +28,7 @@
 			<input type='checkbox' id="FloraEingeschlosseneArten">Eingeschlossene Arten ergänzen<br>
 			<input type='checkbox' id="FloraSynonyme">Synonyme ergänzen<br><br>
 			<div id="SchaltflächenFloraDatensammlungen"></div><br>
+			<input type='checkbox' id="FloraLöschen">Flora löschen<br><br>
 		</div>
 		<hr>
 		<h3>Moose</h3>
@@ -51,13 +52,6 @@
 			<input type='checkbox' id="LrParent">Parent aktualisieren<br>
 			<div id="SchaltflächenLRDatensammlungen"></div><br><br><br>
 			<input type='checkbox' id="LrLöschen">Lebenräume löschen<br><br>
-		</div>
-		<hr>
-
-		<h3>LR-Beziehungen</h3>
-		NACH dem Import aller Arten und LR machen:
-		<div style="column-width:250px;">
-			<input type='checkbox' id="LrFaunaBez">LR-Fauna<br><input type='checkbox' id="LrFloraBez">LR-Flora<br><input type='checkbox' id="LrMooseBez">LR-Moose<br><input type='checkbox' id="LrBezSpeichern">speichern<br>
 		</div>
 		<hr>
 
@@ -145,6 +139,9 @@
 			$("body").on("click", "#FloraSynonyme", function() {
 				ergänzeFloraSynonyme();
 			});
+			$("body").on("click", "#FloraLöschen", function() {
+				löscheFloraIndex();
+			});
 			$("body").on("click", "#LrHierarchie", function() {
 				aktualisiereLrHierarchie();
 			});
@@ -181,11 +178,10 @@
 			$("body").on("click", "#LrMooseBezLöschen", function() {
 				löscheLrMooseBeziehungen();
 			});
-
 			$("body").on("click", "#LrLrBezLöschen", function() {
 				löscheLrLrBeziehungen();
 			});
-			$("body").on("click", "#LrFaunaBez", function() {
+			/*$("body").on("click", "#LrFaunaBez", function() {
 				importiereLrBeziehungen("tblLrFaunaBez");
 			});
 			$("body").on("click", "#LrFloraBez", function() {
@@ -193,7 +189,7 @@
 			});
 			$("body").on("click", "#LrMooseBez", function() {
 				importiereLrBeziehungen("tblLrMooseBez");
-			});
+			});*/
 			$("body").on("click", "#LrBezSpeichern", function() {
 				speichereBezDocs();
 			});

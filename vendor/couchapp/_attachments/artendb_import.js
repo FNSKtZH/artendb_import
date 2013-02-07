@@ -59,6 +59,17 @@ function importiereFloraIndex(Anz) {
 	});
 }
 
+function löscheFloraIndex() {
+	$db = $.couch.db("artendb");
+	$db.view('artendb/flora', {
+		success: function (data) {
+			for (i in data.rows) {
+				löscheDokument(data.rows[i].key);
+			}
+		}
+	});
+}
+
 function ergänzeFloraDeutscheNamen() {
 	$.when(initiiereImport()).then(function() {
 		var qryDeutscheNamen;
