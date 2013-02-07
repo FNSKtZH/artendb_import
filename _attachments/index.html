@@ -164,7 +164,6 @@
 				importiereLrLrBeziehungen($("#" + this.id).attr("Anz"));
 			});
 			$("body").on("click", ".dokumenteVonViewLöschen", function() {
-				console.log("$(this).attr('viewname') = " + $(this).attr("viewname"));
 				löscheDokumenteVonView($(this).attr("viewname"));
 			});
 			$("body").on("click", "#LrBezSpeichern", function() {

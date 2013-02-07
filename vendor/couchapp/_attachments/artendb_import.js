@@ -1,6 +1,6 @@
 function importiereFloraIndex(Anz) {
 	$.when(initiiereImport()).then(function() {
-		var Art, anzDs, länge, andereArt, offizielleArt;
+		var Art, anzDs, andereArt, offizielleArt;
 		//Metadaten laden, wenn nicht schon vorhanden
 		if (!window.tblDatensammlungMetadaten) {
 			window.tblDatensammlungMetadaten = frageSql(window.myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'tblFloraSisf'");
@@ -789,7 +789,7 @@ function importiereLrDatensammlungen(tblName, Anz) {
 				//entsprechenden Index öffnen
 				//sicherstellen, dass Felder vorkommen. Gibt sonst einen Fehler
 				if (anzFelder > 0) {
-					//Datenbankabfrage ist langsam. Estern aufrufen, 
+					//Datenbankabfrage ist langsam. Extern aufrufen, 
 					//sonst überholt die for-Schlaufe und DatensammlungDieserArt ist bis zur saveDoc-Ausführung eine andere!
 					fuegeDatensammlungZuArt(window["Datensammlung" + tblName][x].GUID, window["DatensammlungMetadaten" + tblName][0].DsName, DatensammlungDieserArt);
 				}
@@ -798,6 +798,8 @@ function importiereLrDatensammlungen(tblName, Anz) {
 	});
 }
 
+//fügt der Art eine Datensammlung hinzu
+//wenn dieselbe schon vorkommt, wird sie überschrieben
 function fuegeDatensammlungZuArt(GUID, DsName, DatensammlungDieserArt) {
 	$db = $.couch.db("artendb");
 	$db.openDoc(GUID, {
@@ -808,6 +810,17 @@ function fuegeDatensammlungZuArt(GUID, DsName, DatensammlungDieserArt) {
 			$db.saveDoc(doc);
 		}
 	});
+
+	//alternative Variante mit update-handler. hat nicht funktioniert
+	/*$.ajax({
+		type: "POST",
+		//url: "../../_bulk_docs",
+		url: "http://127.0.0.1:5984/artendb/_design/artendb/_update/eigenschaft_objekt/" + GUID + "?field=" + DsName + "&value='" + JSON.stringify(DatensammlungDieserArt) + "'",
+		contentType: "application/json"
+		//data: JSON.stringify(ObjektMitDeleteListe)
+	}).done(function() {
+		//dokumenteVonDatensatzobjektGelöscht.resolve();
+	});*/
 }
 
 
@@ -1618,7 +1631,11 @@ function löscheDokumenteVonView(viewname) {
 	$db = $.couch.db("artendb");
 	$db.view('artendb/' + viewname, {
 		success: function (data) {
-			loescheMitIdRevListe(data);
+			$.when(loescheMitIdRevListe(data))
+				.then(function() {
+					//dann den eingefügten Node wählen
+					dokumenteVonViewGelöscht.resolve(); 
+				});
 		}
 	});
 	return dokumenteVonViewGelöscht.promise();
@@ -1628,26 +1645,36 @@ function löscheDokumenteVonView(viewname) {
 //nimmt das Ergebnis einer Abfrage entgegen, welche im key einen Array hat
 //Array[0] die _id des zu löschenden Datensatzes und Array[1] dessen _rev
 function loescheMitIdRevListe(Datensatzobjekt) {
-	var ObjektMitDeleteListe, Docs, Datensatz, rowkey;
+	var ObjektMitDeleteListe, Docs, Datensatz, rowkey, anzDs;
+	var dokumenteVonDatensatzobjektGelöscht = $.Deferred();
 	ObjektMitDeleteListe = {};
 	Docs = [];
-	for (i in Datensatzobjekt.rows) {
-		if (typeof i !== "function") {
-			//unsere Daten sind im key
-			rowkey = Datensatzobjekt.rows[i].key;
-			Datensatz = {};
-			Datensatz._id = rowkey[0];
-			Datensatz._rev = rowkey[1];
-			Datensatz._deleted = true;
-			Docs.push(Datensatz);
+	anzDs = Datensatzobjekt.rows.length;
+	if (anzDs >  0) {
+		for (i in Datensatzobjekt.rows) {
+			if (typeof i !== "function") {
+				//unsere Daten sind im key
+				rowkey = Datensatzobjekt.rows[i].key;
+				Datensatz = {};
+				Datensatz._id = rowkey[0];
+				Datensatz._rev = rowkey[1];
+				Datensatz._deleted = true;
+				Docs.push(Datensatz);
+			}
 		}
+		ObjektMitDeleteListe.docs = Docs;
+		$.ajax({
+			type: "POST",
+			//url: "../../_bulk_docs",
+			url: "http://127.0.0.1:5984/artendb/_bulk_docs",
+			contentType: "application/json", 
+			data: JSON.stringify(ObjektMitDeleteListe)
+		}).done(function() {
+			dokumenteVonDatensatzobjektGelöscht.resolve();
+		});
+	} else {
+		console.log("Datensatzliste " + JSON.stringify(Datensatzobjekt) + "enthielt keine Datensätze");
+		dokumenteVonDatensatzobjektGelöscht.resolve();
 	}
-	ObjektMitDeleteListe.docs = Docs;
-	$.ajax({
-		type: "POST",
-		//url: "../../_bulk_docs",
-		url: "http://127.0.0.1:5984/artendb/_bulk_docs",
-		contentType: "application/json", 
-		data: JSON.stringify(ObjektMitDeleteListe)
-	});
+	return dokumenteVonDatensatzobjektGelöscht.promise();
 }
