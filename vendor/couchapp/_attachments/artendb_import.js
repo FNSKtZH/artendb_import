@@ -59,17 +59,6 @@ function importiereFloraIndex(Anz) {
 	});
 }
 
-function löscheFloraIndex() {
-	$db = $.couch.db("artendb");
-	$db.view('artendb/flora', {
-		success: function (data) {
-			for (i in data.rows) {
-				löscheDokument(data.rows[i].key);
-			}
-		}
-	});
-}
-
 function ergänzeFloraDeutscheNamen() {
 	$.when(initiiereImport()).then(function() {
 		var qryDeutscheNamen;
@@ -895,17 +884,6 @@ function importiereFloraFaunaBeziehungen(tblName, Anz) {
 	});
 }
 
-function löscheFloraFaunaBeziehungen() {
-	$db = $.couch.db("artendb");
-	$db.view('artendb/flora_fauna_bez', {
-		success: function (data) {
-			for (i in data.rows) {
-				löscheDokument(data.rows[i].key);
-			}
-		}
-	});
-}
-
 function importiereLrFaunaBeziehungen(tblName, beziehung_nr, Anz) {
 	$.when(initiiereImport()).then(function() {
 		var Beziehung, anzDs, anzDsMax;
@@ -975,17 +953,6 @@ function importiereLrFaunaBeziehungen(tblName, beziehung_nr, Anz) {
 				if (anzDs === Anz*window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsAnzDs || anzDs === window["tblLrFaunaBez" + tblName + beziehung_nr].length) {
 					console.log("Import fertig: anzDs = " + anzDs);
 				}
-			}
-		}
-	});
-}
-
-function löscheLrFaunaBeziehungen() {
-	$db = $.couch.db("artendb");
-	$db.view('artendb/lr_fauna_bez', {
-		success: function (data) {
-			for (i in data.rows) {
-				löscheDokument(data.rows[i].key);
 			}
 		}
 	});
@@ -1065,17 +1032,6 @@ function importiereLrFloraBeziehungen(tblName, beziehung_nr, Anz) {
 	});
 }
 
-function löscheLrFloraBeziehungen() {
-	$db = $.couch.db("artendb");
-	$db.view('artendb/lr_flora_bez', {
-		success: function (data) {
-			for (i in data.rows) {
-				löscheDokument(data.rows[i].key);
-			}
-		}
-	});
-}
-
 function importiereLrMooseBeziehungen(tblName, beziehung_nr, Anz) {
 	$.when(initiiereImport()).then(function() {
 		var Beziehung, anzDs, anzDsMax;
@@ -1149,19 +1105,6 @@ function importiereLrMooseBeziehungen(tblName, beziehung_nr, Anz) {
 	});
 }
 
-function löscheLrMooseBeziehungen() {
-	$db = $.couch.db("artendb");
-	$db.view('artendb/lr_moose_bez', {
-		success: function (data) {
-			for (i in data.rows) {
-				löscheDokument(data.rows[i].key);
-			}
-		}
-	});
-}
-
-
-
 function importiereLrLrBeziehungen(Anz) {
 	$.when(initiiereImport()).then(function() {
 		var Beziehung, anzDs;
@@ -1227,17 +1170,6 @@ function importiereLrLrBeziehungen(Anz) {
 				if (anzDs === Anz*4000 || anzDs === window.tblLrLrBez.length) {
 					console.log("Import fertig: anzDs = " + anzDs);
 				}
-			}
-		}
-	});
-}
-
-function löscheLrLrBeziehungen() {
-	$db = $.couch.db("artendb");
-	$db.view('artendb/lr_lr_bez', {
-		success: function (data) {
-			for (i in data.rows) {
-				löscheDokument(data.rows[i].key);
 			}
 		}
 	});
@@ -1671,22 +1603,51 @@ function baueIndexSchaltflächenAuf() {
 	});
 }
 
-function löscheLr() {
-	$db = $.couch.db("artendb");
-	$db.view('artendb/lr', {
-		success: function (data) {
-			for (i in data.rows) {
-				löscheDokument(data.rows[i].key);
-			}
-		}
-	});
-}
-
 function löscheDokument(DocId) {
 	$db = $.couch.db("artendb");
 	$db.openDoc(DocId, {
 		success: function (document) {
 			$db.removeDoc(document);
 		}
+	});
+}
+
+//übernimmt einen Viewname und löscht alle zugehörigen Dokumente
+function löscheDokumenteVonView(viewname) {
+	var dokumenteVonViewGelöscht = $.Deferred();
+	$db = $.couch.db("artendb");
+	$db.view('artendb/' + viewname, {
+		success: function (data) {
+			loescheMitIdRevListe(data);
+		}
+	});
+	return dokumenteVonViewGelöscht.promise();
+}
+
+//löscht Datensätze in Massen
+//nimmt das Ergebnis einer Abfrage entgegen, welche im key einen Array hat
+//Array[0] die _id des zu löschenden Datensatzes und Array[1] dessen _rev
+function loescheMitIdRevListe(Datensatzobjekt) {
+	var ObjektMitDeleteListe, Docs, Datensatz, rowkey;
+	ObjektMitDeleteListe = {};
+	Docs = [];
+	for (i in Datensatzobjekt.rows) {
+		if (typeof i !== "function") {
+			//unsere Daten sind im key
+			rowkey = Datensatzobjekt.rows[i].key;
+			Datensatz = {};
+			Datensatz._id = rowkey[0];
+			Datensatz._rev = rowkey[1];
+			Datensatz._deleted = true;
+			Docs.push(Datensatz);
+		}
+	}
+	ObjektMitDeleteListe.docs = Docs;
+	$.ajax({
+		type: "POST",
+		//url: "../../_bulk_docs",
+		url: "http://127.0.0.1:5984/artendb/_bulk_docs",
+		contentType: "application/json", 
+		data: JSON.stringify(ObjektMitDeleteListe)
 	});
 }
