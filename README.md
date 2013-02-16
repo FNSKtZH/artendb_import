@@ -1,4 +1,4 @@
-Die Fachstelle Naturschutz des Kantons Zürich hat die sogenannte [Artendatenbank](http://www.aln.zh.ch/internet/baudirektion/aln/de/naturschutz/naturschutzdaten/tools/arten_db.html#a-content) entwickelt, in der Eigenschaften von Arten und Lebensräumen verwaltet werden. Sie basiert auf Microsoft Access.
+Die Fachstelle Naturschutz des Kantons Zürich hat die [Artendatenbank](http://www.aln.zh.ch/internet/baudirektion/aln/de/naturschutz/naturschutzdaten/tools/arten_db.html#a-content) entwickelt, in der Eigenschaften von Arten und Lebensräumen verwaltet werden. Sie basiert auf Microsoft Access.
 
 Ich versuche, eine bessere Lösung mit Javascript und [CouchDb](http://couchdb.apache.org/) zu entwickeln.
 Dazu müssen zunächst die Daten aus Access im [JSON-Format](http://de.wikipedia.org/wiki/JavaScript_Object_Notation) in die Couch importiert werden.
