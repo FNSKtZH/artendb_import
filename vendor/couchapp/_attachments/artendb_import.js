@@ -66,10 +66,21 @@ function ergänzeFloraDeutscheNamen() {
 		$db = $.couch.db("artendb");
 		$db.view('artendb/flora?include_docs=true', {
 			success: function (data) {
+				//Name der Taxonomie suchen
+				var nameDerTaxonomie;
+				for (i in data.rows) {
+					for (x in data.rows[i].doc) {
+						if (typeof data.rows[i].doc[x].Typ !== "undefined" && data.rows[i].doc[x].Typ === "Taxonomie") {
+							nameDerTaxonomie = x;
+							break;
+						}
+					}
+					break;
+				}
 				for (i in data.rows) {
 					var Art, ArtNr, deutscheNamen;
 					Art = data.rows[i].doc;
-					ArtNr = Art["Aktuelle Taxonomie"].Felder["Taxonomie ID"];
+					ArtNr = Art[nameDerTaxonomie].Felder["Taxonomie ID"];
 					deutscheNamen = "";
 					for (k in qryDeutscheNamen) {
 						if (qryDeutscheNamen[k].SisfNr === ArtNr) {
@@ -79,8 +90,8 @@ function ergänzeFloraDeutscheNamen() {
 							deutscheNamen += qryDeutscheNamen[k].NOM_COMMUN;
 						}
 					}
-					if (deutscheNamen && deutscheNamen !== Art["Aktuelle Taxonomie"].Felder["Deutsche Namen"]) {
-						Art["Aktuelle Taxonomie"].Felder["Deutsche Namen"] = deutscheNamen;
+					if (deutscheNamen && deutscheNamen !== Art[nameDerTaxonomie].Felder["Deutsche Namen"]) {
+						Art[nameDerTaxonomie].Felder["Deutsche Namen"] = deutscheNamen;
 						$db = $.couch.db("artendb");
 						$db.saveDoc(Art);
 					}
@@ -94,25 +105,36 @@ function aktualisiereFloraGültigeNamen() {
 	$db = $.couch.db("artendb");
 	$db.view('artendb/flora?include_docs=true', {
 		success: function (data) {
+			//Name der Taxonomie suchen
+			var nameDerTaxonomie;
+			for (i in data.rows) {
+				for (x in data.rows[i].doc) {
+					if (typeof data.rows[i].doc[x].Typ !== "undefined" && data.rows[i].doc[x].Typ === "Taxonomie") {
+						nameDerTaxonomie = x;
+						break;
+					}
+				}
+				break;
+			}
 			var Art, Nrn, gültigeNamen, gültigeArt;
 			for (i in data.rows) {
 				Art = data.rows[i].doc;
 				//Liste aller Deutschen Namen bilden
-				if (Art["Aktuelle Taxonomie"].Felder["Gültige Namen"]) {
-					Nrn = Art["Aktuelle Taxonomie"].Felder["Gültige Namen"].split(",");
+				if (Art[nameDerTaxonomie].Felder["Gültige Namen"]) {
+					Nrn = Art[nameDerTaxonomie].Felder["Gültige Namen"].split(",");
 					gültigeNamen = [];
 					for (a in Nrn) {
 						for (k in data.rows) {
-							if (data.rows[k].doc["Aktuelle Taxonomie"].Felder["Taxonomie ID"] == parseInt(Nrn[a])) {
+							if (data.rows[k].doc[nameDerTaxonomie].Felder["Taxonomie ID"] == parseInt(Nrn[a])) {
 								gültigeArt = {};
-								gültigeArt.GUID = data.rows[k].doc["Aktuelle Taxonomie"].Felder.GUID;
-								gültigeArt.Name = data.rows[k].doc["Aktuelle Taxonomie"].Felder["Artname vollständig"];
+								gültigeArt.GUID = data.rows[k].doc[nameDerTaxonomie].Felder.GUID;
+								gültigeArt.Name = data.rows[k].doc[nameDerTaxonomie].Felder["Artname vollständig"];
 								gültigeNamen.push(gültigeArt);
 							}
 						}
 					}
 					if (gültigeNamen !== []) {
-						Art["Aktuelle Taxonomie"].Felder["Gültige Namen"] = gültigeNamen;
+						Art[nameDerTaxonomie].Felder["Gültige Namen"] = gültigeNamen;
 						$db.saveDoc(Art);
 					}
 				}
@@ -128,20 +150,31 @@ function ergänzeFloraEingeschlosseneArten() {
 		$db = $.couch.db("artendb");
 		$db.view('artendb/flora?include_docs=true', {
 			success: function (data) {
+				//Name der Taxonomie suchen
+				var nameDerTaxonomie;
+				for (i in data.rows) {
+					for (x in data.rows[i].doc) {
+						if (typeof data.rows[i].doc[x].Typ !== "undefined" && data.rows[i].doc[x].Typ === "Taxonomie") {
+							nameDerTaxonomie = x;
+							break;
+						}
+					}
+					break;
+				}
 				for (i in data.rows) {
 					var Art, ArtNr, eingeschlosseneArten, eingeschlosseneArt;
 					Art = data.rows[i].doc;
-					if (Art["Aktuelle Taxonomie"].Felder["Eingeschlossene Arten"]) {
+					if (Art[nameDerTaxonomie].Felder["Eingeschlossene Arten"]) {
 						eingeschlosseneArten = [];
 						for (k in qryEingeschlosseneArten) {
-							if (qryEingeschlosseneArten[k].NO_AGR_SL === Art["Aktuelle Taxonomie"].Felder["Taxonomie ID"]) {
+							if (qryEingeschlosseneArten[k].NO_AGR_SL === Art[nameDerTaxonomie].Felder["Taxonomie ID"]) {
 								eingeschlosseneArt = {};
 								eingeschlosseneArt.GUID = qryEingeschlosseneArten[k].GUID;
 								eingeschlosseneArt.Name = qryEingeschlosseneArten[k]["Artname vollständig"];
 								eingeschlosseneArten.push(eingeschlosseneArt);
 							}
 						}
-						Art["Aktuelle Taxonomie"].Felder["Eingeschlossene Arten"] = eingeschlosseneArten;
+						Art[nameDerTaxonomie].Felder["Eingeschlossene Arten"] = eingeschlosseneArten;
 						$db.saveDoc(Art);
 					}
 				}
@@ -157,20 +190,31 @@ function ergänzeFloraSynonyme() {
 		$db = $.couch.db("artendb");
 		$db.view('artendb/flora?include_docs=true', {
 			success: function (data) {
+				//Name der Taxonomie suchen
+				var nameDerTaxonomie;
+				for (i in data.rows) {
+					for (x in data.rows[i].doc) {
+						if (typeof data.rows[i].doc[x].Typ !== "undefined" && data.rows[i].doc[x].Typ === "Taxonomie") {
+							nameDerTaxonomie = x;
+							break;
+						}
+					}
+					break;
+				}
 				for (i in data.rows) {
 					var Art, ArtNr, Synonyme, Synonym;
 					Art = data.rows[i].doc;
-					if (Art["Aktuelle Taxonomie"].Felder.Synonyme) {
+					if (Art[nameDerTaxonomie].Felder.Synonyme) {
 						Synonyme = [];
 						for (k in qrySynonyme) {
-							if (qrySynonyme[k].NR === Art["Aktuelle Taxonomie"].Felder["Taxonomie ID"]) {
+							if (qrySynonyme[k].NR === Art[nameDerTaxonomie].Felder["Taxonomie ID"]) {
 								Synonym = {};
 								Synonym.GUID = qrySynonyme[k].Synonym_GUID;
 								Synonym.Name = qrySynonyme[k].Synonym_Name;
 								Synonyme.push(Synonym);
 							}
 						}
-						Art["Aktuelle Taxonomie"].Felder.Synonyme = Synonyme;
+						Art[nameDerTaxonomie].Felder.Synonyme = Synonyme;
 						$db.saveDoc(Art);
 					}
 				}
@@ -561,7 +605,7 @@ function importiereFaunaDatensammlungen(tblName, Anz) {
 
 function importiereLrIndex(Anz) {
 	$.when(initiiereImport()).then(function() {
-		var Art, anzDs;
+		var Art, anzDs, DsName;
 		if (!window.LrMetadaten) {
 			window.LrMetadaten = frageSql(window.myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = 'LR'");
 		}
@@ -578,35 +622,36 @@ function importiereLrIndex(Anz) {
 				Art = {};
 				//_id soll GUID sein
 				Art._id = window.tblLr[x].GUID;
+				DsName = window.tblLr[x].DsName;
 				Art.Gruppe = "Lebensräume";
 				//Bezeichnet den Typ des Dokuments. Objekt = Art oder Lebensaum. Im Gegensatz zu Beziehung
 				Art.Typ = "Objekt";
 				//Datensammlung als Objekt gründen, heisst wie DsName
-				Art[window.LrMetadaten[0].DsName] = {};
-				Art[window.LrMetadaten[0].DsName].Typ = "Taxonomie";	//war: Datensammlung
-				if (Art[window.LrMetadaten[0].DsName].Beschreibung) {
-					Art[window.LrMetadaten[0].DsName].Beschreibung = window.LrMetadaten[0].DsBeschreibung;
+				Art[DsName] = {};
+				Art[DsName].Typ = "Taxonomie";	//war: Datensammlung
+				if (Art[DsName].Beschreibung) {
+					Art[DsName].Beschreibung = window.LrMetadaten[0].DsBeschreibung;
 				}
 				if (window.LrMetadaten[0].DsDatenstand) {
-					Art[window.LrMetadaten[0].DsName].Datenstand = window.LrMetadaten[0].DsDatenstand;
+					Art[DsName].Datenstand = window.LrMetadaten[0].DsDatenstand;
 				}
 				if (window.LrMetadaten[0].DsLink) {
-					Art[window.LrMetadaten[0].DsName]["Link"] = window.LrMetadaten[0].DsLink;
+					Art[DsName]["Link"] = window.LrMetadaten[0].DsLink;
 				}
 				//Felder der Datensammlung als Objekt gründen
-				Art[window.LrMetadaten[0].DsName].Felder = {};
+				Art[DsName].Felder = {};
 				//Felder anfügen, wenn sie Werte enthalten. Gruppe ist schon eingefügt
 				for (y in window.tblLr[x]) {
 					if (window.tblLr[x][y] !== "" && window.tblLr[x][y] !== null && y !== "Gruppe") {
 						if (window.tblLr[x][y] === -1) {
 							//Access wandelt in Abfragen Felder mit Wenn() in Zahlen um. Umkehren
-							Art[window.LrMetadaten[0].DsName].Felder[y] = true;
+							Art[DsName].Felder[y] = true;
 						} else if (y === "Einheit-Nrn FNS von" || y === "Einheit-Nrn FNS bis") {
 							//access hat irgendwie aus Zahlen Zeichen gemacht
-							Art[window.LrMetadaten[0].DsName].Felder[y] = parseInt(window.tblLr[x][y]);
+							Art[DsName].Felder[y] = parseInt(window.tblLr[x][y]);
 						} else if (y === "Beschreibung" && window.tblLr[x][y]) {
 							//komische Inhalte ersetzen
-							Art[window.LrMetadaten[0].DsName].Felder[y] = window.tblLr[x][y]
+							Art[DsName].Felder[y] = window.tblLr[x][y]
 								.replace("http://www.wsl.ch/floraindicativa/index_DE#http://www.wsl.ch/floraindicativa/index_DE#", "http://www.wsl.ch/floraindicativa/index_DE")
 								.replace("http://www.cscf.ch/webdav/site/cscf/shared/documents/vademecum.pdf#http://www.cscf.ch/webdav/site/cscf/shared/documents/vademecum.pdf#", "http://www.cscf.ch/webdav/site/cscf/shared/documents/vademecum.pdf")
 								.replace("#http://www.bafu.admin.ch/gis/02911/07403/index.html?lang=de#", "")
@@ -622,7 +667,7 @@ function importiereLrIndex(Anz) {
 								.replace("#http://Ablage: 5.202 [4] N, Bibl. Naturschutz [4]#", "")
 								.replace(/#/g, "");
 						} else if (y !== "GUID") {
-							Art[window.LrMetadaten[0].DsName].Felder[y] = window.tblLr[x][y];
+							Art[DsName].Felder[y] = window.tblLr[x][y];
 						}
 					}
 				}
@@ -641,33 +686,39 @@ function aktualisiereLrHierarchie() {
 		$db.view('artendb/lr?include_docs=true', {
 			success: function (data) {
 				for (i in data.rows) {
-					var LR, Hierarchie, Objekt;
+					var LR, Hierarchie, Objekt, nameDerTaxonomie;
 					LR = data.rows[i].doc;
+					for (x in LR) {
+						if (typeof LR[x].Typ !== "undefined" && LR[x].Typ === "Taxonomie") {
+							nameDerTaxonomie = x;
+							break;
+						}
+					}
 					//Beim export wurde "path" in die Hierarchie geschrieben
-					if (LR.Taxonomie.Felder.Hierarchie === "path") {
+					if (LR[nameDerTaxonomie].Felder.Hierarchie === "path") {
 						Hierarchie = [];
 						Objekt = {};
-						if (LR.Taxonomie.Felder.Label) {
-							Objekt.Name = LR.Taxonomie.Felder.Label + ": " + LR.Taxonomie.Felder.Einheit;
+						if (LR[nameDerTaxonomie].Felder.Label) {
+							Objekt.Name = LR[nameDerTaxonomie].Felder.Label + ": " + LR[nameDerTaxonomie].Felder.Einheit;
 						} else {
-							Objekt.Name = LR.Taxonomie.Felder.Einheit;
+							Objekt.Name = LR[nameDerTaxonomie].Felder.Einheit;
 						}
 						Objekt.GUID = LR._id;
 						Hierarchie.push(Objekt);
 						//hierarchie schon mal setzen, weil beim obersten node das sonst nicht mehr passiert
 						//bei anderen nodes wird dieser Wert später überschrieben
-						LR.Taxonomie.Felder.Hierarchie = Hierarchie;
-						if (typeof LR.Taxonomie.Felder.Parent === "objekt") {
+						LR[nameDerTaxonomie].Felder.Hierarchie = Hierarchie;
+						if (typeof LR[nameDerTaxonomie].Felder.Parent === "objekt") {
 							//Parent wurde schon umgewandelt, ist jetzt Objekt
 							//Wenn id = Parent, ist das der oberste node. Dann nicht mehr weitermachen
-							if (LR._id !== LR.Taxonomie.Felder.Parent.GUID) {
-								LR.Taxonomie.Felder.Hierarchie = ergänzeParentZuHierarchie(data, LR.Taxonomie.Felder.Parent.GUID, Hierarchie);
+							if (LR._id !== LR[nameDerTaxonomie].Felder.Parent.GUID) {
+								LR[nameDerTaxonomie].Felder.Hierarchie = ergänzeParentZuHierarchie(data, LR[nameDerTaxonomie].Felder.Parent.GUID, Hierarchie);
 							}
 						} else {
 							//Parent ist noch ein GUID
 							//Wenn id = Parent, ist das der oberste node. Dann nicht mehr weitermachen
-							if (LR._id !== LR.Taxonomie.Felder.Parent) {
-								LR.Taxonomie.Felder.Hierarchie = ergänzeParentZuHierarchie(data, LR.Taxonomie.Felder.Parent, Hierarchie);
+							if (LR._id !== LR[nameDerTaxonomie].Felder.Parent) {
+								LR[nameDerTaxonomie].Felder.Hierarchie = ergänzeParentZuHierarchie(data, LR[nameDerTaxonomie].Felder.Parent, Hierarchie);
 							}
 						}
 						$db.saveDoc(LR);
@@ -683,25 +734,31 @@ function aktualisiereLrHierarchie() {
 //ruft sich selbst rekursiv auf, bis das oberste Hierarchieelement erreicht ist
 function ergänzeParentZuHierarchie(Lebensräume, parentGUID, Hierarchie) {
 	for (i in Lebensräume.rows) {
-		var LR, parentObjekt;
+		var LR, parentObjekt, nameDerTaxonomie;
 		LR = Lebensräume.rows[i].doc;
+		for (x in LR) {
+			if (typeof LR[x].Typ !== "undefined" && LR[x].Typ === "Taxonomie") {
+				nameDerTaxonomie = x;
+				break;
+			}
+		}
 		if (LR._id === parentGUID) {
 			parentObjekt = {};
-			if (LR.Taxonomie.Felder.Label) {
-				parentObjekt.Name = LR.Taxonomie.Felder.Label + ": " + LR.Taxonomie.Felder.Einheit;
+			if (LR[nameDerTaxonomie].Felder.Label) {
+				parentObjekt.Name = LR[nameDerTaxonomie].Felder.Label + ": " + LR[nameDerTaxonomie].Felder.Einheit;
 			} else {
-				parentObjekt.Name = LR.Taxonomie.Felder.Einheit;
+				parentObjekt.Name = LR[nameDerTaxonomie].Felder.Einheit;
 			}
 			parentObjekt.GUID = LR._id;
 			Hierarchie.push(parentObjekt);
-			if (LR.Taxonomie.Felder.Parent !== LR._id) {
+			if (LR[nameDerTaxonomie].Felder.Parent !== LR._id) {
 				//die Hierarchie ist noch nicht zu Ende - weitermachen
-				if (typeof LR.Taxonomie.Felder.Parent === "objekt") {
+				if (typeof LR[nameDerTaxonomie].Felder.Parent === "objekt") {
 					//Parent wurde schon umgewandelt, ist jetzt Objekt
-					return ergänzeParentZuHierarchie(Lebensräume, LR.Taxonomie.Felder.Parent.GUID, Hierarchie);
+					return ergänzeParentZuHierarchie(Lebensräume, LR[nameDerTaxonomie].Felder.Parent.GUID, Hierarchie);
 				} else {
 					//Parent ist noch ein GUID
-					return ergänzeParentZuHierarchie(Lebensräume, LR.Taxonomie.Felder.Parent, Hierarchie);
+					return ergänzeParentZuHierarchie(Lebensräume, LR[nameDerTaxonomie].Felder.Parent, Hierarchie);
 				}
 			} else {
 				//jetzt ist die Hierarchie vollständig
@@ -723,18 +780,24 @@ function aktualisiereLrParent() {
 		$db.view('artendb/lr?include_docs=true', {
 			success: function (data) {
 				for (i in data.rows) {
-					var LR, Parent;
+					var LR, Parent, nameDerTaxonomie;
 					LR = data.rows[i].doc;
-					if (LR.Taxonomie.Felder.Parent) {
+					for (x in LR) {
+						if (typeof LR[x].Typ !== "undefined" && LR[x].Typ === "Taxonomie") {
+							nameDerTaxonomie = x;
+							break;
+						}
+					}
+					if (LR[nameDerTaxonomie].Felder.Parent) {
 						for (k in qryEinheiten) {
-							if (qryEinheiten[k].GUID === LR.Taxonomie.Felder.Parent) {
+							if (qryEinheiten[k].GUID === LR[nameDerTaxonomie].Felder.Parent) {
 								Parent = {};
 								Parent.GUID = qryEinheiten[k].GUID;
 								Parent.Name = qryEinheiten[k].Einheit;
 								break;
 							}
 						}
-						LR.Taxonomie.Felder.Parent = Parent;
+						LR[nameDerTaxonomie].Felder.Parent = Parent;
 						$db.saveDoc(LR);
 					}
 				}
