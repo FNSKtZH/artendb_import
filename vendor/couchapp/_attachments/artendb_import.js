@@ -894,6 +894,117 @@ function fuegeDatensammlungZuArt(GUID, DsName, DatensammlungDieserArt) {
 
 
 function importiereFloraFaunaBeziehungen(tblName, Anz) {
+	//ANDERER ANSATZ:
+	//Alle Arten der Beziehungen aus Access abfragen
+	//durch alle Arten der Beziehungen aus Access zirkeln
+	//darin: durch alle Beziehungen zirkeln
+	//wenn die Beziehung die Art enthält, Beziehung ergänzen
+	//ein mal in die couch schreiben. SONST GIBT ES KONFLIKTE
+	$.when(initiiereImport()).then(function() {
+		var anzDs;
+		//Informationen zur Datensammlung holen
+		if (!window["DatensammlungMetadaten" + tblName]) {
+			window["DatensammlungMetadaten" + tblName] = frageSql(window.myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = '" + tblName + "'");
+		}
+		//Beziehungen holen, aber nur, wenn nicht schon vorhanden
+		if (!window[tblName]) {
+			window[tblName] = frageSql(window.myDB, "SELECT * FROM " + tblName + "_import");
+		}
+		//liste aller Arten erzeugen, von denen Beziehungen importiert werden sollen
+		if (!window[tblName + "_artenliste"]) {
+			window[tblName + "_artenliste"] = frageSql(window.myDB, 'SELECT ' + tblName + '_import.[Flora GUID] AS [GUID] FROM ' + tblName + '_import UNION SELECT ' + tblName + '_import.[Fauna GUID] AS [GUID] from ' + tblName + '_import');
+		}
+		anzDs = 0;
+		for (f in window[tblName + "_artenliste"]) {
+			//In Häppchen aufteilen
+			anzDs += 1;
+			//nur importieren, wenn innerhalb des mit Anz übergebenen Batches
+			if ((anzDs > (Anz*window["DatensammlungMetadaten" + tblName][0].DsAnzDs-window["DatensammlungMetadaten" + tblName][0].DsAnzDs)) && (anzDs <= Anz*window["DatensammlungMetadaten" + tblName][0].DsAnzDs)) {
+				importiereFloraFaunaBeziehungenFuerArt(window[tblName + "_artenliste"][f].GUID, tblName);
+			}
+			if (anzDs === Anz*window["DatensammlungMetadaten" + tblName][0].DsAnzDs || anzDs === window[tblName + "_artenliste"].length) {
+				console.log("Import fertig: anzDs = " + anzDs);
+			}
+		}
+	});
+}
+
+function importiereFloraFaunaBeziehungenFuerArt (GUID, tblName) {
+	var Feldnamen = ["Imago", "Larve", "Ei"];
+	var Fauna;
+	var Flora;
+	var Beziehung;
+	//Datensammlung als Objekt gründen
+	var Datensammlung = {};
+	//Bezeichnet den Typ der Datensammlung
+	Datensammlung.Typ = "Beziehung";
+	if (window["DatensammlungMetadaten" + tblName][0].DsBeschreibung) {
+		Datensammlung.Beschreibung = window["DatensammlungMetadaten" + tblName][0].DsBeschreibung;
+	}
+	if (window["DatensammlungMetadaten" + tblName][0].DsDatenstand) {
+		Datensammlung.Datenstand = window["DatensammlungMetadaten" + tblName][0].DsDatenstand;
+	}
+	if (window["DatensammlungMetadaten" + tblName][0].DsLink) {
+		Datensammlung["Link"] = window["DatensammlungMetadaten" + tblName][0].DsLink;
+	}
+	//den Array für die Beziehungen schaffen
+	Datensammlung.Beziehungen = [];
+	//durch alle Beziehungen loopen
+	//for (x in window[tblName]) {
+	for (var x = 0; x < window[tblName].length; x++) {
+		if (window[tblName][x]["Flora GUID"] === GUID || window[tblName][x]["Fauna GUID"] === GUID) {
+			//Beziehung enthält diese Art
+			Beziehung = {};
+			Beziehung.Beziehungspartner = [];
+			if (window[tblName][x]["Flora GUID"] === GUID) {
+				//Art ist Flora. Beziehungspartner aus Fauna speichern
+				Fauna = {};
+				Fauna.Gruppe = "Fauna";
+				Fauna.Name = window[tblName][x]["Fauna Name"];
+				Fauna.GUID = window[tblName][x]["Fauna GUID"];
+				Beziehung.Beziehungspartner.push(Fauna);
+			} else if (window[tblName][x]["Fauna GUID"] === GUID) {
+				//Art ist Fauna. Beziehungspartner aus Flora speichern
+				Flora = {};
+				Flora.Gruppe = "Flora";
+				Flora.Name = window[tblName][x]["Flora Name"];
+				Flora.GUID = window[tblName][x]["Flora GUID"];
+				Beziehung.Beziehungspartner.push(Flora);
+			}
+			//Eigenschaften der Beziehung schreiben, wenn sie Werte enthalten
+			$.each(Feldnamen, function(index, value) {
+				if (window[tblName][x][value] !== "" && window[tblName][x][value] !== null) {
+					Beziehung[value] = window[tblName][x][value];
+				}
+			});
+			//die Beziehung anfügen
+			Datensammlung.Beziehungen.push(Beziehung);
+		}
+	}
+	//die Beziehungen nach Objektnamen sortieren
+	//console.log('art[' + window["DatensammlungMetadaten" + tblName][0].DsName + '].Beziehungen 2 = ' + JSON.stringify(art[window["DatensammlungMetadaten" + tblName][0].DsName].Beziehungen));
+	Datensammlung.Beziehungen.sort(function(a, b) {
+		var aName, bName;
+		for (c in a.Beziehungspartner) {
+			aName = a.Beziehungspartner[c].Name;
+		}
+		for (d in b.Beziehungspartner) {
+			bName = b.Beziehungspartner[d].Name;
+		}
+		return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+	});
+
+	$db = $.couch.db("artendb");
+	$db.openDoc(GUID, {
+		success: function (art) {
+			//Datensammlung der Art zufügen
+			art[window["DatensammlungMetadaten" + tblName][0].DsName] = Datensammlung;
+			$db.saveDoc(art);
+		}
+	});
+}
+
+/*function importiereFloraFaunaBeziehungen(tblName, Anz) {
 	$.when(initiiereImport()).then(function() {
 		var Beziehung, anzDs, anzDsMax;
 		//Informationen zur Datensammlung holen
@@ -958,7 +1069,7 @@ function importiereFloraFaunaBeziehungen(tblName, Anz) {
 			}
 		}
 	});
-}
+}*/
 
 function importiereLrFaunaBeziehungen(tblName, beziehung_nr, Anz) {
 	$.when(initiiereImport()).then(function() {
@@ -1443,29 +1554,59 @@ function baueDatensammlungenSchaltflächenAuf() {
 			}
 			$("#SchaltflächenLRDatensammlungen").html(html);
 
-			//jetzt Flora-Bauna-Beziehungen
-			sqlDatensammlungenFloraFaunaBez = "SELECT * FROM tblDatensammlungMetadaten WHERE DsIndex='tblFloraFaunaBez' ORDER BY DsReihenfolge";
-			DatensammlungenFloraFaunaBez = frageSql(window.myDB, sqlDatensammlungenFloraFaunaBez);
+			//jetzt Flora-Bauna-Beziehungen Ebert
+			sqlDatensammlungenFloraFaunaBezEbert = "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle='tblFloraFaunaBezEbert' ORDER BY DsReihenfolge";
+			DatensammlungenFloraFaunaBezEbert = frageSql(window.myDB, sqlDatensammlungenFloraFaunaBezEbert);
+			//liste aller Arten erzeugen, von denen Beziehungen importiert werden sollen
+			if (!window.tblFloraFaunaBezEbert_artenliste) {
+				window.tblFloraFaunaBezEbert_artenliste = frageSql(window.myDB, 'SELECT tblFloraFaunaBezEbert_import.[Flora GUID] AS [GUID] FROM tblFloraFaunaBezEbert_import UNION SELECT tblFloraFaunaBezEbert_import.[Fauna GUID] AS [GUID] from tblFloraFaunaBezEbert_import');
+			}
 			html = "";
-			for (i in DatensammlungenFloraFaunaBez) {
+			for (i in DatensammlungenFloraFaunaBezEbert) {
 				//Anzahl Datensätze ermitteln
-				qryAnzDs = frageSql(window.myDB, "SELECT Count(*) AS Anzahl FROM tblFloraFaunaBez_import WHERE DsTabelle='" + DatensammlungenFloraFaunaBez[i].DsTabelle + "'");
-				anzDs = qryAnzDs[0].Anzahl;
-				anzButtons = Math.ceil(anzDs/DatensammlungenFloraFaunaBez[i].DsAnzDs);
+				anzDs = window.tblFloraFaunaBezEbert_artenliste.length;
+				anzButtons = Math.ceil(anzDs/DatensammlungenFloraFaunaBezEbert[i].DsAnzDs);
 				for (y = 1; y <= anzButtons; y++) {
 					html += "<input type='checkbox' id='";
-					html += DatensammlungenFloraFaunaBez[i].DsTabelle + y;
-					html += "' name='FloraFaunaBez' Tabelle='" + DatensammlungenFloraFaunaBez[i].DsTabelle;
+					html += DatensammlungenFloraFaunaBezEbert[i].DsTabelle + y;
+					html += "' name='FloraFaunaBezEbert' Tabelle='" + DatensammlungenFloraFaunaBezEbert[i].DsTabelle;
 					html += "' Anz='" + y + "' Von='" + anzButtons;
 					html += "'>";
-					html += DatensammlungenFloraFaunaBez[i].DsName;
+					html += DatensammlungenFloraFaunaBezEbert[i].DsName;
 					if (anzButtons > 1) {
 						html += " (" + y + "/" + anzButtons + ")";
 					}
 					html += "<br>";
 				}
 			}
-			$("#SchaltflächenFloraFaunaBez").html(html);
+			$("#SchaltflächenFloraFaunaBezEbert").html(html);
+
+			//jetzt Flora-Bauna-Beziehungen Westrich
+			sqlDatensammlungenFloraFaunaBezWestrich = "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle='tblFloraFaunaBezWestrich' ORDER BY DsReihenfolge";
+			DatensammlungenFloraFaunaBezWestrich = frageSql(window.myDB, sqlDatensammlungenFloraFaunaBezWestrich);
+			//liste aller Arten erzeugen, von denen Beziehungen importiert werden sollen
+			if (!window.tblFloraFaunaBezWestrich_artenliste) {
+				window.tblFloraFaunaBezWestrich_artenliste = frageSql(window.myDB, 'SELECT tblFloraFaunaBezWestrich_import.[Flora GUID] AS [GUID] FROM tblFloraFaunaBezWestrich_import UNION SELECT tblFloraFaunaBezWestrich_import.[Fauna GUID] AS [GUID] from tblFloraFaunaBezWestrich_import');
+			}
+			html = "";
+			for (i in DatensammlungenFloraFaunaBezWestrich) {
+				//Anzahl Datensätze ermitteln
+				anzDs = window.tblFloraFaunaBezWestrich_artenliste.length;
+				anzButtons = Math.ceil(anzDs/DatensammlungenFloraFaunaBezWestrich[i].DsAnzDs);
+				for (y = 1; y <= anzButtons; y++) {
+					html += "<input type='checkbox' id='";
+					html += DatensammlungenFloraFaunaBezWestrich[i].DsTabelle + y;
+					html += "' name='FloraFaunaBezWestrich' Tabelle='" + DatensammlungenFloraFaunaBezWestrich[i].DsTabelle;
+					html += "' Anz='" + y + "' Von='" + anzButtons;
+					html += "'>";
+					html += DatensammlungenFloraFaunaBezWestrich[i].DsName;
+					if (anzButtons > 1) {
+						html += " (" + y + "/" + anzButtons + ")";
+					}
+					html += "<br>";
+				}
+			}
+			$("#SchaltflächenFloraFaunaBezWestrich").html(html);
 
 			//jetzt LR-Fauna-Beziehungen
 			sqlDatensammlungenLrFaunaBez = "SELECT * FROM qryBezMetadaten WHERE DsIndex='tblFaunaCscf' ORDER BY DsReihenfolge";

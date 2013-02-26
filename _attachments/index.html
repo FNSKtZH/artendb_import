@@ -58,10 +58,15 @@
 		</div>
 		<hr>
 
-		<h3>Beziehungen Flora-Fauna</h3>
+		<h3>Beziehungen Flora-Fauna Ebert</h3>
 		<div style="column-width:250px;">
-			<div id="SchaltflächenFloraFaunaBez"></div><br><br>
-			<input type='checkbox' viewname="flora_fauna_bez" class="dokumenteVonViewLöschen">Flora-Fauna-Beziehungen löschen<br><br>
+			<div id="SchaltflächenFloraFaunaBezEbert"></div><br><br>
+		</div>
+		<hr>
+
+		<h3>Beziehungen Flora-Fauna Westrich</h3>
+		<div style="column-width:250px;">
+			<div id="SchaltflächenFloraFaunaBezWestrich"></div><br><br>
 		</div>
 		<hr>
 
@@ -148,7 +153,14 @@
 			$("body").on("click", "#LrParent", function() {
 				aktualisiereLrParent();
 			});
-			$("body").on("click", "[name='FloraFaunaBez']", function() {
+			$("body").on("click", "[name='FloraFaunaBezEbert']", function() {
+				console.log('Tabelle = ' + $("#" + this.id).attr("Tabelle"));
+				console.log('Anz = ' + $("#" + this.id).attr("Anz"));
+				importiereFloraFaunaBeziehungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("Anz"));
+			});
+			$("body").on("click", "[name='FloraFaunaBezWestrich']", function() {
+				console.log('Tabelle = ' + $("#" + this.id).attr("Tabelle"));
+				console.log('Anz = ' + $("#" + this.id).attr("Anz"));
 				importiereFloraFaunaBeziehungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("Anz"));
 			});
 			$("body").on("click", "[name='LrFaunaBez']", function() {
