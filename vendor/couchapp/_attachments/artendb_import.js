@@ -894,7 +894,6 @@ function fuegeDatensammlungZuArt(GUID, DsName, DatensammlungDieserArt) {
 
 
 function importiereFloraFaunaBeziehungen(tblName, Anz) {
-	//ANDERER ANSATZ:
 	//Alle Arten der Beziehungen aus Access abfragen
 	//durch alle Arten der Beziehungen aus Access zirkeln
 	//darin: durch alle Beziehungen zirkeln
@@ -902,24 +901,28 @@ function importiereFloraFaunaBeziehungen(tblName, Anz) {
 	//ein mal in die couch schreiben. SONST GIBT ES KONFLIKTE
 	$.when(initiiereImport()).then(function() {
 		var anzDs;
-		//Informationen zur Datensammlung holen
+		//wenn noch nicht vorhanden...
 		if (!window["DatensammlungMetadaten" + tblName]) {
+			//Informationen zur Datensammlung holen
 			window["DatensammlungMetadaten" + tblName] = frageSql(window.myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = '" + tblName + "'");
 		}
-		//Beziehungen holen, aber nur, wenn nicht schon vorhanden
+		//wenn noch nicht vorhanden...
 		if (!window[tblName]) {
+			//Beziehungen holen
 			window[tblName] = frageSql(window.myDB, "SELECT * FROM " + tblName + "_import");
 		}
-		//liste aller Arten erzeugen, von denen Beziehungen importiert werden sollen
+		//wenn noch nicht vorhanden...
 		if (!window[tblName + "_artenliste"]) {
+			//liste aller Arten holen, von denen Beziehungen importiert werden sollen
 			window[tblName + "_artenliste"] = frageSql(window.myDB, 'SELECT ' + tblName + '_import.[Flora GUID] AS [GUID] FROM ' + tblName + '_import UNION SELECT ' + tblName + '_import.[Fauna GUID] AS [GUID] from ' + tblName + '_import');
 		}
 		anzDs = 0;
 		for (f in window[tblName + "_artenliste"]) {
-			//In Häppchen aufteilen
+			//Artenliste in Häppchen aufteilen
 			anzDs += 1;
-			//nur importieren, wenn innerhalb des mit Anz übergebenen Batches
+			//nur importieren, wenn innerhalb des mit Anz übergebenen Häppchen (in Access-DB definiert)
 			if ((anzDs > (Anz*window["DatensammlungMetadaten" + tblName][0].DsAnzDs-window["DatensammlungMetadaten" + tblName][0].DsAnzDs)) && (anzDs <= Anz*window["DatensammlungMetadaten" + tblName][0].DsAnzDs)) {
+				//jetzt die Beziehungen dieser Art holen
 				importiereFloraFaunaBeziehungenFuerArt(window[tblName + "_artenliste"][f].GUID, tblName);
 			}
 			if (anzDs === Anz*window["DatensammlungMetadaten" + tblName][0].DsAnzDs || anzDs === window[tblName + "_artenliste"].length) {
@@ -929,6 +932,8 @@ function importiereFloraFaunaBeziehungen(tblName, Anz) {
 	});
 }
 
+//importiert die Flora-Fauna-Beziehungen eine Art
+//benötigt deren GUID und den Tabellennahmen
 function importiereFloraFaunaBeziehungenFuerArt (GUID, tblName) {
 	var Feldnamen = ["Imago", "Larve", "Ei"];
 	var Fauna;
@@ -950,7 +955,6 @@ function importiereFloraFaunaBeziehungenFuerArt (GUID, tblName) {
 	//den Array für die Beziehungen schaffen
 	Datensammlung.Beziehungen = [];
 	//durch alle Beziehungen loopen
-	//for (x in window[tblName]) {
 	for (var x = 0; x < window[tblName].length; x++) {
 		if (window[tblName][x]["Flora GUID"] === GUID || window[tblName][x]["Fauna GUID"] === GUID) {
 			//Beziehung enthält diese Art
@@ -981,242 +985,290 @@ function importiereFloraFaunaBeziehungenFuerArt (GUID, tblName) {
 			Datensammlung.Beziehungen.push(Beziehung);
 		}
 	}
-	//die Beziehungen nach Objektnamen sortieren
-	//console.log('art[' + window["DatensammlungMetadaten" + tblName][0].DsName + '].Beziehungen 2 = ' + JSON.stringify(art[window["DatensammlungMetadaten" + tblName][0].DsName].Beziehungen));
-	Datensammlung.Beziehungen.sort(function(a, b) {
-		var aName, bName;
-		for (c in a.Beziehungspartner) {
-			aName = a.Beziehungspartner[c].Name;
-		}
-		for (d in b.Beziehungspartner) {
-			bName = b.Beziehungspartner[d].Name;
-		}
-		return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
-	});
+	if (Datensammlung.Beziehungen.length > 0) {
+		//die Beziehungen nach Objektnamen sortieren
+		Datensammlung.Beziehungen.sort(function(a, b) {
+			var aName, bName;
+			for (c in a.Beziehungspartner) {
+				aName = a.Beziehungspartner[c].Name;
+			}
+			for (d in b.Beziehungspartner) {
+				bName = b.Beziehungspartner[d].Name;
+			}
+			return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+		});
+		//jetzt die Art um diese Beziehung ergänzen
+		$db = $.couch.db("artendb");
+		$db.openDoc(GUID, {
+			success: function (art) {
+				//Datensammlung der Art zufügen
+				art[window["DatensammlungMetadaten" + tblName][0].DsName] = Datensammlung;
+				$db.saveDoc(art);
+			}
+		});
+	}
+}
 
-	$db = $.couch.db("artendb");
-	$db.openDoc(GUID, {
-		success: function (art) {
-			//Datensammlung der Art zufügen
-			art[window["DatensammlungMetadaten" + tblName][0].DsName] = Datensammlung;
-			$db.saveDoc(art);
+function importiereLrFaunaBeziehungen(tblName, beziehung_nr) {
+	//Alle Arten der Beziehungen aus Access abfragen
+	//durch alle Arten der Beziehungen aus Access zirkeln
+	//darin: durch alle Beziehungen zirkeln
+	//wenn die Beziehung die Art enthält, Beziehung ergänzen
+	//ein mal in die couch schreiben. SONST GIBT ES KONFLIKTE
+	$.when(initiiereImport()).then(function() {
+		//wenn noch nicht vorhanden...
+		if (!window["DatensammlungMetadaten" + tblName + beziehung_nr]) {
+			//Informationen zur Datensammlung holen
+			window["DatensammlungMetadaten" + tblName + beziehung_nr] = frageSql(window.myDB, "SELECT * FROM qryBezMetadaten WHERE DsTabelle = '" + tblName + "' AND Beziehungen=1 AND BeziehungNr=" + beziehung_nr);
+		}
+		//wenn noch nicht vorhanden...
+		if (!window["tblLrFaunaBez" + tblName + beziehung_nr]) {
+			//Beziehungen holen
+			window["tblLrFaunaBez" + tblName + beziehung_nr] = frageSql(window.myDB, "SELECT * FROM tblLrFaunaBez_import WHERE DsTabelle='" + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsTabelle + "' AND BeziehungNr=" + beziehung_nr);
+		}
+		//wenn noch nicht vorhanden...
+		if (!window["tblLrFaunaBez" + tblName + beziehung_nr + "_artenliste"]) {
+			//liste aller Arten holen, von denen Beziehungen importiert werden sollen
+			window["tblLrFaunaBez" + tblName + beziehung_nr + "_artenliste"] = frageSql(window.myDB, "SELECT tblLrFaunaBez_import.[Fauna GUID] AS [GUID] FROM tblLrFaunaBez_import UNION SELECT tblLrFaunaBez_import.[LR GUID] AS [GUID] from tblLrFaunaBez_import WHERE DsTabelle='" + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsTabelle + "' AND BeziehungNr=" + beziehung_nr);
+		}
+		anzDs = 0;
+		for (f in window["tblLrFaunaBez" + tblName + beziehung_nr + "_artenliste"]) {
+			anzDs += 1;
+			//jetzt die Beziehungen dieser Art holen
+			importiereLrFaunaBeziehungenFuerArt(window["tblLrFaunaBez" + tblName + beziehung_nr + "_artenliste"][f].GUID, tblName, beziehung_nr);
+			if (anzDs === window["tblLrFaunaBez" + tblName + beziehung_nr + "_artenliste"].length) {
+				console.log("Import fertig: anzDs = " + anzDs);
+			}
 		}
 	});
 }
 
-/*function importiereFloraFaunaBeziehungen(tblName, Anz) {
-	$.when(initiiereImport()).then(function() {
-		var Beziehung, anzDs, anzDsMax;
-		//Informationen zur Datensammlung holen
-		if (!window["DatensammlungMetadaten" + tblName]) {
-			window["DatensammlungMetadaten" + tblName] = frageSql(window.myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = '" + tblName + "'");
-		}
-		//Beziehungen importieren, aber nur, wenn nicht schon vorhanden
-		if (!window["tblFloraFaunaBez" + tblName]) {
-			window["tblFloraFaunaBez" + tblName] = frageSql(window.myDB, "SELECT * FROM tblFloraFaunaBez_import WHERE DsTabelle='" + window["DatensammlungMetadaten" + tblName][0].DsTabelle + "'");
-		}
-		anzDs = 0;
-		for (x in window["tblFloraFaunaBez" + tblName]) {
-			//In Häppchen aufteilen
-			anzDs += 1;
-			//nur importieren, wenn innerhalb des mit Anz übergebenen Batches
-			if ((anzDs > (Anz*window["DatensammlungMetadaten" + tblName][0].DsAnzDs-window["DatensammlungMetadaten" + tblName][0].DsAnzDs)) && (anzDs <= Anz*window["DatensammlungMetadaten" + tblName][0].DsAnzDs)) {
-				//Beziehung als Objekt gründen
-				Beziehung = {};
-				Beziehung._id = window["tblFloraFaunaBez" + tblName][x].GUID;
-				//Bezeichnet den Typ des Dokuments
-				Beziehung.Typ = "Beziehung";
-
-				//Arten aufbauen, dann als Beziehungspartner anfügen
-				Beziehung.Partner = [];
-				var Flora = {};
-				Flora.Gruppe = "Flora";
-				Flora.Name = window["tblFloraFaunaBez" + tblName][x]["Flora Name"];
-				Flora.GUID = window["tblFloraFaunaBez" + tblName][x]["Flora GUID"];
-				Beziehung.Partner.push(Flora);
-				var Fauna = {};
+//importiert die LR-Fauna-Beziehungen eine Art
+//benötigt deren GUID und den Tabellennahmen und die Beziehungs-Nr
+function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
+	var Feldnamen = ["Art der Beziehung", "Wert für die Beziehung", "Bemerkungen"];
+	var LR;
+	var Fauna;
+	var Beziehung;
+	var Gruppe;
+	//Datensammlung als Objekt gründen
+	var Datensammlung = {};
+	//Bezeichnet den Typ der Datensammlung
+	Datensammlung.Typ = "Beziehung";
+	if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsBeschreibung) {
+		Datensammlung.Beschreibung = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsBeschreibung;
+	}
+	if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsDatenstand) {
+		Datensammlung.Datenstand = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsDatenstand;
+	}
+	if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsLink) {
+		Datensammlung["Link"] = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsLink;
+	}
+	//den Array für die Beziehungen schaffen
+	Datensammlung.Beziehungen = [];
+	//durch alle Beziehungen loopen
+	for (var x = 0; x < window["tblLrFaunaBez" + tblName + beziehung_nr].length; x++) {
+		if (window["tblLrFaunaBez" + tblName + beziehung_nr][x]["Fauna GUID"] === GUID || window["tblLrFaunaBez" + tblName + beziehung_nr][x]["LR GUID"] === GUID) {
+			//Das ist der richtige Typ Beziehung und sie enthält diese Art
+			Beziehung = {};
+			Beziehung.Beziehungspartner = [];
+			if (window["tblLrFaunaBez" + tblName + beziehung_nr][x]["LR GUID"] === GUID) {
+				//Art ist LR. Beziehungspartner aus Fauna speichern
+				Gruppe = "Lebensräume";
+				Fauna = {};
 				Fauna.Gruppe = "Fauna";
-				Fauna.Name = window["tblFloraFaunaBez" + tblName][x]["Fauna Name"];
-				Fauna.GUID = window["tblFloraFaunaBez" + tblName][x]["Fauna GUID"];
-				Beziehung.Partner.push(Fauna);
-				
-				//Datensammlung schreiben
-				Beziehung.Datensammlung = {};
-				Beziehung.Datensammlung.Name = window["tblFloraFaunaBez" + tblName][x].DsBeziehung;
-				Beziehung.Datensammlung.Beschreibung = window["DatensammlungMetadaten" + tblName][0].DsBeschreibung;
-				if (window["DatensammlungMetadaten" + tblName][0].DsDatenstand) {
-					Beziehung.Datensammlung.Datenstand = window["DatensammlungMetadaten" + tblName][0].DsDatenstand;
-				}
-				if (window["DatensammlungMetadaten" + tblName][0].DsLink) {
-					Beziehung.Datensammlung["Link"] = window["DatensammlungMetadaten" + tblName][0].DsLink;
-				}
-
-				//Felder der Datensammlung schreiben, wenn sie Werte enthalten
-				Beziehung.Felder = {};
-				var Feldnamen = ["Imago", "Larve", "Ei"];
-				$.each(Feldnamen, function(index, value) {
-					if (window["tblFloraFaunaBez" + tblName][x][value] !== "" && window["tblFloraFaunaBez" + tblName][x][value] !== null) {
-						Beziehung.Felder[value] = window["tblFloraFaunaBez" + tblName][x][value];
-					}
-				});
-
-				//speichern
-				$db = $.couch.db("artendb");
-				$db.saveDoc(Beziehung);
-				if (anzDs === Anz*window["DatensammlungMetadaten" + tblName][0].DsAnzDs || anzDs === window["tblFloraFaunaBez" + tblName].length) {
-					console.log("Import fertig: anzDs = " + anzDs);
-				}
-			}
-		}
-	});
-}*/
-
-function importiereLrFaunaBeziehungen(tblName, beziehung_nr, Anz) {
-	$.when(initiiereImport()).then(function() {
-		var Beziehung, anzDs, anzDsMax;
-		//Informationen zur Datensammlung holen
-		if (!window["DatensammlungMetadaten" + tblName + beziehung_nr]) {
-			window["DatensammlungMetadaten" + tblName + beziehung_nr] = frageSql(window.myDB, "SELECT * FROM qryBezMetadaten WHERE DsTabelle = '" + tblName + "' AND Beziehungen=1 AND BeziehungNr=" + beziehung_nr);
-		}
-		//Beziehungen importieren, aber nur, wenn nicht schon vorhanden
-		if (!window["tblLrFaunaBez" + tblName + beziehung_nr]) {
-			window["tblLrFaunaBez" + tblName + beziehung_nr] = frageSql(window.myDB, "SELECT * FROM tblLrFaunaBez_import WHERE DsTabelle='" + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsTabelle + "' AND BeziehungNr=" + beziehung_nr);
-		}
-		anzDs = 0;
-		for (x in window["tblLrFaunaBez" + tblName + beziehung_nr]) {
-			//In Häppchen aufteilen
-			anzDs += 1;
-			//nur importieren, wenn innerhalb des mit Anz übergebenen 4000er Batches
-			if ((anzDs > (Anz*window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsAnzDs-window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsAnzDs)) && (anzDs <= Anz*window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsAnzDs)) {
-				//Beziehung als Objekt gründen
-				Beziehung = {};
-				Beziehung._id = window["tblLrFaunaBez" + tblName + beziehung_nr][x].GUID;
-				//Bezeichnet den Typ des Dokuments
-				Beziehung.Typ = "Beziehung";
-
-				//Arten aufbauen, dann als Beziehungspartner anfügen
-				Beziehung.Partner = [];
-				var LR = {};
+				Fauna.Name = window["tblLrFaunaBez" + tblName + beziehung_nr][x]["Fauna Name"];
+				Fauna.GUID = window["tblLrFaunaBez" + tblName + beziehung_nr][x]["Fauna GUID"];
+				Beziehung.Beziehungspartner.push(Fauna);
+			} else if (window["tblLrFaunaBez" + tblName + beziehung_nr][x]["Fauna GUID"] === GUID) {
+				//Art ist Fauna. Beziehungspartner aus LR speichern
+				Gruppe = "Fauna";
+				LR = {};
 				LR.Gruppe = "Lebensräume";
 				LR.Taxonomie = window["tblLrFaunaBez" + tblName + beziehung_nr][x]["LR Taxonomie"];
 				LR.Name = window["tblLrFaunaBez" + tblName + beziehung_nr][x]["LR Name"];
 				LR.GUID = window["tblLrFaunaBez" + tblName + beziehung_nr][x]["LR GUID"];
-				Beziehung.Partner.push(LR);
-				var Fauna = {};
-				Fauna.Gruppe = "Fauna";
-				Fauna.Name = window["tblLrFaunaBez" + tblName + beziehung_nr][x]["Fauna Name"];
-				Fauna.GUID = window["tblLrFaunaBez" + tblName + beziehung_nr][x]["Fauna GUID"];
-				Beziehung.Partner.push(Fauna);
-				
-				//Datensammlung schreiben
-				Beziehung.Datensammlung = {};
-				Beziehung.Datensammlung.Name = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsName + ": " + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].Beziehung;
-				Beziehung.Datensammlung.Beschreibung = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsBeschreibung;
-				if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsDatenstand) {
-					Beziehung.Datensammlung.Datenstand = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsDatenstand;
-				}
-				if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsLink) {
-					Beziehung.Datensammlung["Link"] = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsLink;
-				}
-
-				//Felder der Datensammlung schreiben, wenn sie Werte enthalten
-				Beziehung.Felder = {};
-				var Feldnamen = ["Art der Beziehung", "Wert für die Beziehung", "Bemerkungen"];
-				$.each(Feldnamen, function(index, value) {
-					//Leerwerte ausschliessen, aber nicht die 0
-					if (window["tblLrFaunaBez" + tblName + beziehung_nr][x][value] !== "" && window["tblLrFaunaBez" + tblName + beziehung_nr][x][value] !== null) {
-						//Bei AP FM soll das Feld "Wert für die Beziehung" "Biotopbindung" heissen
-						if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsTabelle === "tblFaunaFnsApFm") {
-							Beziehung.Felder.Biotopbindung = window["tblLrFaunaBez" + tblName + beziehung_nr][x][value];
-						} else {
-							Beziehung.Felder[value] = window["tblLrFaunaBez" + tblName + beziehung_nr][x][value];
-						}
+				Beziehung.Beziehungspartner.push(LR);
+			}
+			//Eigenschaften der Beziehung schreiben, wenn sie Werte enthalten
+			$.each(Feldnamen, function(index, value) {
+				//Leerwerte ausschliessen, aber nicht die 0
+				if (window["tblLrFaunaBez" + tblName + beziehung_nr][x][value] !== "" && window["tblLrFaunaBez" + tblName + beziehung_nr][x][value] !== null) {
+					//Bei AP FM soll das Feld "Wert für die Beziehung" "Biotopbindung" heissen
+					if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsTabelle === "tblFaunaFnsApFm") {
+						Beziehung.Biotopbindung = window["tblLrFaunaBez" + tblName + beziehung_nr][x][value];
+					} else {
+						Beziehung[value] = window["tblLrFaunaBez" + tblName + beziehung_nr][x][value];
 					}
-				});
-
-				//speichern
-				$db = $.couch.db("artendb");
-				$db.saveDoc(Beziehung);
-				if (anzDs === Anz*window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsAnzDs || anzDs === window["tblLrFaunaBez" + tblName + beziehung_nr].length) {
-					console.log("Import fertig: anzDs = " + anzDs);
 				}
+			});
+			//die Beziehung anfügen
+			Datensammlung.Beziehungen.push(Beziehung);
+		}
+	}
+	if (Datensammlung.Beziehungen.length > 0) {
+		//nur, wenn Beziehungen existieren!
+		//die Beziehungen nach Objektnamen sortieren
+		Datensammlung.Beziehungen.sort(function(a, b) {
+			var aName, bName;
+			for (c in a.Beziehungspartner) {
+				if (Gruppe === "Lebensräume") {
+					//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
+					aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
+				} else {
+					aName = a.Beziehungspartner[c].Name;
+				}
+			}
+			for (d in b.Beziehungspartner) {
+				if (Gruppe === "Lebensräume") {
+					bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
+				} else {
+					bName = b.Beziehungspartner[d].Name;
+				}
+			}
+			return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+		});
+		//jetzt die Art um diese Beziehung ergänzen
+		$db = $.couch.db("artendb");
+		$db.openDoc(GUID, {
+			success: function (art) {
+				//Datensammlung der Art zufügen
+				art[window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsName + ": " + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].Beziehung] = Datensammlung;
+				$db.saveDoc(art);
+			}
+		});
+	}
+}
+
+function importiereLrFloraBeziehungen(tblName, beziehung_nr) {
+	//Alle Arten der Beziehungen aus Access abfragen
+	//durch alle Arten der Beziehungen aus Access zirkeln
+	//darin: durch alle Beziehungen zirkeln
+	//wenn die Beziehung die Art enthält, Beziehung ergänzen
+	//ein mal in die couch schreiben. SONST GIBT ES KONFLIKTE
+	$.when(initiiereImport()).then(function() {
+		//wenn noch nicht vorhanden...
+		if (!window["DatensammlungMetadaten" + tblName + beziehung_nr]) {
+			//Informationen zur Datensammlung holen
+			window["DatensammlungMetadaten" + tblName + beziehung_nr] = frageSql(window.myDB, "SELECT * FROM qryBezMetadaten WHERE DsTabelle = '" + tblName + "' AND Beziehungen=1 AND BeziehungNr=" + beziehung_nr);
+		}
+		//wenn noch nicht vorhanden...
+		if (!window["tblLrFloraBez" + tblName + beziehung_nr]) {
+			//Beziehungen holen
+			window["tblLrFloraBez" + tblName + beziehung_nr] = frageSql(window.myDB, "SELECT * FROM tblLrFloraBez_import WHERE DsTabelle='" + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsTabelle + "' AND BeziehungNr=" + beziehung_nr);
+		}
+		//wenn noch nicht vorhanden...
+		if (!window["tblLrFloraBez" + tblName + beziehung_nr + "_artenliste"]) {
+			//liste aller Arten holen, von denen Beziehungen importiert werden sollen
+			window["tblLrFloraBez" + tblName + beziehung_nr + "_artenliste"] = frageSql(window.myDB, "SELECT tblLrFloraBez_import.[Flora GUID] AS [GUID] FROM tblLrFloraBez_import UNION SELECT tblLrFloraBez_import.[LR GUID] AS [GUID] from tblLrFloraBez_import WHERE DsTabelle='" + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsTabelle + "' AND BeziehungNr=" + beziehung_nr);
+		}
+		anzDs = 0;
+		for (f in window["tblLrFloraBez" + tblName + beziehung_nr + "_artenliste"]) {
+			anzDs += 1;
+			//jetzt die Beziehungen dieser Art holen
+			importiereLrFloraBeziehungenFuerArt(window["tblLrFloraBez" + tblName + beziehung_nr + "_artenliste"][f].GUID, tblName, beziehung_nr);
+			if (anzDs === window["tblLrFloraBez" + tblName + beziehung_nr + "_artenliste"].length) {
+				console.log("Import fertig: anzDs = " + anzDs);
 			}
 		}
 	});
 }
 
-function importiereLrFloraBeziehungen(tblName, beziehung_nr, Anz) {
-	$.when(initiiereImport()).then(function() {
-		var Beziehung, anzDs, anzDsMax;
-		//Informationen zur Datensammlung holen
-		if (!window["DatensammlungMetadaten" + tblName + beziehung_nr]) {
-			window["DatensammlungMetadaten" + tblName + beziehung_nr] = frageSql(window.myDB, "SELECT * FROM qryBezMetadaten WHERE DsTabelle = '" + tblName + "' AND BeziehungNr=" + beziehung_nr);
-		}
-		//Beziehungen importieren, aber nur, wenn nicht schon vorhanden
-		if (!window["tblLrFloraBez" + tblName + beziehung_nr]) {
-			window["tblLrFloraBez" + tblName + beziehung_nr] = frageSql(window.myDB, "SELECT * FROM tblLrFloraBez_import WHERE DsTabelle='" + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsTabelle + "' AND BeziehungNr=" + beziehung_nr);
-		}
-		anzDs = 0;
-		for (x in window["tblLrFloraBez" + tblName + beziehung_nr]) {
-			//In Häppchen aufteilen
-			anzDs += 1;
-			//nur importieren, wenn innerhalb des mit Anz übergebenen 4000er Batches
-			if ((anzDs > (Anz*window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsAnzDs-window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsAnzDs)) && (anzDs <= Anz*window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsAnzDs)) {
-				//Beziehung als Objekt gründen
-				Beziehung = {};
-				Beziehung._id = window["tblLrFloraBez" + tblName + beziehung_nr][x].GUID;
-				//Bezeichnet den Typ des Dokuments
-				Beziehung.Typ = "Beziehung";
-
-				//Arten aufbauen, dann als Beziehungspartner anfügen
-				Beziehung.Partner = [];
-				var LR = {};
+//importiert die LR-Flora-Beziehungen eine Art
+//benötigt deren GUID und den Tabellennahmen und die Beziehungs-Nr
+function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
+	var Feldnamen = ["Art der Beziehung", "Wert für die Beziehung", "Bemerkungen"];
+	var LR;
+	var Flora;
+	var Beziehung;
+	var Gruppe;
+	//Datensammlung als Objekt gründen
+	var Datensammlung = {};
+	//Bezeichnet den Typ der Datensammlung
+	Datensammlung.Typ = "Beziehung";
+	if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsBeschreibung) {
+		Datensammlung.Beschreibung = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsBeschreibung;
+	}
+	if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsDatenstand) {
+		Datensammlung.Datenstand = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsDatenstand;
+	}
+	if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsLink) {
+		Datensammlung["Link"] = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsLink;
+	}
+	//den Array für die Beziehungen schaffen
+	Datensammlung.Beziehungen = [];
+	//durch alle Beziehungen loopen
+	for (var x = 0; x < window["tblLrFloraBez" + tblName + beziehung_nr].length; x++) {
+		if (window["tblLrFloraBez" + tblName + beziehung_nr][x]["Flora GUID"] === GUID || window["tblLrFloraBez" + tblName + beziehung_nr][x]["LR GUID"] === GUID) {
+			//Das ist der richtige Typ Beziehung und sie enthält diese Art
+			Beziehung = {};
+			Beziehung.Beziehungspartner = [];
+			if (window["tblLrFloraBez" + tblName + beziehung_nr][x]["LR GUID"] === GUID) {
+				//Art ist LR. Beziehungspartner aus Flora speichern
+				Gruppe = "Lebensräume";
+				Flora = {};
+				Flora.Gruppe = "Flora";
+				Flora.Name = window["tblLrFloraBez" + tblName + beziehung_nr][x]["Flora Name"];
+				Flora.GUID = window["tblLrFloraBez" + tblName + beziehung_nr][x]["Flora GUID"];
+				Beziehung.Beziehungspartner.push(Flora);
+			} else if (window["tblLrFloraBez" + tblName + beziehung_nr][x]["Flora GUID"] === GUID) {
+				//Art ist Flora. Beziehungspartner aus LR speichern
+				Gruppe = "Flora";
+				LR = {};
 				LR.Gruppe = "Lebensräume";
 				LR.Taxonomie = window["tblLrFloraBez" + tblName + beziehung_nr][x]["LR Taxonomie"];
 				LR.Name = window["tblLrFloraBez" + tblName + beziehung_nr][x]["LR Name"];
 				LR.GUID = window["tblLrFloraBez" + tblName + beziehung_nr][x]["LR GUID"];
-				Beziehung.Partner.push(LR);
-				var Flora = {};
-				Flora.Gruppe = "Flora";
-				Flora.Name = window["tblLrFloraBez" + tblName + beziehung_nr][x]["Flora Name"];
-				Flora.GUID = window["tblLrFloraBez" + tblName + beziehung_nr][x]["Flora GUID"];
-				Beziehung.Partner.push(Flora);
-				
-				//Datensammlung schreiben
-				Beziehung.Datensammlung = {};
-				Beziehung.Datensammlung.Name = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsName + ": " + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].Beziehung;
-				Beziehung.Datensammlung.Beschreibung = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsBeschreibung;
-				if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsDatenstand) {
-					Beziehung.Datensammlung.Datenstand = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsDatenstand;
-				}
-				if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsLink) {
-					Beziehung.Datensammlung["Link"] = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsLink;
-				}
-
-				//Felder der Datensammlung schreiben, wenn sie Werte enthalten
-				Beziehung.Felder = {};
-				var Feldnamen = ["Art der Beziehung", "Wert für die Beziehung", "Bemerkungen"];
-				$.each(Feldnamen, function(index, value) {
-					//Leerwerte ausschliessen, aber nicht die 0
-					if (window["tblLrFloraBez" + tblName + beziehung_nr][x][value] !== "" && window["tblLrFloraBez" + tblName + beziehung_nr][x][value] !== null) {
-						//Bei AP FM soll das Feld "Wert für die Beziehung" "Biotopbindung" heissen
-						if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsTabelle === "tblFloraFnsApFm") {
-							Beziehung.Felder.Biotopbindung = window["tblLrFloraBez" + tblName + beziehung_nr][x][value];
-						} else {
-							Beziehung.Felder[value] = window["tblLrFloraBez" + tblName + beziehung_nr][x][value];
-						}
+				Beziehung.Beziehungspartner.push(LR);
+			}
+			//Eigenschaften der Beziehung schreiben, wenn sie Werte enthalten
+			$.each(Feldnamen, function(index, value) {
+				//Leerwerte ausschliessen, aber nicht die 0
+				if (window["tblLrFloraBez" + tblName + beziehung_nr][x][value] !== "" && window["tblLrFloraBez" + tblName + beziehung_nr][x][value] !== null) {
+					//Bei AP FM soll das Feld "Wert für die Beziehung" "Biotopbindung" heissen
+					if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsTabelle === "tblFloraFnsApFm") {
+						Beziehung.Biotopbindung = window["tblLrFloraBez" + tblName + beziehung_nr][x][value];
+					} else {
+						Beziehung[value] = window["tblLrFloraBez" + tblName + beziehung_nr][x][value];
 					}
-				});
-
-				//speichern
-				$db = $.couch.db("artendb");
-				$db.saveDoc(Beziehung);
-				if (anzDs === Anz*window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsAnzDs || anzDs === window["tblLrFloraBez" + tblName + beziehung_nr].length) {
-					console.log("Import fertig: anzDs = " + anzDs);
+				}
+			});
+			//die Beziehung anfügen
+			Datensammlung.Beziehungen.push(Beziehung);
+		}
+	}
+	if (Datensammlung.Beziehungen.length > 0) {
+		//nur, wenn Beziehungen existieren!
+		//die Beziehungen nach Objektnamen sortieren
+		Datensammlung.Beziehungen.sort(function(a, b) {
+			var aName, bName;
+			for (c in a.Beziehungspartner) {
+				if (Gruppe === "Lebensräume") {
+					//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
+					aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
+				} else {
+					aName = a.Beziehungspartner[c].Name;
 				}
 			}
-		}
-	});
+			for (d in b.Beziehungspartner) {
+				if (Gruppe === "Lebensräume") {
+					bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
+				} else {
+					bName = b.Beziehungspartner[d].Name;
+				}
+			}
+			return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+		});
+		//jetzt die Art um diese Beziehung ergänzen
+		$db = $.couch.db("artendb");
+		$db.openDoc(GUID, {
+			success: function (art) {
+				//Datensammlung der Art zufügen
+				art[window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsName + ": " + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].Beziehung] = Datensammlung;
+				$db.saveDoc(art);
+			}
+		});
+	}
 }
 
 function importiereLrMooseBeziehungen(tblName, beziehung_nr, Anz) {
@@ -1613,22 +1665,13 @@ function baueDatensammlungenSchaltflächenAuf() {
 			DatensammlungenLrFaunaBez = frageSql(window.myDB, sqlDatensammlungenLrFaunaBez);
 			html = "";
 			for (i in DatensammlungenLrFaunaBez) {
-				//Anzahl Datensätze ermitteln
-				qryAnzDs = frageSql(window.myDB, "SELECT Count(*) AS Anzahl FROM tblLrFaunaBez_import WHERE DsTabelle='" + DatensammlungenLrFaunaBez[i].DsTabelle + "' AND BeziehungNr=" + DatensammlungenLrFaunaBez[i].BeziehungNr);
-				anzDs = qryAnzDs[0].Anzahl;
-				anzButtons = Math.ceil(anzDs/DatensammlungenLrFaunaBez[i].DsAnzDs);
-				for (y = 1; y <= anzButtons; y++) {
-					html += "<input type='checkbox' id='";
-					html += DatensammlungenLrFaunaBez[i].DsTabelle + DatensammlungenLrFaunaBez[i].BeziehungNr + y;
-					html += "' name='LrFaunaBez' Tabelle='" + DatensammlungenLrFaunaBez[i].DsTabelle;
-					html += "' BeziehungNr=" + DatensammlungenLrFaunaBez[i].BeziehungNr + " Anz='" + y + "' Von='" + anzButtons;
-					html += "'>";
-					html += DatensammlungenLrFaunaBez[i].DsName + ": " + qryAnzDs[0].Anzahl + " " + DatensammlungenLrFaunaBez[i].Beziehung;
-					if (anzButtons > 1) {
-						html += " (" + y + "/" + anzButtons + ")";
-					}
-					html += "<br>";
-				}
+				html += "<input type='checkbox' id='";
+				html += DatensammlungenLrFaunaBez[i].DsTabelle + DatensammlungenLrFaunaBez[i].BeziehungNr;
+				html += "' name='LrFaunaBez' Tabelle='" + DatensammlungenLrFaunaBez[i].DsTabelle;
+				html += "' BeziehungNr=" + DatensammlungenLrFaunaBez[i].BeziehungNr;
+				html += ">";
+				html += DatensammlungenLrFaunaBez[i].DsName + ": " + DatensammlungenLrFaunaBez[i].Beziehung;
+				html += "<br>";
 			}
 			$("#SchaltflächenLrFaunaBez").html(html);
 
@@ -1637,22 +1680,13 @@ function baueDatensammlungenSchaltflächenAuf() {
 			DatensammlungenLrFloraBez = frageSql(window.myDB, sqlDatensammlungenLrFloraBez);
 			html = "";
 			for (i in DatensammlungenLrFloraBez) {
-				//Anzahl Datensätze ermitteln
-				qryAnzDs = frageSql(window.myDB, "SELECT Count(*) AS Anzahl FROM tblLrFloraBez_import WHERE DsTabelle='" + DatensammlungenLrFloraBez[i].DsTabelle + "' AND BeziehungNr=" + DatensammlungenLrFloraBez[i].BeziehungNr);
-				anzDs = qryAnzDs[0].Anzahl;
-				anzButtons = Math.ceil(anzDs/DatensammlungenLrFloraBez[i].DsAnzDs);
-				for (y = 1; y <= anzButtons; y++) {
-					html += "<input type='checkbox' id='";
-					html += DatensammlungenLrFloraBez[i].DsTabelle + DatensammlungenLrFloraBez[i].BeziehungNr + y;
-					html += "' name='LrFloraBez' Tabelle='" + DatensammlungenLrFloraBez[i].DsTabelle;
-					html += "' BeziehungNr=" + DatensammlungenLrFloraBez[i].BeziehungNr + " Anz='" + y + "' Von='" + anzButtons;
-					html += "'>";
-					html += DatensammlungenLrFloraBez[i].DsName + ": " + qryAnzDs[0].Anzahl + " " + DatensammlungenLrFloraBez[i].Beziehung;
-					if (anzButtons > 1) {
-						html += " (" + y + "/" + anzButtons + ")";
-					}
-					html += "<br>";
-				}
+				html += "<input type='checkbox' id='";
+				html += DatensammlungenLrFloraBez[i].DsTabelle + DatensammlungenLrFloraBez[i].BeziehungNr;
+				html += "' name='LrFloraBez' Tabelle='" + DatensammlungenLrFloraBez[i].DsTabelle;
+				html += "' BeziehungNr=" + DatensammlungenLrFloraBez[i].BeziehungNr;
+				html += ">";
+				html += DatensammlungenLrFloraBez[i].DsName + ": " + DatensammlungenLrFloraBez[i].Beziehung;
+				html += "<br>";
 			}
 			$("#SchaltflächenLrFloraBez").html(html);
 
@@ -1661,45 +1695,15 @@ function baueDatensammlungenSchaltflächenAuf() {
 			DatensammlungenLrMooseBez = frageSql(window.myDB, sqlDatensammlungenLrMooseBez);
 			html = "";
 			for (i in DatensammlungenLrMooseBez) {
-				//Anzahl Datensätze ermitteln
-				qryAnzDs = frageSql(window.myDB, "SELECT Count(*) AS Anzahl FROM tblLrMooseBez_import WHERE DsTabelle='" + DatensammlungenLrMooseBez[i].DsTabelle + "' AND BeziehungNr=" + DatensammlungenLrMooseBez[i].BeziehungNr);
-				anzDs = qryAnzDs[0].Anzahl;
-				anzButtons = Math.ceil(anzDs/DatensammlungenLrMooseBez[i].DsAnzDs);
-				for (y = 1; y <= anzButtons; y++) {
-					html += "<input type='checkbox' id='";
-					html += DatensammlungenLrMooseBez[i].DsTabelle + DatensammlungenLrMooseBez[i].BeziehungNr + y;
-					html += "' name='LrMooseBez' Tabelle='" + DatensammlungenLrMooseBez[i].DsTabelle;
-					html += "' BeziehungNr=" + DatensammlungenLrMooseBez[i].BeziehungNr + " Anz='" + y + "' Von='" + anzButtons;
-					html += "'>";
-					html += DatensammlungenLrMooseBez[i].DsName + ": " + qryAnzDs[0].Anzahl + " " + DatensammlungenLrMooseBez[i].Beziehung;
-					if (anzButtons > 1) {
-						html += " (" + y + "/" + anzButtons + ")";
-					}
-					html += "<br>";
-				}
-			}
-			$("#SchaltflächenLrMooseBez").html(html);
-
-			//jetzt LR-LR-Beziehungen
-			html = "";
-			//Anzahl Datensätze ermitteln
-			qryAnzDs = frageSql(window.myDB, "SELECT Count(*) AS Anzahl FROM qryLrLrBez_import");
-			anzDs = qryAnzDs[0].Anzahl;
-			anzButtons = Math.ceil(anzDs/4000);
-			for (y = 1; y <= anzButtons; y++) {
 				html += "<input type='checkbox' id='";
-				html += y;
-				html += "' name='LrLrBez'";
-				html += " Anz='" + y + "' Von='" + anzButtons;
-				html += "'>";
-				html += "LrLrBez: " + qryAnzDs[0].Anzahl;
-				if (anzButtons > 1) {
-					html += " (" + y + "/" + anzButtons + ")";
-				}
+				html += DatensammlungenLrMooseBez[i].DsTabelle + DatensammlungenLrMooseBez[i].BeziehungNr;
+				html += "' name='LrMooseBez' Tabelle='" + DatensammlungenLrMooseBez[i].DsTabelle;
+				html += "' BeziehungNr=" + DatensammlungenLrMooseBez[i].BeziehungNr;
+				html += ">";
+				html += DatensammlungenLrMooseBez[i].DsName + ": " + DatensammlungenLrMooseBez[i].Beziehung;
 				html += "<br>";
 			}
-			$("#SchaltflächenLrLrBez").html(html);
-
+			$("#SchaltflächenLrMooseBez").html(html);
 		} else {
 			alert("Bitte den Pfad zur .mdb erfassen");
 		}

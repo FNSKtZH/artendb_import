@@ -59,42 +59,38 @@
 		<hr>
 
 		<h3>Beziehungen Flora-Fauna Ebert</h3>
-		<div style="column-width:250px;">
+		<div style="column-width:500px;">
 			<div id="SchaltflächenFloraFaunaBezEbert"></div><br><br>
 		</div>
 		<hr>
 
 		<h3>Beziehungen Flora-Fauna Westrich</h3>
-		<div style="column-width:250px;">
+		<div style="column-width:500px;">
 			<div id="SchaltflächenFloraFaunaBezWestrich"></div><br><br>
 		</div>
 		<hr>
 
 		<h3>Beziehungen LR-Fauna</h3>
-		<div style="column-width:550px;">
+		<div style="column-width:500px;">
 			<div id="SchaltflächenLrFaunaBez"></div><br><br>
-			<input type='checkbox' viewname="lr_fauna_bez" class="dokumenteVonViewLöschen">LR-Fauna-Beziehungen löschen<br><br>
 		</div>
 		<hr>
 
 		<h3>Beziehungen LR-Flora</h3>
-		<div style="column-width:550px;">
+		<div style="column-width:520px;">
 			<div id="SchaltflächenLrFloraBez"></div><br><br>
-			<input type='checkbox' viewname="lr_flora_bez" class="dokumenteVonViewLöschen">LR-Flora-Beziehungen löschen<br><br>
 		</div>
 		<hr>
 
 		<h3>Beziehungen LR-Moose</h3>
 		<div style="column-width:550px;">
 			<div id="SchaltflächenLrMooseBez"></div><br><br>
-			<input type='checkbox' viewname="lr_moose_bez" class="dokumenteVonViewLöschen">LR-Moose-Beziehungen löschen<br><br>
 		</div>
 		<hr>
 
 		<h3>Beziehungen LR-LR</h3>
 		<div style="column-width:550px;">
-			<div id="SchaltflächenLrLrBez"></div><br><br>
-			<input type='checkbox' viewname="lr_lr_bez" class="dokumenteVonViewLöschen">LR-LR-Beziehungen löschen<br><br>
+			<div id="SchaltflächenLrLrBez"><input type='checkbox' name='LrLrBez'>LrLrBez</div><br><br>
 		</div>
 
 		<script>
@@ -164,16 +160,16 @@
 				importiereFloraFaunaBeziehungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("Anz"));
 			});
 			$("body").on("click", "[name='LrFaunaBez']", function() {
-				importiereLrFaunaBeziehungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("BeziehungNr"), $("#" + this.id).attr("Anz"));
+				importiereLrFaunaBeziehungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("BeziehungNr"));
 			});
 			$("body").on("click", "[name='LrFloraBez']", function() {
-				importiereLrFloraBeziehungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("BeziehungNr"), $("#" + this.id).attr("Anz"));
+				importiereLrFloraBeziehungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("BeziehungNr"));
 			});
 			$("body").on("click", "[name='LrMooseBez']", function() {
-				importiereLrMooseBeziehungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("BeziehungNr"), $("#" + this.id).attr("Anz"));
+				importiereLrMooseBeziehungen($("#" + this.id).attr("Tabelle"), $("#" + this.id).attr("BeziehungNr"));
 			});
 			$("body").on("click", "[name='LrLrBez']", function() {
-				importiereLrLrBeziehungen($("#" + this.id).attr("Anz"));
+				importiereLrLrBeziehungen();
 			});
 			$("body").on("click", ".dokumenteVonViewLöschen", function() {
 				löscheDokumenteVonView($(this).attr("viewname"));
