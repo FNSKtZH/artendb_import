@@ -628,7 +628,7 @@ function importiereLrIndex(Anz) {
 				Art.Typ = "Objekt";
 				//Datensammlung als Objekt gründen, heisst wie DsName
 				Art[DsName] = {};
-				Art[DsName].Typ = "Taxonomie";	//war: Datensammlung
+				Art[DsName].Typ = "Taxonomie";
 				if (Art[DsName].Beschreibung) {
 					Art[DsName].Beschreibung = window.LrMetadaten[0].DsBeschreibung;
 				}
@@ -680,49 +680,23 @@ function importiereLrIndex(Anz) {
 
 function aktualisiereLrHierarchie() {
 	$.when(initiiereImport()).then(function() {
-		var qryEinheiten;
 		//mit der mdb verbinden
 		$db = $.couch.db("artendb");
 		$db.view('artendb/lr?include_docs=true', {
 			success: function (data) {
 				for (i in data.rows) {
-					var LR, Hierarchie, Objekt, nameDerTaxonomie;
+					var LR, Hierarchie, Hierarchie2;
 					LR = data.rows[i].doc;
 					for (x in LR) {
 						if (typeof LR[x].Typ !== "undefined" && LR[x].Typ === "Taxonomie") {
-							nameDerTaxonomie = x;
-							break;
-						}
-					}
-					//Beim export wurde "path" in die Hierarchie geschrieben
-					if (LR[nameDerTaxonomie].Felder.Hierarchie === "path") {
-						Hierarchie = [];
-						Objekt = {};
-						if (LR[nameDerTaxonomie].Felder.Label) {
-							Objekt.Name = LR[nameDerTaxonomie].Felder.Label + ": " + LR[nameDerTaxonomie].Felder.Einheit;
-						} else {
-							Objekt.Name = LR[nameDerTaxonomie].Felder.Einheit;
-						}
-						Objekt.GUID = LR._id;
-						Hierarchie.push(Objekt);
-						//hierarchie schon mal setzen, weil beim obersten node das sonst nicht mehr passiert
-						//bei anderen nodes wird dieser Wert später überschrieben
-						LR[nameDerTaxonomie].Felder.Hierarchie = Hierarchie;
-						if (typeof LR[nameDerTaxonomie].Felder.Parent === "objekt") {
-							//Parent wurde schon umgewandelt, ist jetzt Objekt
-							//Wenn id = Parent, ist das der oberste node. Dann nicht mehr weitermachen
-							if (LR._id !== LR[nameDerTaxonomie].Felder.Parent.GUID) {
-								LR[nameDerTaxonomie].Felder.Hierarchie = ergänzeParentZuHierarchie(data, LR[nameDerTaxonomie].Felder.Parent.GUID, Hierarchie);
-							}
-						} else {
-							//Parent ist noch ein GUID
-							//Wenn id = Parent, ist das der oberste node. Dann nicht mehr weitermachen
-							if (LR._id !== LR[nameDerTaxonomie].Felder.Parent) {
-								LR[nameDerTaxonomie].Felder.Hierarchie = ergänzeParentZuHierarchie(data, LR[nameDerTaxonomie].Felder.Parent, Hierarchie);
+							if (LR[x].Felder.Parent && typeof LR[x].Felder.Parent === "string") {
+								Hierarchie1 = [];
+								LR[x].Felder.Hierarchie = ergänzeParentZuHierarchie(data, LR._id, Hierarchie1);
+								$db.saveDoc(LR);
+								break;
 							}
 						}
-						$db.saveDoc(LR);
-					}
+					}	
 				}
 			}
 		});
@@ -734,37 +708,30 @@ function aktualisiereLrHierarchie() {
 //ruft sich selbst rekursiv auf, bis das oberste Hierarchieelement erreicht ist
 function ergänzeParentZuHierarchie(Lebensräume, parentGUID, Hierarchie) {
 	for (i in Lebensräume.rows) {
-		var LR, parentObjekt, nameDerTaxonomie;
+		var LR, parentObjekt, hierarchieErgänzt;
 		LR = Lebensräume.rows[i].doc;
 		for (x in LR) {
 			if (typeof LR[x].Typ !== "undefined" && LR[x].Typ === "Taxonomie") {
-				nameDerTaxonomie = x;
-				break;
-			}
-		}
-		if (LR._id === parentGUID) {
-			parentObjekt = {};
-			if (LR[nameDerTaxonomie].Felder.Label) {
-				parentObjekt.Name = LR[nameDerTaxonomie].Felder.Label + ": " + LR[nameDerTaxonomie].Felder.Einheit;
-			} else {
-				parentObjekt.Name = LR[nameDerTaxonomie].Felder.Einheit;
-			}
-			parentObjekt.GUID = LR._id;
-			Hierarchie.push(parentObjekt);
-			if (LR[nameDerTaxonomie].Felder.Parent !== LR._id) {
-				//die Hierarchie ist noch nicht zu Ende - weitermachen
-				if (typeof LR[nameDerTaxonomie].Felder.Parent === "objekt") {
-					//Parent wurde schon umgewandelt, ist jetzt Objekt
-					return ergänzeParentZuHierarchie(Lebensräume, LR[nameDerTaxonomie].Felder.Parent.GUID, Hierarchie);
-				} else {
-					//Parent ist noch ein GUID
-					return ergänzeParentZuHierarchie(Lebensräume, LR[nameDerTaxonomie].Felder.Parent, Hierarchie);
+				if (LR._id === parentGUID) {
+					parentObjekt = {};
+					if (LR[x].Felder.Label) {
+						parentObjekt.Name = LR[x].Felder.Label + ": " + LR[x].Felder.Einheit;
+					} else {
+						parentObjekt.Name = LR[x].Felder.Einheit;
+					}
+					parentObjekt.GUID = LR._id;
+					Hierarchie.push(parentObjekt);
+					if (LR[x].Felder.Parent !== LR._id) {
+						//die Hierarchie ist noch nicht zu Ende - weitermachen
+						hierarchieErgänzt = ergänzeParentZuHierarchie(Lebensräume, LR[x].Felder.Parent, Hierarchie);
+						return Hierarchie;
+					} else {
+						//jetzt ist die Hierarchie vollständig
+						//sie ist aber verkehrt - umkehren
+						return Hierarchie.reverse();
+					}
+					break;
 				}
-			} else {
-				//jetzt ist die Hierarchie vollständig
-				//sie ist aber verkehrt - umkehren
-				return Hierarchie.reverse();
-				//return Hierarchie;
 			}
 		}
 	}
@@ -1203,7 +1170,7 @@ function importiereLrFloraBeziehungen(tblName, beziehung_nr) {
 					for (var h = anz2; h < anz3; h++) {
 						importiereLrFloraBeziehungenFuerArt(Artenliste[h].GUID, tblName, beziehung_nr);
 					}
-				}, 300000);
+				}, 240000);
 			}
 			if (Artenliste.length > anz3) {
 				setTimeout(function() {
@@ -1214,7 +1181,7 @@ function importiereLrFloraBeziehungen(tblName, beziehung_nr) {
 					for (var i = anz3; i < anz4; i++) {
 						importiereLrFloraBeziehungenFuerArt(Artenliste[i].GUID, tblName, beziehung_nr);
 					}
-				}, 600000);
+				}, 460000);
 			}
 			if (Artenliste.length > anz4) {
 				setTimeout(function() {
@@ -1225,7 +1192,7 @@ function importiereLrFloraBeziehungen(tblName, beziehung_nr) {
 					for (var j = anz4; j < anz5; j++) {
 						importiereLrFloraBeziehungenFuerArt(Artenliste[j].GUID, tblName, beziehung_nr);
 					}
-				}, 900000);
+				}, 680000);
 			}
 			if (Artenliste.length > anz5) {
 				setTimeout(function() {
@@ -1236,7 +1203,7 @@ function importiereLrFloraBeziehungen(tblName, beziehung_nr) {
 					for (var k = anz5; k < anz6 || k < Artenliste.length; k++) {
 						importiereLrFloraBeziehungenFuerArt(Artenliste[k].GUID, tblName, beziehung_nr);
 					}
-				}, 1200000);
+				}, 900000);
 			}
 			if (Artenliste.length > anz6) {
 				setTimeout(function() {
@@ -1247,7 +1214,7 @@ function importiereLrFloraBeziehungen(tblName, beziehung_nr) {
 					for (var l = anz6; l < anz7 || l < Artenliste.length; l++) {
 						importiereLrFloraBeziehungenFuerArt(Artenliste[l].GUID, tblName, beziehung_nr);
 					}
-				}, 1500000);
+				}, 1060000);
 			}
 		}
 			
