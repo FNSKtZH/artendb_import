@@ -190,38 +190,81 @@ function ergänzeFloraSynonyme() {
 		$db = $.couch.db("artendb");
 		$db.view('artendb/flora?include_docs=true', {
 			success: function (data) {
-				//Name der Taxonomie suchen
-				var nameDerTaxonomie;
 				for (i in data.rows) {
-					for (x in data.rows[i].doc) {
-						if (typeof data.rows[i].doc[x].Typ !== "undefined" && data.rows[i].doc[x].Typ === "Taxonomie") {
-							nameDerTaxonomie = x;
-							break;
-						}
-					}
-					break;
-				}
-				for (i in data.rows) {
+					//durch alle Arten loopen
 					var Art, ArtNr, Synonyme, Synonym;
 					Art = data.rows[i].doc;
-					if (Art[nameDerTaxonomie].Felder.Synonyme) {
-						Synonyme = [];
-						for (k in qrySynonyme) {
-							if (qrySynonyme[k].NR === Art[nameDerTaxonomie].Felder["Taxonomie ID"]) {
-								Synonym = {};
-								Synonym.GUID = qrySynonyme[k].Synonym_GUID;
-								Synonym.Name = qrySynonyme[k].Synonym_Name;
-								Synonyme.push(Synonym);
+					for (x in Art) {
+						//durch alle Eigenschaften loopen
+						if (typeof Art[x].Typ !== "undefined" && Art[x].Typ === "Taxonomie") {
+							//das ist die Taxonomie
+							if (Art[x].Felder && Art[x].Felder.Synonyme) {
+								//es gibt Synonyme
+								Synonyme = [];
+								for (k in qrySynonyme) {
+									//durch alle Synonyme loopen
+									if (qrySynonyme[k].NR === Art[x].Felder["Taxonomie ID"]) {
+										//aus dem Synonym ein Objekt bilden
+										Synonym = {};
+										Synonym.Gruppe = "Flora";
+										Synonym.GUID = qrySynonyme[k].Synonym_GUID;
+										Synonym.Name = qrySynonyme[k].Synonym_Name;
+										Synonyme.push(Synonym);
+									}
+								}
+								Art[x].Felder.Synonyme = Synonyme;
+								$db.saveDoc(Art);
+								//wir müssen nicht durch weitere Eigenschaften der Art loopen
+								break;
 							}
 						}
-						Art[nameDerTaxonomie].Felder.Synonyme = Synonyme;
-						$db.saveDoc(Art);
 					}
 				}
 			}
 		});
 	});
 }
+
+/*function ergänzeFloraSynonyme() {
+	$.when(initiiereImport()).then(function() {
+		var qrySynonyme;
+		qrySynonyme = frageSql(window.myDB, "SELECT tblFloraSisf.SynonymVon AS NR, Mid([tblFloraSisf].[GUID],2,36) AS Synonym_GUID, IIf([tblFloraSisf].[Deutsch] Is Not Null,[tblFloraSisf].[Name] & ' (' & [tblFloraSisf].[Deutsch] & ')',[tblFloraSisf].[Name]) AS Synonym_Name FROM tblFloraSisf WHERE tblFloraSisf.SynonymVon Is Not Null ORDER BY [tblFloraSisf].[Name]");
+		$db = $.couch.db("artendb");
+		$db.view('artendb/flora?include_docs=true', {
+			success: function (data) {
+				for (i in data.rows) {
+					//durch alle Arten loopen
+					var Art, ArtNr, Synonyme, Synonym;
+					Art = data.rows[i].doc;
+					for (x in Art) {
+						//durch alle Eigenschaften loopen
+						if (typeof Art[x].Typ !== "undefined" && Art[x].Typ === "Taxonomie") {
+							//das ist die Taxonomie
+							if (Art[x].Felder && Art[x].Felder.Synonyme) {
+								//es gibt Synonyme
+								Synonyme = [];
+								for (k in qrySynonyme) {
+									//durch alle Synonyme loopen
+									if (qrySynonyme[k].NR === Art[x].Felder["Taxonomie ID"]) {
+										//aus dem Synonym ein Objekt bilden
+										Synonym = {};
+										Synonym.GUID = qrySynonyme[k].Synonym_GUID;
+										Synonym.Name = qrySynonyme[k].Synonym_Name;
+										Synonyme.push(Synonym);
+									}
+								}
+								Art[x].Felder.Synonyme = Synonyme;
+								$db.saveDoc(Art);
+								//wir müssen nicht durch weitere Eigenschaften der Art loopen
+								break;
+							}
+						}
+					}
+				}
+			}
+		});
+	});
+}*/
 
 function importiereFloraDatensammlungen(tblName, Anz) {
 	$.when(initiiereImport()).then(function() {
@@ -747,26 +790,25 @@ function aktualisiereLrParent() {
 		$db.view('artendb/lr?include_docs=true', {
 			success: function (data) {
 				for (i in data.rows) {
-					var LR, Parent, nameDerTaxonomie;
+					var LR, Parent;
 					LR = data.rows[i].doc;
 					for (x in LR) {
 						if (typeof LR[x].Typ !== "undefined" && LR[x].Typ === "Taxonomie") {
-							nameDerTaxonomie = x;
-							break;
-						}
-					}
-					if (LR[nameDerTaxonomie].Felder.Parent) {
-						for (k in qryEinheiten) {
-							if (qryEinheiten[k].GUID === LR[nameDerTaxonomie].Felder.Parent) {
-								Parent = {};
-								Parent.GUID = qryEinheiten[k].GUID;
-								Parent.Name = qryEinheiten[k].Einheit;
+							if (LR[x].Felder.Parent) {
+								for (k in qryEinheiten) {
+									if (qryEinheiten[k].GUID === LR[x].Felder.Parent) {
+										Parent = {};
+										Parent.GUID = qryEinheiten[k].GUID;
+										Parent.Name = qryEinheiten[k].Einheit;
+										break;
+									}
+								}
+								LR[x].Felder.Parent = Parent;
+								$db.saveDoc(LR);
 								break;
 							}
 						}
-						LR[nameDerTaxonomie].Felder.Parent = Parent;
-						$db.saveDoc(LR);
-					}
+					}		
 				}
 			}
 		});
@@ -919,6 +961,11 @@ function importiereFloraFaunaBeziehungenFuerArt (GUID, tblName) {
 	if (window["DatensammlungMetadaten" + tblName][0].DsLink) {
 		Datensammlung["Link"] = window["DatensammlungMetadaten" + tblName][0].DsLink;
 	}
+	if (tblName === "tblFloraFaunaBezEbert") {
+		Datensammlung["Art der Beziehungen"] = "Beziehungen zwischen Schmetterlingen und Pflanzenarten";
+	} else if (tblName === "tblFloraFaunaBezWestrich") {
+		Datensammlung["Art der Beziehungen"] = "Beziehungen zwischen Wildbienen und Pflanzenarten";
+	}
 	//den Array für die Beziehungen schaffen
 	Datensammlung.Beziehungen = [];
 	//durch alle Beziehungen loopen
@@ -1013,7 +1060,7 @@ function importiereLrFaunaBeziehungen(tblName, beziehung_nr) {
 //importiert die LR-Fauna-Beziehungen eine Art
 //benötigt deren GUID und den Tabellennahmen und die Beziehungs-Nr
 function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
-	var Feldnamen = ["Art der Beziehung", "Wert für die Beziehung", "Bemerkungen"];
+	var Feldnamen = ["Wert für die Beziehung", "Bemerkungen"];
 	var LR;
 	var Fauna;
 	var Beziehung;
@@ -1031,6 +1078,8 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 	if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsLink) {
 		Datensammlung["Link"] = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsLink;
 	}
+	//Art der Beziehung soll eine Eigenschaft der Datensammlung sein, nicht der Beziehung
+	Datensammlung["Art der Beziehungen"] = window["tblLrFaunaBez" + tblName + beziehung_nr][0]["Art der Beziehung"];
 	//den Array für die Beziehungen schaffen
 	Datensammlung.Beziehungen = [];
 	//durch alle Beziehungen loopen
@@ -1224,7 +1273,7 @@ function importiereLrFloraBeziehungen(tblName, beziehung_nr) {
 //importiert die LR-Flora-Beziehungen eine Art
 //benötigt deren GUID und den Tabellennahmen und die Beziehungs-Nr
 function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
-	var Feldnamen = ["Art der Beziehung", "Wert für die Beziehung", "Bemerkungen"];
+	var Feldnamen = ["Wert für die Beziehung", "Bemerkungen"];
 	var LR;
 	var Flora;
 	var Beziehungen;
@@ -1244,13 +1293,19 @@ function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 	if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsLink) {
 		Datensammlung["Link"] = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsLink;
 	}
+	//Art der Beziehung jetzt schon anlegen, damit es vor den Beziehungen liegt
+	//Datensammlung["Art der Beziehungen"] = "";
 	//den Array für die Beziehungen schaffen
-	Datensammlung.Beziehungen = [];
+	//Datensammlung.Beziehungen = [];
 	//Alle Beziehungen dieser Art holen
 	anzBeziehungen = frageSql(window.myDB, "SELECT Count(tblLrFloraBez_import.GUID) AS Anzahl FROM tblLrFloraBez_import WHERE DsTabelle='" + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsTabelle + "' AND BeziehungNr=" + beziehung_nr + " AND ([Flora GUID]='" + GUID + "' OR [LR GUID]='" + GUID + "')");
 	//nur weiterfahren, wenn Beziehungen existieren
 	if (anzBeziehungen[0].Anzahl > 0) {
 		Beziehungen = frageSql(window.myDB, "SELECT * FROM tblLrFloraBez_import WHERE DsTabelle='" + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsTabelle + "' AND BeziehungNr=" + beziehung_nr + " AND ([Flora GUID]='" + GUID + "' OR [LR GUID]='" + GUID + "')");
+		//Art der Beziehung soll eine Eigenschaft der Datensammlung sein, nicht der Beziehungen
+		Datensammlung["Art der Beziehungen"] = Beziehungen[0]["Art der Beziehung"];
+		//den Array für die Beziehungen schaffen - erst jetzt, damit es unter "Art der Beziehungen" liegt
+		Datensammlung.Beziehungen = [];
 		//durch alle Beziehungen loopen
 		for (var x = 0; x < Beziehungen.length; x++) {
 			if (Beziehungen[x]["Flora GUID"] === GUID || Beziehungen[x]["LR GUID"] === GUID) {
@@ -1332,10 +1387,6 @@ function importiereLrMooseBeziehungen(tblName, beziehung_nr) {
 	//wenn die Beziehung die Art enthält, Beziehung ergänzen
 	//ein mal in die couch schreiben. SONST GIBT ES KONFLIKTE
 	$.when(initiiereImport()).then(function() {
-		//Objekt gründen, in das der Array mit allen zu aktualisierenden Dokumenten eingefügt werden soll
-		var docObjekt = {};
-		//Array gründen, worin alle zu aktualisierenden Dokumente eingefügt werden sollen
-		window.docArray = [];
 		//wenn noch nicht vorhanden...
 		if (!window["DatensammlungMetadaten" + tblName + beziehung_nr]) {
 			//Informationen zur Datensammlung holen
@@ -1346,35 +1397,25 @@ function importiereLrMooseBeziehungen(tblName, beziehung_nr) {
 			//Beziehungen holen
 			window["tblLrMooseBez" + tblName + beziehung_nr] = frageSql(window.myDB, "SELECT * FROM tblLrMooseBez_import WHERE DsTabelle='" + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsTabelle + "' AND BeziehungNr=" + beziehung_nr);
 		}
-		console.log('window["tblLrMooseBez" + tblName + beziehung_nr].length = ' + window["tblLrMooseBez" + tblName + beziehung_nr].length);
+		console.log('window[tblLrMooseBez' + tblName + beziehung_nr + '].length = ' + window["tblLrMooseBez" + tblName + beziehung_nr].length);
 		//wenn noch nicht vorhanden...
 		if (!window["tblLrMooseBez" + tblName + beziehung_nr + "_artenliste"]) {
 			//liste aller Arten holen, von denen Beziehungen importiert werden sollen
 			window["tblLrMooseBez" + tblName + beziehung_nr + "_artenliste"] = frageSql(window.myDB, "SELECT tblLrMooseBez_import.[Moos GUID] AS [GUID] FROM tblLrMooseBez_import UNION SELECT tblLrMooseBez_import.[LR GUID] AS [GUID] from tblLrMooseBez_import WHERE DsTabelle='" + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsTabelle + "' AND BeziehungNr=" + beziehung_nr);
 		}
-		console.log('window["tblLrMooseBez" + tblName + beziehung_nr + "_artenliste"].length = ' + window["tblLrMooseBez" + tblName + beziehung_nr + "_artenliste"].length);
+		console.log('window[tblLrMooseBez' + tblName + beziehung_nr + '_artenliste].length = ' + window["tblLrMooseBez" + tblName + beziehung_nr + "_artenliste"].length);
 		//jetzt durch alle Objekte loopen und ihre LR-Moose-Beziehungen ergänzen
 		for (f in window["tblLrMooseBez" + tblName + beziehung_nr + "_artenliste"]) {
 			//jetzt die Beziehungen dieser Art holen und in den Array einfügen
 			importiereLrMooseBeziehungenFuerArt(window["tblLrMooseBez" + tblName + beziehung_nr + "_artenliste"][f].GUID, tblName, beziehung_nr);
 		}
-		//Das Objekt mit der Liste aller Dokumente bilden
-		docObjekt.docs = window.docArray;
-		//und speichern
-		$db = $.couch.db("artendb");
-		$db.bulkSave(docObjekt, {
-			success: function() {
-				console.log(window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsName + ": " + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsBeziehung + ": " + docArray.length + " Beziehungen importiert");
-				delete window.docArray;
-			}
-		});
 	});
 }
 
 //importiert die LR-Moose-Beziehungen eine Art
 //benötigt deren GUID und den Tabellennahmen und die Beziehungs-Nr
 function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
-	var Feldnamen = ["Art der Beziehung", "Wert für die Beziehung", "Bemerkungen"];
+	var Feldnamen = ["Wert für die Beziehung", "Bemerkungen"];
 	var LR;
 	var Moose;
 	var Beziehung;
@@ -1392,6 +1433,8 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 	if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsLink) {
 		Datensammlung["Link"] = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsLink;
 	}
+	//Art der Beziehung soll eine Eigenschaft der Datensammlung sein, nicht der Beziehungen
+	Datensammlung["Art der Beziehungen"] = window["tblLrMooseBez" + tblName + beziehung_nr][0]["Art der Beziehung"];
 	//den Array für die Beziehungen schaffen
 	Datensammlung.Beziehungen = [];
 	//durch alle Beziehungen loopen
@@ -1460,8 +1503,14 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 		$db = $.couch.db("artendb");
 		$db.openDoc(GUID, {
 			success: function (art) {
-				art[window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsName + ": " + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsBeziehung] = Datensammlung;
-				window.docArray.push(art);
+				//console.log('window[DatensammlungMetadaten' + tblName + beziehung_nr + '][0].DsName = ' + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsName);
+				//console.log('window[tblLrMooseBez' + tblName + beziehung_nr + '][0].Beziehung = ' + window["tblLrMooseBez" + tblName + beziehung_nr][0].Beziehung);
+				//console.log('DsName = ' + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsName + ": " + window["tblLrMooseBez" + tblName + beziehung_nr][0].Beziehung);
+				art[window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsName + ": " + window["tblLrMooseBez" + tblName + beziehung_nr][0].Beziehung] = Datensammlung;
+				$db.saveDoc(art);
+				//console.log('Datensammlung = ' + JSON.stringify(Datensammlung));
+				//console.log('Art = ' + JSON.stringify(art));
+				//window.docArray.push(art);
 			}
 		});
 	}
@@ -1564,6 +1613,13 @@ function importiereLrLrBeziehungenFuerLr (GUID, DsName, tblPostpend) {
 	//das sind alles taxonomische Beziehungen. kenntlich machen, damit sie separat dargestellt werden können
 	Datensammlung.Untertyp = "taxonomisch";
 	//Datensammlung.Beschreibung = "Diese Datensammlung ist nicht beschrieben";
+	//Felder der Datensammlung schreiben
+	if (window["tblLrLrBez" + tblPostpend][0]["Art der Beziehung"] === "Synonym von") {
+		Datensammlung["Art der Beziehungen"] = "synonym";
+	} else {
+		//Wert ist "Untereinheit von"
+		Datensammlung["Art der Beziehungen"] = "hierarchisch";
+	}
 
 	//den Array für die Beziehungen schaffen
 	Datensammlung.Beziehungen = [];
@@ -1585,11 +1641,8 @@ function importiereLrLrBeziehungenFuerLr (GUID, DsName, tblPostpend) {
 			LR2.Name = window["tblLrLrBez" + tblPostpend][x]["LR2 Name"];
 			LR2.GUID = window["tblLrLrBez" + tblPostpend][x]["LR2 GUID"];
 			//Felder der Datensammlung schreiben
-			if (window["tblLrLrBez" + tblPostpend][x]["Art der Beziehung"] === "Synonym von") {
-				Beziehung["Art der Beziehung"] = "synonym";
-			} else {
+			if (window["tblLrLrBez" + tblPostpend][x]["Art der Beziehung"] === "Untereinheit von") {
 				//Wert ist "Untereinheit von"
-				Beziehung["Art der Beziehung"] = "hierarchisch";
 				LR2.Rolle = "übergeordnet";
 				LR1.Rolle = "untergeordnet";
 			}
