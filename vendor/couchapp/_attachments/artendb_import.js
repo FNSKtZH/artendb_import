@@ -146,36 +146,56 @@ function aktualisiereFloraGültigeNamen() {
 function ergänzeFloraEingeschlosseneArten() {
 	$.when(initiiereImport()).then(function() {
 		var qryEingeschlosseneArten;
-		qryEingeschlosseneArten = frageSql(window.myDB, "SELECT tblFloraSisfAggrSl.NO_AGR_SL, IIf([tblFloraSisf].[Deutsch] Is Not Null,[tblFloraSisf].[Name] & ' (' & [tblFloraSisf].[Deutsch] & ')',[tblFloraSisf].[Name]) AS [Artname vollständig], Mid([tblFloraSisf].[GUID],2,36) AS [GUID] FROM tblFloraSisfAggrSl INNER JOIN tblFloraSisf ON tblFloraSisfAggrSl.NO_NOM_INCLU = tblFloraSisf.NR");
+		qryEingeschlosseneArten = frageSql(window.myDB, "SELECT IIf([tblFloraSisf].[Deutsch] Is Not Null,[tblFloraSisf].[Name] & ' (' & [tblFloraSisf].[Deutsch] & ')',[tblFloraSisf].[Name]) AS [Artname vollständig], Mid([tblFloraSisf].[GUID],2,36) AS GUID_eingeschlossen, Mid([tblFloraSisf_1].[GUID],2,36) AS [GUID] FROM tblFloraSisf AS tblFloraSisf_1 INNER JOIN (tblFloraSisf INNER JOIN tblFloraSisfAggrSl ON tblFloraSisf.NR = tblFloraSisfAggrSl.NO_NOM_INCLU) ON tblFloraSisf_1.NR = tblFloraSisfAggrSl.NO_AGR_SL ORDER BY IIf([tblFloraSisf].[Deutsch] Is Not Null,[tblFloraSisf].[Name] & ' (' & [tblFloraSisf].[Deutsch] & ')',[tblFloraSisf].[Name])");
 		$db = $.couch.db("artendb");
 		$db.view('artendb/flora?include_docs=true', {
 			success: function (data) {
-				//Name der Taxonomie suchen
-				var nameDerTaxonomie;
 				for (i in data.rows) {
-					for (x in data.rows[i].doc) {
-						if (typeof data.rows[i].doc[x].Typ !== "undefined" && data.rows[i].doc[x].Typ === "Taxonomie") {
-							nameDerTaxonomie = x;
-							break;
-						}
-					}
-					break;
-				}
-				for (i in data.rows) {
-					var Art, ArtNr, eingeschlosseneArten, eingeschlosseneArt;
+					//durch alle Arten loopen
+					var Art, Synonyme, Einschluss, DsEinschluss, BeziehungsObjekt, Beziehungspartner;
 					Art = data.rows[i].doc;
-					if (Art[nameDerTaxonomie].Felder["Eingeschlossene Arten"]) {
-						eingeschlosseneArten = [];
-						for (k in qryEingeschlosseneArten) {
-							if (qryEingeschlosseneArten[k].NO_AGR_SL === Art[nameDerTaxonomie].Felder["Taxonomie ID"]) {
-								eingeschlosseneArt = {};
-								eingeschlosseneArt.GUID = qryEingeschlosseneArten[k].GUID;
-								eingeschlosseneArt.Name = qryEingeschlosseneArten[k]["Artname vollständig"];
-								eingeschlosseneArten.push(eingeschlosseneArt);
+					for (x in Art) {
+						//durch alle Eigenschaften loopen
+						if (typeof Art[x].Typ !== "undefined" && Art[x].Typ === "Taxonomie") {
+							//das ist die Taxonomie
+							if (Art[x].Felder && Art[x].Felder["Eingeschlossene Arten"]) {
+								//es gibt Synonyme
+								DsEinschluss = {};
+								DsEinschluss.Typ = "Beziehung";
+								DsEinschluss.Beschreibung = Art[x].Beschreibung;
+								if (Art[x].Datenstand) {
+									DsEinschluss.Datenstand = Art[x].Datenstand;
+								}
+								if (Art[x].Link) {
+									DsEinschluss["Link"] = Art[x].Link;
+								}
+								DsEinschluss["Art der Beziehungen"] = "eingeschlossen";
+								DsEinschluss.Beziehungen = [];
+								Synonyme = [];
+								for (k in qryEingeschlosseneArten) {
+									//durch alle Synonyme loopen
+									//console.log('qryEingeschlosseneArten[k].NR = ' + qryEingeschlosseneArten[k].NR);
+									//console.log('Art['+x+'].Felder["Taxonomie ID"] = ' + Art[x].Felder["Taxonomie ID"]);
+									if (qryEingeschlosseneArten[k].GUID == Art._id) {
+										//aus dem Synonym ein Objekt bilden
+										Beziehungspartner = [];
+										Einschluss = {};
+										Einschluss.Gruppe = "Flora";
+										Einschluss.GUID = qryEingeschlosseneArten[k]["GUID_eingeschlossen"];
+										Einschluss.Name = qryEingeschlosseneArten[k]["Artname vollständig"];
+										Beziehungspartner.push(Einschluss);
+										BeziehungsObjekt = {};
+										BeziehungsObjekt.Beziehungspartner = Beziehungspartner;
+										DsEinschluss.Beziehungen.push(BeziehungsObjekt);
+									}
+								}
+								Art[x + ": Eingeschlossene Arten"] = DsEinschluss;
+								delete Art[x].Felder["Eingeschlossene Arten"];
+								$db.saveDoc(Art);
+								//wir müssen nicht durch weitere Eigenschaften der Art loopen
+								break;
 							}
 						}
-						Art[nameDerTaxonomie].Felder["Eingeschlossene Arten"] = eingeschlosseneArten;
-						$db.saveDoc(Art);
 					}
 				}
 			}
@@ -185,34 +205,53 @@ function ergänzeFloraEingeschlosseneArten() {
 
 function ergänzeFloraSynonyme() {
 	$.when(initiiereImport()).then(function() {
-		var qrySynonyme;
-		qrySynonyme = frageSql(window.myDB, "SELECT tblFloraSisf.SynonymVon AS NR, Mid([tblFloraSisf].[GUID],2,36) AS Synonym_GUID, IIf([tblFloraSisf].[Deutsch] Is Not Null,[tblFloraSisf].[Name] & ' (' & [tblFloraSisf].[Deutsch] & ')',[tblFloraSisf].[Name]) AS Synonym_Name FROM tblFloraSisf WHERE tblFloraSisf.SynonymVon Is Not Null ORDER BY [tblFloraSisf].[Name]");
+		if (!window.qryFloraSynonyme) {
+			window.qryFloraSynonyme = frageSql(window.myDB, "SELECT tblFloraSisf_import.GUID, [tblFloraSisf_import].[Synonym von], [tblFloraSisf_import].[Artname vollständig] FROM tblFloraSisf_import WHERE [tblFloraSisf_import].[Synonym von] Is Not Null ORDER BY [tblFloraSisf_import].[Artname vollständig]");
+		}
 		$db = $.couch.db("artendb");
 		$db.view('artendb/flora?include_docs=true', {
 			success: function (data) {
 				for (i in data.rows) {
 					//durch alle Arten loopen
-					var Art, ArtNr, Synonyme, Synonym;
+					var Art, Synonyme, Synonym, DsSynonyme, BeziehungsObjekt, Beziehungspartner;
 					Art = data.rows[i].doc;
 					for (x in Art) {
 						//durch alle Eigenschaften loopen
 						if (typeof Art[x].Typ !== "undefined" && Art[x].Typ === "Taxonomie") {
 							//das ist die Taxonomie
-							if (Art[x].Felder && Art[x].Felder.Synonyme) {
+							if (Art[x].Felder && Art[x].Felder["Synonym von"]) {
 								//es gibt Synonyme
+								DsSynonyme = {};
+								DsSynonyme.Typ = "Beziehung";	//war: Datensammlung
+								DsSynonyme.Beschreibung = Art[x].Beschreibung;
+								if (Art[x].Datenstand) {
+									DsSynonyme.Datenstand = Art[x].Datenstand;
+								}
+								if (Art[x].Link) {
+									DsSynonyme["Link"] = Art[x].Link;
+								}
+								DsSynonyme["Art der Beziehungen"] = "synonym";
+								DsSynonyme.Beziehungen = [];
 								Synonyme = [];
-								for (k in qrySynonyme) {
+								for (k in window.qryFloraSynonyme) {
 									//durch alle Synonyme loopen
-									if (qrySynonyme[k].NR === Art[x].Felder["Taxonomie ID"]) {
+									//console.log('window.qryFloraSynonyme[k].NR = ' + window.qryFloraSynonyme[k].NR);
+									//console.log('Art['+x+'].Felder["Taxonomie ID"] = ' + Art[x].Felder["Taxonomie ID"]);
+									if (window.qryFloraSynonyme[k].GUID == Art._id) {
 										//aus dem Synonym ein Objekt bilden
+										Beziehungspartner = [];
 										Synonym = {};
 										Synonym.Gruppe = "Flora";
-										Synonym.GUID = qrySynonyme[k].Synonym_GUID;
-										Synonym.Name = qrySynonyme[k].Synonym_Name;
-										Synonyme.push(Synonym);
+										Synonym.GUID = window.qryFloraSynonyme[k]["Synonym von"];
+										Synonym.Name = window.qryFloraSynonyme[k]["Artname vollständig"];
+										Beziehungspartner.push(Synonym);
+										BeziehungsObjekt = {};
+										BeziehungsObjekt.Beziehungspartner = Beziehungspartner;
+										DsSynonyme.Beziehungen.push(BeziehungsObjekt);
 									}
 								}
-								Art[x].Felder.Synonyme = Synonyme;
+								Art[x + ": Synonyme"] = DsSynonyme;
+								delete Art[x].Felder["Synonym von"];
 								$db.saveDoc(Art);
 								//wir müssen nicht durch weitere Eigenschaften der Art loopen
 								break;
@@ -224,47 +263,6 @@ function ergänzeFloraSynonyme() {
 		});
 	});
 }
-
-/*function ergänzeFloraSynonyme() {
-	$.when(initiiereImport()).then(function() {
-		var qrySynonyme;
-		qrySynonyme = frageSql(window.myDB, "SELECT tblFloraSisf.SynonymVon AS NR, Mid([tblFloraSisf].[GUID],2,36) AS Synonym_GUID, IIf([tblFloraSisf].[Deutsch] Is Not Null,[tblFloraSisf].[Name] & ' (' & [tblFloraSisf].[Deutsch] & ')',[tblFloraSisf].[Name]) AS Synonym_Name FROM tblFloraSisf WHERE tblFloraSisf.SynonymVon Is Not Null ORDER BY [tblFloraSisf].[Name]");
-		$db = $.couch.db("artendb");
-		$db.view('artendb/flora?include_docs=true', {
-			success: function (data) {
-				for (i in data.rows) {
-					//durch alle Arten loopen
-					var Art, ArtNr, Synonyme, Synonym;
-					Art = data.rows[i].doc;
-					for (x in Art) {
-						//durch alle Eigenschaften loopen
-						if (typeof Art[x].Typ !== "undefined" && Art[x].Typ === "Taxonomie") {
-							//das ist die Taxonomie
-							if (Art[x].Felder && Art[x].Felder.Synonyme) {
-								//es gibt Synonyme
-								Synonyme = [];
-								for (k in qrySynonyme) {
-									//durch alle Synonyme loopen
-									if (qrySynonyme[k].NR === Art[x].Felder["Taxonomie ID"]) {
-										//aus dem Synonym ein Objekt bilden
-										Synonym = {};
-										Synonym.GUID = qrySynonyme[k].Synonym_GUID;
-										Synonym.Name = qrySynonyme[k].Synonym_Name;
-										Synonyme.push(Synonym);
-									}
-								}
-								Art[x].Felder.Synonyme = Synonyme;
-								$db.saveDoc(Art);
-								//wir müssen nicht durch weitere Eigenschaften der Art loopen
-								break;
-							}
-						}
-					}
-				}
-			}
-		});
-	});
-}*/
 
 function importiereFloraDatensammlungen(tblName, Anz) {
 	$.when(initiiereImport()).then(function() {
