@@ -41,21 +41,18 @@ function importiereFloraIndex(Anz) {
 							Art[window.tblDatensammlungMetadaten[0].DsName].Felder[y] = true;
 						} else if (y === "Offizielle Art") {
 							andereArt = frageSql(window.myDB, "SELECT [Artname vollständig] as Artname FROM tblFloraSisf_import where GUID='" + window.tblFloraSisf[x][y] + "'");
-							if (!Art["SISF Index 2 (2005): offizielle Art"]) {
-								//es gibt noch keine Synonyme > Datensammlung erstellen
-								var DsSynonyme = {};
-								DsSynonyme.Typ = "Beziehung";
-								DsSynonyme.Beschreibung = Art["SISF Index 2 (2005)"].Beschreibung;
-								if (Art["SISF Index 2 (2005)"].Datenstand) {
-									DsSynonyme.Datenstand = Art["SISF Index 2 (2005)"].Datenstand;
-								}
-								if (Art["SISF Index 2 (2005)"].Link) {
-									DsSynonyme["Link"] = Art["SISF Index 2 (2005)"].Link;
-								}
-								DsSynonyme["Art der Beziehungen"] = "offizielle Art";
-								DsSynonyme.Beziehungen = [];
-								Art["SISF Index 2 (2005): offizielle Art"] = DsSynonyme;
+							var DsSynonyme = {};
+							DsSynonyme.Typ = "Beziehung";
+							DsSynonyme.Beschreibung = Art["SISF Index 2 (2005)"].Beschreibung;
+							if (Art["SISF Index 2 (2005)"].Datenstand) {
+								DsSynonyme.Datenstand = Art["SISF Index 2 (2005)"].Datenstand;
 							}
+							if (Art["SISF Index 2 (2005)"].Link) {
+								DsSynonyme["Link"] = Art["SISF Index 2 (2005)"].Link;
+							}
+							DsSynonyme["Art der Beziehungen"] = "offizielle Art";
+							DsSynonyme.Beziehungen = [];
+							Art["SISF Index 2 (2005): offizielle Art"] = DsSynonyme;
 							//aus dem Synonym ein Objekt bilden
 							var Beziehungspartner = [];
 							var Synonym = {};
@@ -66,13 +63,6 @@ function importiereFloraIndex(Anz) {
 							var BeziehungsObjekt = {};
 							BeziehungsObjekt.Beziehungspartner = Beziehungspartner;
 							Art["SISF Index 2 (2005): offizielle Art"].Beziehungen.push(BeziehungsObjekt);
-						} else if (y === "Synonym von") {
-							/*//Objekt aus Name und GUID bilden
-							offizielleArt = {};
-							andereArt = frageSql(window.myDB, "SELECT [Artname vollständig] as Artname FROM tblFloraSisf_import where GUID='" + window.tblFloraSisf[x][y] + "'");
-							offizielleArt.GUID = window.tblFloraSisf[x][y];
-							offizielleArt.Name = andereArt[0].Artname;
-							Art[window.tblDatensammlungMetadaten[0].DsName].Felder[y] = offizielleArt;*/
 						} else if (y !== "GUID") {
 							//GUID ist _id, kein eigenes Feld
 							Art[window.tblDatensammlungMetadaten[0].DsName].Felder[y] = window.tblFloraSisf[x][y];
@@ -220,7 +210,7 @@ function ergänzeFloraEingeschlosseneArten() {
 									DsEinschluss.Beziehungen.push(BeziehungsObjekt);
 								}
 							}
-							Art["SISF Index 2 (2005): Eingeschlossene Arten"] = DsEinschluss;
+							Art["SISF Index 2 (2005): eingeschlossene Arten"] = DsEinschluss;
 							delete Art["SISF Index 2 (2005)"].Felder["Eingeschlossene Arten"];
 							$db.saveDoc(Art);
 							//wir müssen nicht durch weitere Eigenschaften der Art loopen
@@ -289,7 +279,7 @@ function ergänzeFloraEingeschlossenInFuerArt(Art) {
 				if (Art["SISF Index 2 (2005)"].Link) {
 					DsEingeschlossenIn["Link"] = Art["SISF Index 2 (2005)"].Link;
 				}
-				DsEingeschlossenIn["Art der Beziehungen"] = "synonym";
+				DsEingeschlossenIn["Art der Beziehungen"] = "eingeschlossen in";
 				DsEingeschlossenIn.Beziehungen = [];
 				//aus dem Synonym ein Objekt bilden
 				Beziehungspartner = [];
@@ -303,7 +293,7 @@ function ergänzeFloraEingeschlossenInFuerArt(Art) {
 				DsEingeschlossenIn.Beziehungen.push(BeziehungsObjekt);
 			}
 		}
-		Art["SISF Index 2 (2005): Eingeschlossen in"] = DsEingeschlossenIn;
+		Art["SISF Index 2 (2005): eingeschlossen in"] = DsEingeschlossenIn;
 		$db.saveDoc(Art);
 	}
 }
@@ -351,7 +341,7 @@ function ergänzeFloraSynonyme_2(guidArray, a) {
 
 function ergänzeFloraSynonymeFuerArt(Art) {
 	var qryFloraSynonyme, Synonym, DsSynonyme, BeziehungsObjekt, Beziehungspartner;
-	qryFloraSynonyme = frageSql(window.myDB, 'SELECT tblFloraSisf_import.[Synonym von] AS GUID1, tblFloraSisf_import_1.[Artname vollständig] FROM tblFloraSisf_import INNER JOIN tblFloraSisf_import AS tblFloraSisf_import_1 ON tblFloraSisf_import.[Synonym von] = tblFloraSisf_import_1.GUID  WHERE tblFloraSisf_import.[Synonym von]="'+Art._id+'" UNION SELECT tblFloraSisf_import.GUID AS GUID1, tblFloraSisf_import.[Artname vollständig] FROM tblFloraSisf_import WHERE tblFloraSisf_import.[Synonym von] Is Not Null AND tblFloraSisf_import.GUID="'+Art._id+'" ORDER BY [Artname vollständig]');
+	qryFloraSynonyme = frageSql(window.myDB, 'SELECT tblFloraSisf_import.GUID AS GUID1, tblFloraSisf_import.[Synonym von] AS GUID2, tblFloraSisf_import_1.[Artname vollständig] FROM tblFloraSisf_import INNER JOIN tblFloraSisf_import AS tblFloraSisf_import_1 ON tblFloraSisf_import.[Synonym von] = tblFloraSisf_import_1.GUID WHERE tblFloraSisf_import.GUID="'+Art._id+'" UNION SELECT tblFloraSisf_import.[Synonym von] AS GUID1, tblFloraSisf_import.GUID AS GUID2, tblFloraSisf_import.[Artname vollständig] FROM tblFloraSisf_import WHERE tblFloraSisf_import.[Synonym von] Is Not Null AND tblFloraSisf_import.[Synonym von]="'+Art._id+'" ORDER BY [Artname vollständig]');
 	if (qryFloraSynonyme && qryFloraSynonyme.length > 0) {
 		//es gibt Synonyme
 		for (k in qryFloraSynonyme) {
@@ -380,8 +370,7 @@ function ergänzeFloraSynonymeFuerArt(Art) {
 				DsSynonyme.Beziehungen.push(BeziehungsObjekt);
 			}
 		}
-		Art["SISF Index 2 (2005): Synonyme"] = DsSynonyme;
-		delete Art["SISF Index 2 (2005)"].Felder["Synonym von"];
+		Art["SISF Index 2 (2005): synonym"] = DsSynonyme;
 		$db.saveDoc(Art);
 	}
 }
@@ -481,12 +470,30 @@ function importiereMoosIndex(Anz) {
 				for (y in window.tblMooseNism[x]) {
 					if (window.tblMooseNism[x][y] !== "" && window.tblMooseNism[x][y] !== null && y !== "Gruppe") {
 						if (y === "Akzeptierte Referenz") {
-							//Objekt aus Name und GUID bilden
-							akzeptierteReferenz = {};
 							andereArt = frageSql(window.myDB, "SELECT [Artname vollständig] as Artname FROM tblMooseNism_import where GUID='" + window.tblMooseNism[x][y] + "'");
-							akzeptierteReferenz.GUID = window.tblMooseNism[x][y];
-							akzeptierteReferenz.Name = andereArt[0].Artname;
-							Art[window.DatensammlungMetadatenMoose[0].DsName].Felder[y] = akzeptierteReferenz;
+							var DsSynonyme = {};
+							DsSynonyme.Typ = "Beziehung";
+							DsSynonyme.Beschreibung = Art["NISM (2010)"].Beschreibung;
+							if (Art["NISM (2010)"].Datenstand) {
+								DsSynonyme.Datenstand = Art["NISM (2010)"].Datenstand;
+							}
+							if (Art["NISM (2010)"].Link) {
+								DsSynonyme["Link"] = Art["NISM (2010)"].Link;
+							}
+							DsSynonyme["Art der Beziehungen"] = "akzeptierte Referenz";
+							DsSynonyme.Beziehungen = [];
+							Art["NISM (2010): akzeptierte Referenz"] = DsSynonyme;
+							//aus dem Synonym ein Objekt bilden
+							var Beziehungspartner = [];
+							var Synonym = {};
+							Synonym.Gruppe = "Moose";
+							Synonym.GUID = window.tblMooseNism[x][y];
+							Synonym.Name = andereArt[0].Artname;
+							Beziehungspartner.push(Synonym);
+							var BeziehungsObjekt = {};
+							BeziehungsObjekt.Beziehungspartner = Beziehungspartner;
+							Art["NISM (2010): akzeptierte Referenz"].Beziehungen.push(BeziehungsObjekt);
+							delete Art[window.DatensammlungMetadatenMoose[0].DsName].Felder[y];
 						} else if (window.tblMooseNism[x][y] === -1) {
 							//Access wadelt in Abfragen Felder mit Wenn() in Zahlen um. Umkehren
 							Art[window.DatensammlungMetadatenMoose[0].DsName].Felder[y] = true;
