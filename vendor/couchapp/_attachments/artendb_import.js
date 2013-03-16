@@ -1261,7 +1261,7 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 	var Gruppe;
 	//Datensammlung als Objekt gründen
 	var Datensammlung = {};
-	Datensammlung.Name = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsName;
+	Datensammlung.Name = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsName + ": " + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].Beziehung;
 	if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsBeschreibung) {
 		Datensammlung.Beschreibung = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsBeschreibung;
 	}
@@ -1484,7 +1484,7 @@ function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 	var anzBeziehungen;
 	//Datensammlung als Objekt gründen
 	var Datensammlung = {};
-	Datensammlung.Name = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsName;
+	Datensammlung.Name = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsName + ": " + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].Beziehung;
 	if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsBeschreibung) {
 		Datensammlung.Beschreibung = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsBeschreibung;
 	}
@@ -1632,7 +1632,7 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 	var Gruppe;
 	//Datensammlung als Objekt gründen
 	var Datensammlung = {};
-	Datensammlung.Name = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsName;
+	Datensammlung.Name = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsName + ": " + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].Beziehung;
 	if (window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsBeschreibung) {
 		Datensammlung.Beschreibung = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsBeschreibung;
 	}
@@ -1818,15 +1818,16 @@ function importiereLrLrBeziehungenFuerLr (GUID, DsName, tblPostpend) {
 	var Gruppe;
 	//Datensammlung als Objekt gründen
 	var Datensammlung = {};
-	Datensammlung.Name = DsName;
 	//das sind alles taxonomische Beziehungen. kenntlich machen, damit sie separat dargestellt werden können
 	Datensammlung.Typ = "taxonomisch";
 	//Datensammlung.Beschreibung = "Diese Datensammlung ist nicht beschrieben";
 	//Felder der Datensammlung schreiben
 	if (window["tblLrLrBez" + tblPostpend][0]["Art der Beziehung"] === "Synonym von") {
+		Datensammlung.Name = DsName + ": synonym";
 		Datensammlung["Art der Beziehungen"] = "synonym";
 	} else {
 		//Wert ist "Untereinheit von"
+		Datensammlung.Name = DsName + ": hierarchisch";
 		Datensammlung["Art der Beziehungen"] = "hierarchisch";
 	}
 
@@ -1883,12 +1884,12 @@ function importiereLrLrBeziehungenFuerLr (GUID, DsName, tblPostpend) {
 		$db = $.couch.db("artendb");
 		$db.openDoc(GUID, {
 			success: function (lr) {
-				if (!art.Beziehungen) {
-					art.Beziehungen = [];
+				if (!lr.Beziehungen) {
+					lr.Beziehungen = [];
 				}
-				art.Beziehungen.push(Datensammlung);
+				lr.Beziehungen.push(Datensammlung);
 				//Datensammlungen nach Name sortieren
-				art.Beziehungen.sort(function(a, b) {
+				lr.Beziehungen.sort(function(a, b) {
 					var aName = a.Name;
 					var bName = b.Name;
 					return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
