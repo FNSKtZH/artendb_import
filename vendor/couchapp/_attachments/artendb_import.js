@@ -1259,6 +1259,7 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 	var Fauna;
 	var Beziehung;
 	var Gruppe;
+	var artDerBeziehungExistiertSchon;
 	//Datensammlung als Objekt gründen
 	var Datensammlung = {};
 	Datensammlung.Name = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsName + ": " + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].Beziehung;
@@ -1344,8 +1345,42 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 				//Datensammlung der Art zufügen
 				if (!art.Beziehungen) {
 					art.Beziehungen = [];
+					art.Beziehungen.push(Datensammlung);
+				} else {
+					artDerBeziehungExistiertSchon = false;
+					//kontrollieren, ob diese Art von Beziehungen schon existiert
+					for (i in art.Beziehungen) {
+						if (art.Beziehungen[i].Name === Datensammlung.Name) {
+							artDerBeziehungExistiertSchon = true;
+							//Beziehungen in vorhandener Datensammlung ergänzen
+							art.Beziehungen[i].Beziehungen.push(Datensammlung.Beziehungen);
+							//und neu sortieren
+							art.Beziehungen[i].Beziehungen.sort(function(a, b) {
+								var aName, bName;
+								for (c in a.Beziehungspartner) {
+									if (Gruppe === "Lebensräume") {
+										//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
+										aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
+									} else {
+										aName = a.Beziehungspartner[c].Name;
+									}
+								}
+								for (d in b.Beziehungspartner) {
+									if (Gruppe === "Lebensräume") {
+										bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
+									} else {
+										bName = b.Beziehungspartner[d].Name;
+									}
+								}
+								return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+							});
+						}
+					}
+					if (!artDerBeziehungExistiertSchon) {
+						//Datensammlung sammt Beziehung ergänzen
+						art.Beziehungen.push(Datensammlung);
+					}
 				}
-				art.Beziehungen.push(Datensammlung);
 				//Datensammlungen nach Name sortieren
 				art.Beziehungen.sort(function(a, b) {
 					var aName = a.Name;
@@ -1482,6 +1517,7 @@ function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 	var Beziehung;
 	var Gruppe;
 	var anzBeziehungen;
+	var artDerBeziehungExistiertSchon;
 	//Datensammlung als Objekt gründen
 	var Datensammlung = {};
 	Datensammlung.Name = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsName + ": " + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].Beziehung;
@@ -1573,10 +1609,45 @@ function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 			$db = $.couch.db("artendb");
 			$db.openDoc(GUID, {
 				success: function (art) {
+					//Datensammlung der Art zufügen
 					if (!art.Beziehungen) {
 						art.Beziehungen = [];
+						art.Beziehungen.push(Datensammlung);
+					} else {
+						artDerBeziehungExistiertSchon = false;
+						//kontrollieren, ob diese Art von Beziehungen schon existiert
+						for (i in art.Beziehungen) {
+							if (art.Beziehungen[i].Name === Datensammlung.Name) {
+								artDerBeziehungExistiertSchon = true;
+								//Beziehungen in vorhandener Datensammlung ergänzen
+								art.Beziehungen[i].Beziehungen.push(Datensammlung.Beziehungen);
+								//und neu sortieren
+								art.Beziehungen[i].Beziehungen.sort(function(a, b) {
+									var aName, bName;
+									for (c in a.Beziehungspartner) {
+										if (Gruppe === "Lebensräume") {
+											//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
+											aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
+										} else {
+											aName = a.Beziehungspartner[c].Name;
+										}
+									}
+									for (d in b.Beziehungspartner) {
+										if (Gruppe === "Lebensräume") {
+											bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
+										} else {
+											bName = b.Beziehungspartner[d].Name;
+										}
+									}
+									return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+								});
+							}
+						}
+						if (!artDerBeziehungExistiertSchon) {
+							//Datensammlung sammt Beziehung ergänzen
+							art.Beziehungen.push(Datensammlung);
+						}
 					}
-					art.Beziehungen.push(Datensammlung);
 					//Datensammlungen nach Name sortieren
 					art.Beziehungen.sort(function(a, b) {
 						var aName = a.Name;
@@ -1630,6 +1701,7 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 	var Moose;
 	var Beziehung;
 	var Gruppe;
+	var artDerBeziehungExistiertSchon;
 	//Datensammlung als Objekt gründen
 	var Datensammlung = {};
 	Datensammlung.Name = window["DatensammlungMetadaten" + tblName + beziehung_nr][0].DsName + ": " + window["DatensammlungMetadaten" + tblName + beziehung_nr][0].Beziehung;
@@ -1712,10 +1784,45 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 		$db = $.couch.db("artendb");
 		$db.openDoc(GUID, {
 			success: function (art) {
+				//Datensammlung der Art zufügen
 				if (!art.Beziehungen) {
 					art.Beziehungen = [];
+					art.Beziehungen.push(Datensammlung);
+				} else {
+					artDerBeziehungExistiertSchon = false;
+					//kontrollieren, ob diese Art von Beziehungen schon existiert
+					for (i in art.Beziehungen) {
+						if (art.Beziehungen[i].Name === Datensammlung.Name) {
+							artDerBeziehungExistiertSchon = true;
+							//Beziehungen in vorhandener Datensammlung ergänzen
+							art.Beziehungen[i].Beziehungen.push(Datensammlung.Beziehungen);
+							//und neu sortieren
+							art.Beziehungen[i].Beziehungen.sort(function(a, b) {
+								var aName, bName;
+								for (c in a.Beziehungspartner) {
+									if (Gruppe === "Lebensräume") {
+										//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
+										aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
+									} else {
+										aName = a.Beziehungspartner[c].Name;
+									}
+								}
+								for (d in b.Beziehungspartner) {
+									if (Gruppe === "Lebensräume") {
+										bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
+									} else {
+										bName = b.Beziehungspartner[d].Name;
+									}
+								}
+								return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+							});
+						}
+					}
+					if (!artDerBeziehungExistiertSchon) {
+						//Datensammlung sammt Beziehung ergänzen
+						art.Beziehungen.push(Datensammlung);
+					}
 				}
-				art.Beziehungen.push(Datensammlung);
 				//Datensammlungen nach Name sortieren
 				art.Beziehungen.sort(function(a, b) {
 					var aName = a.Name;
