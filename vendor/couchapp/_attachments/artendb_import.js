@@ -73,9 +73,9 @@ function importiereFloraIndex(Anz) {
 							Art.Beziehungen.push(DsSynonyme);
 							//Datensammlungen nach Name sortieren
 							Art.Beziehungen.sort(function(a, b) {
-								var aName = a.Name.toLowerCase();
-								var bName = b.Name.toLowerCase();
-								return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+								var aName = a.Name;
+								var bName = b.Name;
+								return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
 							});
 						} else if (y !== "GUID") {
 							//GUID ist _id, kein eigenes Feld
@@ -172,9 +172,9 @@ function aktualisiereFloraGültigeNamen() {
 						Art.Beziehungen.push(DsGueltigeNamen);
 						//Datensammlungen nach Name sortieren
 						Art.Beziehungen.sort(function(a, b) {
-							var aName = a.Name.toLowerCase();
-							var bName = b.Name.toLowerCase();
-							return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+							var aName = a.Name;
+							var bName = b.Name;
+							return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
 						});
 						$db.saveDoc(Art);
 					}
@@ -230,9 +230,9 @@ function ergänzeFloraEingeschlosseneArten() {
 							Art.Beziehungen.push(DsEinschluss);
 							//Datensammlungen nach Name sortieren
 							Art.Beziehungen.sort(function(a, b) {
-								var aName = a.Name.toLowerCase();
-								var bName = b.Name.toLowerCase();
-								return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+								var aName = a.Name;
+								var bName = b.Name;
+								return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
 							});
 							delete Art.Taxonomie.Felder["Eingeschlossene Arten"];
 							$db.saveDoc(Art);
@@ -322,9 +322,9 @@ function ergänzeFloraEingeschlossenInFuerArt(Art) {
 		Art.Beziehungen.push(DsEingeschlossenIn);
 		//Datensammlungen nach Name sortieren
 		Art.Beziehungen.sort(function(a, b) {
-			var aName = a.Name.toLowerCase();
-			var bName = b.Name.toLowerCase();
-			return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+			var aName = a.Name;
+			var bName = b.Name;
+			return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
 		});
 		$db.saveDoc(Art);
 	}
@@ -407,9 +407,9 @@ function ergänzeFloraSynonymeFuerArt(Art) {
 		Art.Beziehungen.push(DsSynonyme);
 		//Datensammlungen nach Name sortieren
 		Art.Beziehungen.sort(function(a, b) {
-			var aName = a.Name.toLowerCase();
-			var bName = b.Name.toLowerCase();
-			return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+			var aName = a.Name;
+			var bName = b.Name;
+			return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
 		});
 		$db.saveDoc(Art);
 	}
@@ -543,9 +543,9 @@ function importiereMoosIndex(Anz) {
 							Art.Beziehungen.push(DsSynonyme);
 							//Datensammlungen nach Name sortieren
 							Art.Beziehungen.sort(function(a, b) {
-								var aName = a.Name.toLowerCase();
-								var bName = b.Name.toLowerCase();
-								return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+								var aName = a.Name;
+								var bName = b.Name;
+								return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
 							});
 							delete Art.Taxonomie.Felder[y];
 						} else if (window.tblMooseNism[x][y] === -1) {
@@ -1065,9 +1065,9 @@ function fuegeDatensammlungZuArt(GUID, DsName, DatensammlungDieserArt) {
 			doc.Datensammlungen.push(DatensammlungDieserArt);
 			//Datensammlungen nach Name sortieren
 			doc.Datensammlungen.sort(function(a, b) {
-				var aName = a.Name.toLowerCase();
-				var bName = b.Name.toLowerCase();
-				return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+				var aName = a.Name;
+				var bName = b.Name;
+				return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
 			});
 			//in artendb speichern
 			$db.saveDoc(doc);
@@ -1194,12 +1194,12 @@ function importiereFloraFaunaBeziehungenFuerArt (GUID, tblName) {
 		Datensammlung.Beziehungen.sort(function(a, b) {
 			var aName, bName;
 			for (c in a.Beziehungspartner) {
-				aName = a.Beziehungspartner[c].Name.toLowerCase();
+				aName = a.Beziehungspartner[c].Name;
 			}
 			for (d in b.Beziehungspartner) {
-				bName = b.Beziehungspartner[d].Name.toLowerCase();
+				bName = b.Beziehungspartner[d].Name;
 			}
-			return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+			return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
 		});
 		//jetzt die Art um diese Beziehung ergänzen
 		$db = $.couch.db("artendb");
@@ -1212,9 +1212,9 @@ function importiereFloraFaunaBeziehungenFuerArt (GUID, tblName) {
 				art.Beziehungen.push(Datensammlung);
 				//Datensammlungen nach Name sortieren
 				art.Beziehungen.sort(function(a, b) {
-					var aName = a.Name.toLowerCase();
-					var bName = b.Name.toLowerCase();
-					return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+					var aName = a.Name;
+					var bName = b.Name;
+					return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
 				});
 				$db.saveDoc(art);
 			}
@@ -1329,19 +1329,19 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 			for (c in a.Beziehungspartner) {
 				if (Gruppe === "Lebensräume") {
 					//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
-					aName = a.Beziehungspartner[c].Taxonomie.toLowerCase() + a.Beziehungspartner[c].Name.toLowerCase();
+					aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 				} else {
-					aName = a.Beziehungspartner[c].Name.toLowerCase();
+					aName = a.Beziehungspartner[c].Name;
 				}
 			}
 			for (d in b.Beziehungspartner) {
 				if (Gruppe === "Lebensräume") {
-					bName = b.Beziehungspartner[d].Taxonomie.toLowerCase() + b.Beziehungspartner[d].Name.toLowerCase();
+					bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 				} else {
-					bName = b.Beziehungspartner[d].Name.toLowerCase();
+					bName = b.Beziehungspartner[d].Name;
 				}
 			}
-			return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+			return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
 		});
 		//jetzt die Art um diese Beziehung ergänzen
 		$db = $.couch.db("artendb");
@@ -1365,19 +1365,19 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 								for (c in a.Beziehungspartner) {
 									if (Gruppe === "Lebensräume") {
 										//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
-										aName = a.Beziehungspartner[c].Taxonomie.toLowerCase() + a.Beziehungspartner[c].Name.toLowerCase();
+										aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 									} else {
-										aName = a.Beziehungspartner[c].Name.toLowerCase();
+										aName = a.Beziehungspartner[c].Name;
 									}
 								}
 								for (d in b.Beziehungspartner) {
 									if (Gruppe === "Lebensräume") {
-										bName = b.Beziehungspartner[d].Taxonomie.toLowerCase() + b.Beziehungspartner[d].Name.toLowerCase();
+										bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 									} else {
-										bName = b.Beziehungspartner[d].Name.toLowerCase();
+										bName = b.Beziehungspartner[d].Name;
 									}
 								}
-								return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+								return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
 							});
 						}
 					}
@@ -1388,9 +1388,9 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 				}
 				//Datensammlungen nach Name sortieren
 				art.Beziehungen.sort(function(a, b) {
-					var aName = a.Name.toLowerCase();
-					var bName = b.Name.toLowerCase();
-					return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+					var aName = a.Name;
+					var bName = b.Name;
+					return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
 				});
 				$db.saveDoc(art);
 			}
@@ -1596,19 +1596,19 @@ function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 				for (c in a.Beziehungspartner) {
 					if (Gruppe === "Lebensräume") {
 						//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
-						aName = a.Beziehungspartner[c].Taxonomie.toLowerCase() + a.Beziehungspartner[c].Name.toLowerCase();
+						aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 					} else {
-						aName = a.Beziehungspartner[c].Name.toLowerCase();
+						aName = a.Beziehungspartner[c].Name;
 					}
 				}
 				for (d in b.Beziehungspartner) {
 					if (Gruppe === "Lebensräume") {
-						bName = b.Beziehungspartner[d].Taxonomie.toLowerCase() + b.Beziehungspartner[d].Name.toLowerCase();
+						bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 					} else {
-						bName = b.Beziehungspartner[d].Name.toLowerCase();
+						bName = b.Beziehungspartner[d].Name;
 					}
 				}
-				return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+				return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
 			});
 			//jetzt die Art um diese Beziehung ergänzen
 			$db = $.couch.db("artendb");
@@ -1632,19 +1632,23 @@ function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 									for (c in a.Beziehungspartner) {
 										if (Gruppe === "Lebensräume") {
 											//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
-											aName = a.Beziehungspartner[c].Taxonomie.toLowerCase() + a.Beziehungspartner[c].Name.toLowerCase();
+											aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 										} else {
-											aName = a.Beziehungspartner[c].Name.toLowerCase();
+											aName = a.Beziehungspartner[c].Name;
 										}
 									}
 									for (d in b.Beziehungspartner) {
 										if (Gruppe === "Lebensräume") {
-											bName = b.Beziehungspartner[d].Taxonomie.toLowerCase() + b.Beziehungspartner[d].Name.toLowerCase();
+											bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 										} else {
-											bName = b.Beziehungspartner[d].Name.toLowerCase();
+											bName = b.Beziehungspartner[d].Name;
 										}
 									}
-									return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+									if (aName && bName) {
+										return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
+									} else {
+										return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+									}
 								});
 							}
 						}
@@ -1653,12 +1657,14 @@ function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 							art.Beziehungen.push(Datensammlung);
 						}
 					}
-					//Datensammlungen nach Name sortieren
-					art.Beziehungen.sort(function(a, b) {
-						var aName = a.Name.toLowerCase();
-						var bName = b.Name.toLowerCase();
-						return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
-					});
+					if (art.Beziehungen.length > 0) {
+						//Datensammlungen nach Name sortieren
+						art.Beziehungen.sort(function(a, b) {
+							var aName = a.Name;
+							var bName = b.Name;
+							return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
+						});
+					}
 					$db.saveDoc(art);
 				}
 			});
@@ -1771,19 +1777,19 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 			for (c in a.Beziehungspartner) {
 				if (Gruppe === "Lebensräume") {
 					//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
-					aName = a.Beziehungspartner[c].Taxonomie.toLowerCase() + a.Beziehungspartner[c].Name.toLowerCase();
+					aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 				} else {
-					aName = a.Beziehungspartner[c].Name.toLowerCase();
+					aName = a.Beziehungspartner[c].Name;
 				}
 			}
 			for (d in b.Beziehungspartner) {
 				if (Gruppe === "Lebensräume") {
-					bName = b.Beziehungspartner[d].Taxonomie.toLowerCase() + b.Beziehungspartner[d].Name.toLowerCase();
+					bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 				} else {
-					bName = b.Beziehungspartner[d].Name.toLowerCase();
+					bName = b.Beziehungspartner[d].Name;
 				}
 			}
-			return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+			return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
 		});
 		//jetzt die Art um diese Beziehung ergänzen
 		$db = $.couch.db("artendb");
@@ -1807,19 +1813,23 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 								for (c in a.Beziehungspartner) {
 									if (Gruppe === "Lebensräume") {
 										//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
-										aName = a.Beziehungspartner[c].Taxonomie.toLowerCase() + a.Beziehungspartner[c].Name.toLowerCase();
+										aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 									} else {
-										aName = a.Beziehungspartner[c].Name.toLowerCase();
+										aName = a.Beziehungspartner[c].Name;
 									}
 								}
 								for (d in b.Beziehungspartner) {
 									if (Gruppe === "Lebensräume") {
-										bName = b.Beziehungspartner[d].Taxonomie.toLowerCase() + b.Beziehungspartner[d].Name.toLowerCase();
+										bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 									} else {
-										bName = b.Beziehungspartner[d].Name.toLowerCase();
+										bName = b.Beziehungspartner[d].Name;
 									}
 								}
-								return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+								if (aName && bName) {
+									return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
+								} else {
+									return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+								}
 							});
 						}
 					}
@@ -1828,12 +1838,14 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 						art.Beziehungen.push(Datensammlung);
 					}
 				}
-				//Datensammlungen nach Name sortieren
-				art.Beziehungen.sort(function(a, b) {
-					var aName = a.Name.toLowerCase();
-					var bName = b.Name.toLowerCase();
-					return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
-				});
+				if (art.Beziehungen.length > 0) {
+					//Datensammlungen nach Name sortieren
+					art.Beziehungen.sort(function(a, b) {
+						var aName = a.Name;
+						var bName = b.Name;
+						return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
+					});
+				}
 				$db.saveDoc(art);
 			}
 		});
@@ -1987,12 +1999,12 @@ function importiereLrLrBeziehungenFuerLr (GUID, DsName, tblPostpend) {
 			var aName, bName;
 			for (c in a.Beziehungspartner) {
 				//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
-				aName = a.Beziehungspartner[c].Taxonomie.toLowerCase() + a.Beziehungspartner[c].Name.toLowerCase();
+				aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 			}
 			for (d in b.Beziehungspartner) {
-				bName = b.Beziehungspartner[d].Taxonomie.toLowerCase() + b.Beziehungspartner[d].Name.toLowerCase();
+				bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 			}
-			return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
+			return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
 		});
 		//jetzt die Art um diese Beziehung ergänzen
 		$db = $.couch.db("artendb");
@@ -2003,11 +2015,13 @@ function importiereLrLrBeziehungenFuerLr (GUID, DsName, tblPostpend) {
 				}
 				lr.Beziehungen.push(Datensammlung);
 				//Datensammlungen nach Name sortieren
-				lr.Beziehungen.sort(function(a, b) {
-					var aName = a.Name.toLowerCase();
-					var bName = b.Name.toLowerCase();
-					return (aName == bName) ? 0 : (aName > bName) ? 1 : -1;
-				});
+				if (lr.Beziehungen.length > 0) {
+					lr.Beziehungen.sort(function(a, b) {
+						var aName = a.Name;
+						var bName = b.Name;
+						return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
+					});
+				}
 				window["docArray" + tblPostpend].push(lr);
 			}
 		});
