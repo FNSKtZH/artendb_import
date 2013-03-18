@@ -136,6 +136,7 @@ function aktualisiereFloraGültigeNamen() {
 					//es gibt Synonyme
 					DsGueltigeNamen = {};
 					DsGueltigeNamen.Name = "SISF Index 2 (2005): gültige Namen";
+					DsGueltigeNamen.Typ = "taxonomisch";
 					DsGueltigeNamen.Beschreibung = Art.Taxonomie.Beschreibung;
 					if (Art.Taxonomie.Datenstand) {
 						DsGueltigeNamen.Datenstand = Art.Taxonomie.Datenstand;
@@ -198,6 +199,7 @@ function ergänzeFloraEingeschlosseneArten() {
 							//es gibt Synonyme
 							DsEinschluss = {};
 							DsEinschluss.Name = "SISF Index 2 (2005): eingeschlossene Arten";
+							DsEinschluss.Typ = "taxonomisch";
 							DsEinschluss.Beschreibung = Art.Taxonomie.Beschreibung;
 							if (Art.Taxonomie.Datenstand) {
 								DsEinschluss.Datenstand = Art.Taxonomie.Datenstand;
@@ -292,6 +294,7 @@ function ergänzeFloraEingeschlossenInFuerArt(Art) {
 			if (qryFloraEingeschlossenIn[k].GUID1 === Art._id) {
 				DsEingeschlossenIn = {};
 				DsEingeschlossenIn.Name = "SISF Index 2 (2005): eingeschlossen in";
+				DsEingeschlossenIn.Typ = "taxonomisch";
 				DsEingeschlossenIn.Beschreibung = Art.Taxonomie.Beschreibung;
 				if (Art.Taxonomie.Datenstand) {
 					DsEingeschlossenIn.Datenstand = Art.Taxonomie.Datenstand;
@@ -376,6 +379,7 @@ function ergänzeFloraSynonymeFuerArt(Art) {
 			if (qryFloraSynonyme[k].GUID1 === Art._id) {
 				DsSynonyme = {};
 				DsSynonyme.Name = "SISF Index 2 (2005): synonym";
+				DsSynonyme.Typ = "taxonomisch";
 				DsSynonyme.Beschreibung = Art.Taxonomie.Beschreibung;
 				if (Art.Taxonomie.Datenstand) {
 					DsSynonyme.Datenstand = Art.Taxonomie.Datenstand;
@@ -513,6 +517,7 @@ function importiereMoosIndex(Anz) {
 							andereArt = frageSql(window.myDB, "SELECT [Artname vollständig] as Artname FROM tblMooseNism_import where GUID='" + window.tblMooseNism[x][y] + "'");
 							var DsSynonyme = {};
 							DsSynonyme.Name = "NISM (2010): akzeptierte Referenz";
+							DsSynonyme.Typ = "taxonomisch";
 							DsSynonyme.Beschreibung = Art.Taxonomie.Beschreibung;
 							if (Art.Taxonomie.Datenstand) {
 								DsSynonyme.Datenstand = Art.Taxonomie.Datenstand;
@@ -1931,10 +1936,12 @@ function importiereLrLrBeziehungenFuerLr (GUID, DsName, tblPostpend) {
 	//Felder der Datensammlung schreiben
 	if (window["tblLrLrBez" + tblPostpend][0]["Art der Beziehung"] === "Synonym von") {
 		Datensammlung.Name = DsName + ": synonym";
+		Datensammlung.Typ = "taxonomisch";
 		Datensammlung["Art der Beziehungen"] = "synonym";
 	} else {
 		//Wert ist "Untereinheit von"
 		Datensammlung.Name = DsName + ": hierarchisch";
+		Datensammlung.Typ = "taxonomisch";
 		Datensammlung["Art der Beziehungen"] = "hierarchisch";
 	}
 
