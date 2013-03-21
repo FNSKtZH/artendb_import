@@ -1263,7 +1263,6 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 	var LR;
 	var Fauna;
 	var Beziehung;
-	var Gruppe;
 	var artDerBeziehungExistiertSchon;
 	//Datensammlung als Objekt gründen
 	var Datensammlung = {};
@@ -1289,7 +1288,6 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 			Beziehung.Beziehungspartner = [];
 			if (window["tblLrFaunaBez" + tblName + beziehung_nr][x]["LR GUID"] === GUID) {
 				//Art ist LR. Beziehungspartner aus Fauna speichern
-				Gruppe = "Lebensräume";
 				Fauna = {};
 				Fauna.Gruppe = "Fauna";
 				Fauna.Name = window["tblLrFaunaBez" + tblName + beziehung_nr][x]["Fauna Name"];
@@ -1297,7 +1295,6 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 				Beziehung.Beziehungspartner.push(Fauna);
 			} else if (window["tblLrFaunaBez" + tblName + beziehung_nr][x]["Fauna GUID"] === GUID) {
 				//Art ist Fauna. Beziehungspartner aus LR speichern
-				Gruppe = "Fauna";
 				LR = {};
 				LR.Gruppe = "Lebensräume";
 				LR.Taxonomie = window["tblLrFaunaBez" + tblName + beziehung_nr][x]["LR Taxonomie"];
@@ -1327,7 +1324,7 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 		Datensammlung.Beziehungen.sort(function(a, b) {
 			var aName, bName;
 			for (c in a.Beziehungspartner) {
-				if (Gruppe === "Lebensräume") {
+				if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
 					//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
 					aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 				} else {
@@ -1335,7 +1332,7 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 				}
 			}
 			for (d in b.Beziehungspartner) {
-				if (Gruppe === "Lebensräume") {
+				if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
 					bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 				} else {
 					bName = b.Beziehungspartner[d].Name;
@@ -1363,7 +1360,7 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 							art.Beziehungssammlungen[i].Beziehungen.sort(function(a, b) {
 								var aName, bName;
 								for (c in a.Beziehungspartner) {
-									if (Gruppe === "Lebensräume") {
+									if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
 										//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
 										aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 									} else {
@@ -1371,7 +1368,7 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 									}
 								}
 								for (d in b.Beziehungspartner) {
-									if (Gruppe === "Lebensräume") {
+									if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
 										bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 									} else {
 										bName = b.Beziehungspartner[d].Name;
@@ -1520,7 +1517,6 @@ function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 	var Flora;
 	var Beziehungen;
 	var Beziehung;
-	var Gruppe;
 	var anzBeziehungen;
 	var artDerBeziehungExistiertSchon;
 	//Datensammlung als Objekt gründen
@@ -1556,7 +1552,6 @@ function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 				Beziehung.Beziehungspartner = [];
 				if (Beziehungen[x]["LR GUID"] === GUID) {
 					//Art ist LR. Beziehungspartner aus Flora speichern
-					Gruppe = "Lebensräume";
 					Flora = {};
 					Flora.Gruppe = "Flora";
 					Flora.Name = Beziehungen[x]["Flora Name"];
@@ -1564,7 +1559,6 @@ function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 					Beziehung.Beziehungspartner.push(Flora);
 				} else if (Beziehungen[x]["Flora GUID"] === GUID) {
 					//Art ist Flora. Beziehungspartner aus LR speichern
-					Gruppe = "Flora";
 					LR = {};
 					LR.Gruppe = "Lebensräume";
 					LR.Taxonomie = Beziehungen[x]["LR Taxonomie"];
@@ -1594,7 +1588,7 @@ function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 			Datensammlung.Beziehungen.sort(function(a, b) {
 				var aName, bName;
 				for (c in a.Beziehungspartner) {
-					if (Gruppe === "Lebensräume") {
+					if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
 						//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
 						aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 					} else {
@@ -1602,7 +1596,7 @@ function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 					}
 				}
 				for (d in b.Beziehungspartner) {
-					if (Gruppe === "Lebensräume") {
+					if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
 						bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 					} else {
 						bName = b.Beziehungspartner[d].Name;
@@ -1630,7 +1624,7 @@ function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 								art.Beziehungssammlungen[i].Beziehungen.sort(function(a, b) {
 									var aName, bName;
 									for (c in a.Beziehungspartner) {
-										if (Gruppe === "Lebensräume") {
+										if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
 											//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
 											aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 										} else {
@@ -1638,7 +1632,7 @@ function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 										}
 									}
 									for (d in b.Beziehungspartner) {
-										if (Gruppe === "Lebensräume") {
+										if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
 											bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 										} else {
 											bName = b.Beziehungspartner[d].Name;
@@ -1711,7 +1705,6 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 	var LR;
 	var Moose;
 	var Beziehung;
-	var Gruppe;
 	var artDerBeziehungExistiertSchon;
 	//Datensammlung als Objekt gründen
 	var Datensammlung = {};
@@ -1737,7 +1730,6 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 			Beziehung.Beziehungspartner = [];
 			if (window["tblLrMooseBez" + tblName + beziehung_nr][x]["LR GUID"] === GUID) {
 				//Art ist LR. Beziehungspartner aus Moose speichern
-				Gruppe = "Lebensräume";
 				Moos = {};
 				Moos.Gruppe = "Moose";
 				Moos.Name = window["tblLrMooseBez" + tblName + beziehung_nr][x]["Moos Name"];
@@ -1745,7 +1737,6 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 				Beziehung.Beziehungspartner.push(Moos);
 			} else if (window["tblLrMooseBez" + tblName + beziehung_nr][x]["Moos GUID"] === GUID) {
 				//Art ist Moose. Beziehungspartner aus LR speichern
-				Gruppe = "Moose";
 				LR = {};
 				LR.Gruppe = "Lebensräume";
 				LR.Taxonomie = window["tblLrMooseBez" + tblName + beziehung_nr][x]["LR Taxonomie"];
@@ -1775,7 +1766,7 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 		Datensammlung.Beziehungen.sort(function(a, b) {
 			var aName, bName;
 			for (c in a.Beziehungspartner) {
-				if (Gruppe === "Lebensräume") {
+				if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
 					//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
 					aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 				} else {
@@ -1783,7 +1774,7 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 				}
 			}
 			for (d in b.Beziehungspartner) {
-				if (Gruppe === "Lebensräume") {
+				if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
 					bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 				} else {
 					bName = b.Beziehungspartner[d].Name;
@@ -1811,7 +1802,7 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 							art.Beziehungssammlungen[i].Beziehungen.sort(function(a, b) {
 								var aName, bName;
 								for (c in a.Beziehungspartner) {
-									if (Gruppe === "Lebensräume") {
+									if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
 										//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
 										aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 									} else {
@@ -1819,7 +1810,7 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 									}
 								}
 								for (d in b.Beziehungspartner) {
-									if (Gruppe === "Lebensräume") {
+									if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
 										bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 									} else {
 										bName = b.Beziehungspartner[d].Name;
