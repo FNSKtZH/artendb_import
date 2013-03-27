@@ -1194,10 +1194,10 @@ function importiereFloraFaunaBeziehungenFuerArt (GUID, tblName) {
 		Datensammlung.Beziehungen.sort(function(a, b) {
 			var aName, bName;
 			for (c in a.Beziehungspartner) {
-				aName = a.Beziehungspartner[c].Name;
+				aName = a.Beziehungspartner[c].Gruppe + a.Beziehungspartner[c].Name;
 			}
 			for (d in b.Beziehungspartner) {
-				bName = b.Beziehungspartner[d].Name;
+				bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Name;
 			}
 			return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
 		});
@@ -1326,16 +1326,16 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 			for (c in a.Beziehungspartner) {
 				if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
 					//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
-					aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
+					aName = a.Beziehungspartner[c].Gruppe + a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 				} else {
-					aName = a.Beziehungspartner[c].Name;
+					aName = a.Beziehungspartner[c].Gruppe + a.Beziehungspartner[c].Name;
 				}
 			}
 			for (d in b.Beziehungspartner) {
 				if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
-					bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
+					bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 				} else {
-					bName = b.Beziehungspartner[d].Name;
+					bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Name;
 				}
 			}
 			return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
@@ -1362,16 +1362,16 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 								for (c in a.Beziehungspartner) {
 									if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
 										//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
-										aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
+										aName = a.Beziehungspartner[c].Gruppe + a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 									} else {
-										aName = a.Beziehungspartner[c].Name;
+										aName = a.Beziehungspartner[c].Gruppe + a.Beziehungspartner[c].Name;
 									}
 								}
 								for (d in b.Beziehungspartner) {
 									if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
-										bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
+										bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 									} else {
-										bName = b.Beziehungspartner[d].Name;
+										bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Name;
 									}
 								}
 								return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
@@ -1590,16 +1590,16 @@ function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 				for (c in a.Beziehungspartner) {
 					if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
 						//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
-						aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
+						aName = a.Beziehungspartner[c].Gruppe + a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 					} else {
-						aName = a.Beziehungspartner[c].Name;
+						aName = a.Beziehungspartner[c].Gruppe + a.Beziehungspartner[c].Name;
 					}
 				}
 				for (d in b.Beziehungspartner) {
 					if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
-						bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
+						bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 					} else {
-						bName = b.Beziehungspartner[d].Name;
+						bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Name;
 					}
 				}
 				return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
@@ -1626,16 +1626,16 @@ function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 									for (c in a.Beziehungspartner) {
 										if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
 											//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
-											aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
+											aName = a.Beziehungspartner[c].Gruppe + a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 										} else {
-											aName = a.Beziehungspartner[c].Name;
+											aName = a.Beziehungspartner[c].Gruppe + a.Beziehungspartner[c].Name;
 										}
 									}
 									for (d in b.Beziehungspartner) {
 										if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
-											bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
+											bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 										} else {
-											bName = b.Beziehungspartner[d].Name;
+											bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Name;
 										}
 									}
 									if (aName && bName) {
@@ -1768,16 +1768,16 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 			for (c in a.Beziehungspartner) {
 				if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
 					//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
-					aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
+					aName = a.Beziehungspartner[c].Gruppe + a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 				} else {
-					aName = a.Beziehungspartner[c].Name;
+					aName = a.Beziehungspartner[c].Gruppe + a.Beziehungspartner[c].Name;
 				}
 			}
 			for (d in b.Beziehungspartner) {
 				if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
-					bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
+					bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 				} else {
-					bName = b.Beziehungspartner[d].Name;
+					bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Name;
 				}
 			}
 			return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
@@ -1804,16 +1804,16 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 								for (c in a.Beziehungspartner) {
 									if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
 										//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
-										aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
+										aName = a.Beziehungspartner[c].Gruppe + a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 									} else {
-										aName = a.Beziehungspartner[c].Name;
+										aName = a.Beziehungspartner[c].Gruppe + a.Beziehungspartner[c].Name;
 									}
 								}
 								for (d in b.Beziehungspartner) {
 									if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
-										bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
+										bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 									} else {
-										bName = b.Beziehungspartner[d].Name;
+										bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Name;
 									}
 								}
 								if (aName && bName) {
@@ -1990,10 +1990,10 @@ function importiereLrLrBeziehungenFuerLr (GUID, DsName, tblPostpend) {
 			var aName, bName;
 			for (c in a.Beziehungspartner) {
 				//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
-				aName = a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
+				aName = a.Beziehungspartner[c].Gruppe + a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 			}
 			for (d in b.Beziehungspartner) {
-				bName = b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
+				bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 			}
 			return (aName.toLowerCase() == bName.toLowerCase()) ? 0 : (aName.toLowerCase() > bName.toLowerCase()) ? 1 : -1;
 		});
