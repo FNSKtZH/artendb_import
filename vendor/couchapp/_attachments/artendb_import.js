@@ -1324,7 +1324,7 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 		Datensammlung.Beziehungen.sort(function(a, b) {
 			var aName, bName;
 			for (c in a.Beziehungspartner) {
-				if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
+				if (a.Beziehungspartner[c].Taxonomie) {
 					//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
 					aName = a.Beziehungspartner[c].Gruppe + a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 				} else {
@@ -1332,7 +1332,7 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 				}
 			}
 			for (d in b.Beziehungspartner) {
-				if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
+				if (b.Beziehungspartner[d].Taxonomie) {
 					bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 				} else {
 					bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Name;
@@ -1355,12 +1355,14 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 						if (art.Beziehungssammlungen[i].Name === Datensammlung.Name) {
 							artDerBeziehungExistiertSchon = true;
 							//Beziehungssammlungen in vorhandener Datensammlung ergänzen
-							art.Beziehungssammlungen[i].Beziehungen.push(Datensammlung.Beziehungen);
+							for (var q=0; q<Datensammlung.Beziehungen.length; q++) {
+								art.Beziehungssammlungen[i].Beziehungen.push(Datensammlung.Beziehungen[q]);
+							}
 							//und neu sortieren
 							art.Beziehungssammlungen[i].Beziehungen.sort(function(a, b) {
 								var aName, bName;
 								for (c in a.Beziehungspartner) {
-									if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
+									if (a.Beziehungspartner[c].Taxonomie) {
 										//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
 										aName = a.Beziehungspartner[c].Gruppe + a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 									} else {
@@ -1368,7 +1370,7 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 									}
 								}
 								for (d in b.Beziehungspartner) {
-									if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
+									if (b.Beziehungspartner[d].Taxonomie) {
 										bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 									} else {
 										bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Name;
@@ -1588,7 +1590,7 @@ function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 			Datensammlung.Beziehungen.sort(function(a, b) {
 				var aName, bName;
 				for (c in a.Beziehungspartner) {
-					if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
+					if (a.Beziehungspartner[c].Taxonomie) {
 						//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
 						aName = a.Beziehungspartner[c].Gruppe + a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 					} else {
@@ -1596,7 +1598,7 @@ function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 					}
 				}
 				for (d in b.Beziehungspartner) {
-					if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
+					if (b.Beziehungspartner[d].Taxonomie) {
 						bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 					} else {
 						bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Name;
@@ -1619,12 +1621,14 @@ function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 							if (art.Beziehungssammlungen[i].Name === Datensammlung.Name) {
 								artDerBeziehungExistiertSchon = true;
 								//Beziehungssammlungen in vorhandener Datensammlung ergänzen
-								art.Beziehungssammlungen[i].Beziehungen.push(Datensammlung.Beziehungen);
+								for (var q=0; q<Datensammlung.Beziehungen.length; q++) {
+									art.Beziehungssammlungen[i].Beziehungen.push(Datensammlung.Beziehungen[q]);
+								}
 								//und neu sortieren
 								art.Beziehungssammlungen[i].Beziehungen.sort(function(a, b) {
 									var aName, bName;
 									for (c in a.Beziehungspartner) {
-										if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
+										if (a.Beziehungspartner[c].Taxonomie) {
 											//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
 											aName = a.Beziehungspartner[c].Gruppe + a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 										} else {
@@ -1632,7 +1636,7 @@ function importiereLrFloraBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 										}
 									}
 									for (d in b.Beziehungspartner) {
-										if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
+										if (b.Beziehungspartner[d].Taxonomie) {
 											bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 										} else {
 											bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Name;
@@ -1766,7 +1770,7 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 		Datensammlung.Beziehungen.sort(function(a, b) {
 			var aName, bName;
 			for (c in a.Beziehungspartner) {
-				if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
+				if (a.Beziehungspartner[c].Taxonomie) {
 					//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
 					aName = a.Beziehungspartner[c].Gruppe + a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 				} else {
@@ -1774,7 +1778,7 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 				}
 			}
 			for (d in b.Beziehungspartner) {
-				if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
+				if (b.Beziehungspartner[d].Taxonomie) {
 					bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 				} else {
 					bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Name;
@@ -1797,12 +1801,14 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 						if (art.Beziehungssammlungen[i].Name === Datensammlung.Name) {
 							artDerBeziehungExistiertSchon = true;
 							//Beziehungssammlungen in vorhandener Datensammlung ergänzen
-							art.Beziehungssammlungen[i].Beziehungen.push(Datensammlung.Beziehungen);
+							for (var q=0; q<Datensammlung.Beziehungen.length; q++) {
+								art.Beziehungssammlungen[i].Beziehungen.push(Datensammlung.Beziehungen[q]);
+							}
 							//und neu sortieren
 							art.Beziehungssammlungen[i].Beziehungen.sort(function(a, b) {
 								var aName, bName;
 								for (c in a.Beziehungspartner) {
-									if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
+									if (a.Beziehungspartner[c].Taxonomie) {
 										//sortiert werden soll bei Lebensräumen zuerst nach Taxonomie, dann nach Name
 										aName = a.Beziehungspartner[c].Gruppe + a.Beziehungspartner[c].Taxonomie + a.Beziehungspartner[c].Name;
 									} else {
@@ -1810,7 +1816,7 @@ function importiereLrMooseBeziehungenFuerArt (GUID, tblName, beziehung_nr) {
 									}
 								}
 								for (d in b.Beziehungspartner) {
-									if (a.Beziehungspartner[c].Gruppe === "Lebensräume") {
+									if (b.Beziehungspartner[d].Taxonomie) {
 										bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Taxonomie + b.Beziehungspartner[d].Name;
 									} else {
 										bName = b.Beziehungspartner[d].Gruppe + b.Beziehungspartner[d].Name;
