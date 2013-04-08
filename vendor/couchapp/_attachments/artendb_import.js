@@ -424,6 +424,7 @@ function importiereFloraDatensammlungen(tblName, Anz) {
 				if (window["tblDatensammlungMetadaten" + tblName][0].DsLink) {
 					DatensammlungDieserArt["Link"] = window["tblDatensammlungMetadaten" + tblName][0].DsLink;
 				}
+				DatensammlungDieserArt["importiert von"] = "alexander.gabriel@bd.zh.ch";
 				//Daten der Datensammlung als Objekt gründen
 				DatensammlungDieserArt.Daten = {};
 				//Daten anfügen, wenn sie Werte enthalten
@@ -565,6 +566,7 @@ function importiereMoosDatensammlungen(tblName, Anz) {
 				if (window["DatensammlungMetadaten" + tblName][0].DsLink) {
 					DatensammlungDieserArt["Link"] = window["DatensammlungMetadaten" + tblName][0].DsLink;
 				}
+				DatensammlungDieserArt["importiert von"] = "alexander.gabriel@bd.zh.ch";
 				//Daten der Datensammlung als Objekt gründen
 				DatensammlungDieserArt.Daten = {};
 				//Daten anfügen, wenn sie Werte enthalten
@@ -675,6 +677,7 @@ function importiereMacromycetesDatensammlungen(tblName, Anz) {
 				if (window["DatensammlungMetadaten" + tblName][0].DsLink) {
 					DatensammlungDieserArt["Link"] = window["DatensammlungMetadaten" + tblName][0].DsLink;
 				}
+				DatensammlungDieserArt["importiert von"] = "alexander.gabriel@bd.zh.ch";
 				//Daten der Datensammlung als Objekt gründen
 				DatensammlungDieserArt.Daten = {};
 				//Daten anfügen, wenn sie Werte enthalten
@@ -789,6 +792,7 @@ function importiereFaunaDatensammlungen(tblName, Anz) {
 				if (window["DatensammlungMetadaten" + tblName][0].zusammenfassend == "true") {
 					DatensammlungDieserArt.zusammenfassend = true;
 				}
+				DatensammlungDieserArt["importiert von"] = "alexander.gabriel@bd.zh.ch";
 				//Daten der Datensammlung als Objekt gründen
 				DatensammlungDieserArt.Daten = {};
 				//Daten anfügen, wenn sie Werte enthalten
@@ -1003,6 +1007,7 @@ function importiereLrDatensammlungen(tblName, Anz) {
 				if (window["DatensammlungMetadaten" + tblName][0].DsLink) {
 					DatensammlungDieserArt["Link"] = window["DatensammlungMetadaten" + tblName][0].DsLink;
 				}
+				DatensammlungDieserArt["importiert von"] = "alexander.gabriel@bd.zh.ch";
 				//Daten der Datensammlung als Objekt gründen
 				DatensammlungDieserArt.Daten = {};
 				//Daten anfügen, wenn sie Werte enthalten
@@ -1131,6 +1136,7 @@ function importiereFloraFaunaBeziehungenFuerArt (GUID, tblName) {
 	} else if (tblName === "tblFloraFaunaBezWestrich") {
 		Datensammlung["Art der Beziehungen"] = "Beziehungen zwischen Wildbienen und Pflanzenarten";
 	}
+	Datensammlung["importiert von"] = "alexander.gabriel@bd.zh.ch";
 	//den Array für die Beziehungen schaffen
 	Datensammlung.Beziehungen = [];
 	//durch alle Beziehungen loopen
@@ -1228,6 +1234,7 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, metadaten, beziehungen) {
 	}
 	//Art der Beziehung soll eine Eigenschaft der Datensammlung sein, nicht der Beziehung
 	Datensammlung["Art der Beziehungen"] = beziehungen[0]["Art der Beziehung"];
+	Datensammlung["importiert von"] = "alexander.gabriel@bd.zh.ch";
 	//den Array für die Beziehungen schaffen
 	Datensammlung.Beziehungen = [];
 	//durch alle Beziehungen loopen
@@ -1426,6 +1433,7 @@ function importiereLrFloraBeziehungenFuerObjekt (objekt, metadaten, beziehungen)
 	}
 	//Art der Beziehung soll eine Eigenschaft der Datensammlung sein, nicht der Beziehungen
 	Datensammlung["Art der Beziehungen"] = beziehungen[0]["Art der Beziehung"];
+	Datensammlung["importiert von"] = "alexander.gabriel@bd.zh.ch";
 	//den Array für die Beziehungen schaffen - erst jetzt, damit es unter "Art der Beziehungen" liegt
 	Datensammlung.Beziehungen = [];
 	//durch alle Beziehungen loopen
@@ -1551,6 +1559,7 @@ function importiereLrMooseBeziehungenFuerArt (GUID, metadaten, beziehungen) {
 	}
 	//Art der Beziehung soll eine Eigenschaft der Datensammlung sein, nicht der Beziehungen
 	Datensammlung["Art der Beziehungen"] = beziehungen[0]["Art der Beziehung"];
+	Datensammlung["importiert von"] = "alexander.gabriel@bd.zh.ch";
 	//den Array für die Beziehungen schaffen
 	Datensammlung.Beziehungen = [];
 	//durch alle Beziehungen loopen
@@ -1736,6 +1745,7 @@ function importiereLrLrBeziehungenFuerLr (GUID, DsName, tblPostpend) {
 		Datensammlung.Typ = "taxonomisch";
 		Datensammlung["Art der Beziehungen"] = "hierarchisch";
 	}
+	Datensammlung["importiert von"] = "alexander.gabriel@bd.zh.ch";
 
 	//den Array für die Beziehungen schaffen
 	Datensammlung.Beziehungen = [];
