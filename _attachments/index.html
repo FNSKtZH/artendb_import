@@ -37,6 +37,7 @@
 		<h3>Moose</h3>
 		<div style="column-width:250px;">
 			<div id="SchaltflächenMoosIndex">hier kommen die Moose</div><br><br>
+			<input type='checkbox' id="MooseSynonyme">Synonyme ergänzen<br><br>
 			<div id="SchaltflächenMoosDatensammlungen"></div><br><br>
 			<input type='checkbox' viewname="moose" class="dokumenteVonViewLöschen">Moose löschen<br><br>
 		</div>
@@ -148,6 +149,9 @@
 			});
 			$("body").on("click", "#FloraSynonyme", function() {
 				ergänzeFloraSynonyme();
+			});
+			$("body").on("click", "#MooseSynonyme", function() {
+				ergänzeMooseSynonyme();
 			});
 			$("body").on("click", "#LrHierarchie", function() {
 				aktualisiereLrHierarchie();

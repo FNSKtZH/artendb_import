@@ -540,6 +540,86 @@ function importiereMoosIndex(Anz) {
 	});
 }
 
+function ergänzeMooseSynonyme() {
+	$.when(initiiereImport()).then(function() {
+		var Artenliste = frageSql(window.myDB, 'SELECT tblMooseNism_import.GUID AS id FROM tblMooseNism_import WHERE tblMooseNism_import.[Akzeptierte Referenz] Is Not Null UNION SELECT tblMooseNism_import.[Akzeptierte Referenz] AS id FROM tblMooseNism_import GROUP BY tblMooseNism_import.[Akzeptierte Referenz] HAVING tblMooseNism_import.[Akzeptierte Referenz] Is Not Null;');
+		var guidArray = [];
+		var a = 0;
+		var batch = 150;
+		var batchGrösse = 150;
+		for (a; a<batch; a++) {
+			if (a < Artenliste.length) {
+				guidArray.push(Artenliste[a].id);
+				if (a === (batch-1)) {
+					ergänzeMooseSynonyme_2(guidArray, (a-batchGrösse));
+					guidArray = [];
+					batch += batchGrösse;
+				}
+			} else {
+				ergänzeMooseSynonyme_2(guidArray, (a-batchGrösse));
+				break;
+			}
+		}
+	});
+}
+
+function ergänzeMooseSynonyme_2(guidArray, a) {
+	setTimeout(function() {
+		$db = $.couch.db("artendb");
+		$db.view('artendb/all_docs?keys=' + encodeURI(JSON.stringify(guidArray)) + '&include_docs=true', {
+			success: function (data) {
+				var Art;
+				for (var f = 0; f<data.rows.length; f++) {
+					Art = data.rows[f].doc;
+					ergänzeMooseSynonymeFuerArt(Art);
+				}
+			}
+		});
+	}, a*40);
+}
+
+function ergänzeMooseSynonymeFuerArt(Art) {
+	var qryMooseSynonyme, Synonym, DsSynonyme, BeziehungsObjekt, Beziehungspartner;
+	qryMooseSynonyme = frageSql(window.myDB, 'SELECT tblMooseNism_import.GUID AS GUID1, tblMooseNism_import_1.GUID AS GUID2, tblMooseNism_import_1.[Artname vollständig] FROM tblMooseNism_import INNER JOIN tblMooseNism_import AS tblMooseNism_import_1 ON tblMooseNism_import.[Akzeptierte Referenz] = tblMooseNism_import_1.GUID WHERE tblMooseNism_import.GUID="'+Art._id+'" UNION SELECT tblMooseNism_import.[Akzeptierte Referenz] AS GUID1, tblMooseNism_import.GUID AS GUID2, tblMooseNism_import.[Artname vollständig] FROM tblMooseNism_import GROUP BY tblMooseNism_import.[Akzeptierte Referenz], tblMooseNism_import.GUID, tblMooseNism_import.[Artname vollständig] HAVING tblMooseNism_import.[Akzeptierte Referenz]="'+Art._id+'"');
+	if (qryMooseSynonyme && qryMooseSynonyme.length > 0) {
+		//es gibt Synonyme
+		for (var k in qryMooseSynonyme) {
+			//durch alle Synonyme loopen
+			if (qryMooseSynonyme[k].GUID1 === Art._id) {
+				DsSynonyme = {};
+				DsSynonyme.Name = "NISM (2010): synonym";
+				DsSynonyme.Typ = "taxonomisch";
+				DsSynonyme.Beschreibung = Art.Taxonomie.Beschreibung;
+				if (Art.Taxonomie.Datenstand) {
+					DsSynonyme.Datenstand = Art.Taxonomie.Datenstand;
+				}
+				if (Art.Taxonomie.Link) {
+					DsSynonyme["Link"] = Art.Taxonomie.Link;
+				}
+				DsSynonyme["Art der Beziehungen"] = "synonym";
+				DsSynonyme.Beziehungen = [];
+				//aus dem Synonym ein Objekt bilden
+				Beziehungspartner = [];
+				Synonym = {};
+				Synonym.Gruppe = "Moose";
+				Synonym.GUID = qryMooseSynonyme[k].GUID2;
+				Synonym.Name = qryMooseSynonyme[k]["Artname vollständig"];
+				Beziehungspartner.push(Synonym);
+				BeziehungsObjekt = {};
+				BeziehungsObjekt.Beziehungspartner = Beziehungspartner;
+				DsSynonyme.Beziehungen.push(BeziehungsObjekt);
+			}
+		}
+		if (!Art.Beziehungssammlungen) {
+			Art.Beziehungssammlungen = [];
+		}
+		Art.Beziehungssammlungen.push(DsSynonyme);
+		//Datensammlungen nach Name sortieren
+		Art.Beziehungssammlungen = sortiereObjektarrayNachName(Art.Beziehungssammlungen);
+		$db.saveDoc(Art);
+	}
+}
+
 function importiereMoosDatensammlungen(tblName, Anz) {
 	$.when(initiiereImport()).then(function() {
 		var DatensammlungDieserArt, anzFelder, anzDs;
