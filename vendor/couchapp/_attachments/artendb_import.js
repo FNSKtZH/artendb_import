@@ -39,7 +39,7 @@ function importiereFloraIndex(Anz) {
 				Art.Taxonomie.Daten = {};
 				//Daten anfügen, wenn sie Werte enthalten
 				for (var y in window.tblFloraSisf[x]) {
-					if (window.tblFloraSisf[x][y] !== "" && window.tblFloraSisf[x][y] !== null && y !== "Gruppe") {
+					if (window.tblFloraSisf[x][y] !== "" && window.tblFloraSisf[x][y] !== null && y !== "Gruppe" && y !== "Synonym von") {
 						if (window.tblFloraSisf[x][y] === -1) {
 							//Access wadelt in Abfragen Felder mit Wenn() in Zahlen um. Umkehren
 							Art.Taxonomie.Daten[y] = true;
