@@ -106,8 +106,8 @@ function ergänzeFloraDeutscheNamen() {
 							deutscheNamen += qryDeutscheNamen[k].NOM_COMMUN;
 						}
 					}
-					if (deutscheNamen && deutscheNamen !== Art.Taxonomie.Daten["Deutsche Namen"]) {
-						Art.Taxonomie.Daten["Deutsche Namen"] = deutscheNamen;
+					if (deutscheNamen && deutscheNamen !== Art.Taxonomie.Daten["Name Deutsch"]) {
+						Art.Taxonomie.Daten["Name Deutsch"] = deutscheNamen;
 						$db = $.couch.db("artendb");
 						$db.saveDoc(Art);
 					}
