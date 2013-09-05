@@ -73,6 +73,9 @@ function importiereFloraIndex(Anz) {
 							Art.Beziehungssammlungen.push(DsSynonyme);
 							//Datensammlungen nach Name sortieren
 							Art.Beziehungssammlungen = sortiereObjektarrayNachName(Art.Beziehungssammlungen);
+						} else if (y === "Deutsche Namen") {
+							//umbenennen, damit das Feld gleich heisst, wie in der Fauna
+							Art.Taxonomie.Daten["Name Deutsch"] = window.tblFloraSisf[x][y];
 						} else if (y !== "GUID") {
 							//GUID ist _id, kein eigenes Feld
 							Art.Taxonomie.Daten[y] = window.tblFloraSisf[x][y];
