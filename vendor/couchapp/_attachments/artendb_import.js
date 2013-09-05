@@ -431,14 +431,17 @@ function importiereFloraDatensammlungen(tblName, Anz) {
 				anzFelder = 0;
 				for (var y in window["Datensammlung" + tblName][x]) {
 					if (y !== "GUID" && y !== "NR" && window["Datensammlung" + tblName][x][y] !== "" && window["Datensammlung" + tblName][x][y] !== null && y !== window["tblDatensammlungMetadaten" + tblName][0].DsBeziehungsfeldDs && y !== "Gruppe") {
-						if (window["Datensammlung" + tblName][x][y] === -1) {
-							//Access macht in Abfragen mit Wenn-Klausel aus true -1 > korrigieren
-							DatensammlungDieserArt.Daten[y] = true;
-						} else {
-							//Normalfall
-							DatensammlungDieserArt.Daten[y] = window["Datensammlung" + tblName][x][y];
+						//aus Synonymen kopierte Infos nicht übernehmen - werden eh angezeigt
+						if (y !== "Informationen sind" || (window["Datensammlung" + tblName][x][y].indexOf("kopiert") === -1)) {
+							if (window["Datensammlung" + tblName][x][y] === -1) {
+								//Access macht in Abfragen mit Wenn-Klausel aus true -1 > korrigieren
+								DatensammlungDieserArt.Daten[y] = true;
+							} else {
+								//Normalfall
+								DatensammlungDieserArt.Daten[y] = window["Datensammlung" + tblName][x][y];
+							}
+							anzFelder += 1;
 						}
-						anzFelder += 1;
 					}
 				}
 				//entsprechenden Index öffnen
