@@ -31,6 +31,7 @@
 			<input type='checkbox' id="FloraEingeschlossenIn">Eingeschlossen in ergänzen<br>
 			<input type='checkbox' id="FloraSynonyme">Synonyme ergänzen<br><br>
 			<div id="SchaltflächenFloraDatensammlungen"></div><br>
+			<input type='checkbox' id="FloraZhGis">ZH GIS ergänzen<br><br>
 			<input type='checkbox' viewname="flora" class="dokumenteVonViewLöschen">Flora löschen<br><br>
 		</div>
 		<hr>
@@ -149,6 +150,9 @@
 			});
 			$("body").on("click", "#FloraSynonyme", function() {
 				ergänzeFloraSynonyme();
+			});
+			$("body").on("click", "#FloraZhGis", function() {
+				ergaenzeFloraZhGis();
 			});
 			$("body").on("click", "#MooseSynonyme", function() {
 				ergänzeMooseSynonyme();

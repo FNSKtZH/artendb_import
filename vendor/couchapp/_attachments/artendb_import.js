@@ -450,7 +450,7 @@ function importiereFloraDatensammlungen(tblName, Anz) {
 				//entsprechenden Index öffnen
 				//sicherstellen, dass Daten vorkommen. Gibt sonst einen Fehler
 				if (anzFelder > 0) {
-					//Datenbankabfrage ist langsam. Estern aufrufen, 
+					//Datenbankabfrage ist langsam. Extern aufrufen, 
 					//sonst überholt die for-Schlaufe und DatensammlungDieserArt ist bis zur saveDoc-Ausführung eine andere!
 					fuegeDatensammlungZuArt(window["Datensammlung" + tblName][x].GUID, window["tblDatensammlungMetadaten" + tblName][0].DsName, DatensammlungDieserArt);
 				}
@@ -458,6 +458,49 @@ function importiereFloraDatensammlungen(tblName, Anz) {
 		}
 	});
 }
+
+function ergaenzeFloraZhGis(batch_nr) {
+	var a, i, doc;
+	$db = $.couch.db("artendb");
+	$db.view("artendb/flora?include_docs=true", {
+		success: function(data) {
+			for (a in data.rows) {
+				doc = data.rows[a].doc;
+				for (i in doc.Datensammlungen) {
+					if (doc.Datensammlungen[i].Name === "ZH Artengruppen") {
+						doc.Datensammlungen[i].Daten["Betrachtungsdistanz (m)"] = 500;
+					}
+				}
+				ergaenzeFloraZhGisSaveDoc(doc, a*2);
+			}
+		}
+	});
+}
+
+function ergaenzeFloraZhGisSaveDoc(doc, millisec) {
+	//verzögern, weil sonst Arbeitsspeicher überläuft
+	setTimeout(function() {
+		$db.saveDoc(doc);
+	}, millisec);
+}
+
+/*function ergaenzeFloraZhGis() {
+	var a, i, doc;
+	$db = $.couch.db("artendb");
+	$db.view("artendb/flora?include_docs=true", {
+		success: function (data) {
+			for (a in data.rows) {
+				doc = data.rows[a].doc;
+				for (i in doc.Datensammlungen) {
+					if (doc.Datensammlungen[i].Name === "ZH Artengruppen") {
+						doc.Datensammlungen[i].Daten["Betrachtungsdistanz (m)"] = 500;
+					}
+				}
+				$db.saveDoc(doc);
+			}
+		}
+	});
+}*/
 
 function importiereMoosIndex(Anz) {
 	$.when(initiiereImport()).then(function() {
