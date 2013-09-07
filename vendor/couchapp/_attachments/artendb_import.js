@@ -467,7 +467,7 @@ function ergaenzeFloraZhGis(batch_nr) {
 			for (a in data.rows) {
 				doc = data.rows[a].doc;
 				for (i in doc.Datensammlungen) {
-					if (doc.Datensammlungen[i].Name === "ZH Artengruppen") {
+					if (doc.Datensammlungen[i].Name === "ZH GIS") {
 						doc.Datensammlungen[i].Daten["Betrachtungsdistanz (m)"] = 500;
 					}
 				}
