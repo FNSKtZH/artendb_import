@@ -1171,9 +1171,29 @@ function fuegeDatensammlungZuArt(GUID, DsName, DatensammlungDieserArt) {
 	$db = $.couch.db("artendb");
 	$db.openDoc(GUID, {
 		success: function (doc) {
-			//Datensammlung anfügen
+			//Datensammlung anfügen, falls noch nicht vorhanden
 			if (!doc.Datensammlungen) {
 				doc.Datensammlungen = [];
+			}
+			//prüfen, ob die DS schon existiert
+			for (var i=0; i<doc.Datensammlungen.length; i++) {
+				if (doc.Datensammlungen[i].Name && doc.Datensammlungen[i].Name === DatensammlungDieserArt.Name) {
+					//die DS existiert schon
+					//sicherstellen, dass Daten existieren
+					if (!doc.Datensammlungen[i].Daten) {
+						doc.Datensammlungen[i].Daten = {};
+					}
+					//nur noch fehlende Felder anhängen
+					for (y in DatensammlungDieserArt.Daten) {
+						if (!doc.Datensammlungen[i].Daten[y]) {
+							doc.Datensammlungen[i].Daten[y] = DatensammlungDieserArt.Daten[y];
+						}
+					}
+					//in artendb speichern
+					$db.saveDoc(doc);
+					//Funktion beenden - die ganze DS soll nicht angefügt werden
+					return;
+				}
 			}
 			doc.Datensammlungen.push(DatensammlungDieserArt);
 			//Datensammlungen nach Name sortieren
