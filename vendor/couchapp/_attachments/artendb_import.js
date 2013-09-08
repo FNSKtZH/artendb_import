@@ -459,7 +459,7 @@ function importiereFloraDatensammlungen(tblName, Anz) {
 	});
 }
 
-function ergaenzeFloraZhGis(batch_nr) {
+function ergaenzeFloraZhGis() {
 	var a, i, doc;
 	$db = $.couch.db("artendb");
 	$db.view("artendb/flora?include_docs=true", {
@@ -483,24 +483,6 @@ function ergaenzeFloraZhGisSaveDoc(doc, millisec) {
 		$db.saveDoc(doc);
 	}, millisec);
 }
-
-/*function ergaenzeFloraZhGis() {
-	var a, i, doc;
-	$db = $.couch.db("artendb");
-	$db.view("artendb/flora?include_docs=true", {
-		success: function (data) {
-			for (a in data.rows) {
-				doc = data.rows[a].doc;
-				for (i in doc.Datensammlungen) {
-					if (doc.Datensammlungen[i].Name === "ZH Artengruppen") {
-						doc.Datensammlungen[i].Daten["Betrachtungsdistanz (m)"] = 500;
-					}
-				}
-				$db.saveDoc(doc);
-			}
-		}
-	});
-}*/
 
 function importiereMoosIndex(Anz) {
 	$.when(initiiereImport()).then(function() {
