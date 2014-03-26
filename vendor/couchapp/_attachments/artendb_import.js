@@ -7,7 +7,7 @@ function importiereFloraIndex(Anz) {
 		}
 		//Index laden, nur wenn nicht schon vorhanden
 		if (!window.tblFloraSisf) {
-			window.tblFloraSisf = frageSql(window.myDB, "SELECT * FROM tblFloraSisf_import");
+			window.tblFloraSisf = frageSql(window.myDB, "SELECT * FROM qrytblFloraSisf_import");
 		}
 		anzDs = 0;
 		for (var x in window.tblFloraSisf) {
@@ -44,7 +44,7 @@ function importiereFloraIndex(Anz) {
 							//Access wadelt in Abfragen Felder mit Wenn() in Zahlen um. Umkehren
 							Art.Taxonomie.Daten[y] = true;
 						} else if (y === "Offizielle Art") {
-							andereArt = frageSql(window.myDB, "SELECT [Artname vollständig] as Artname FROM tblFloraSisf_import where GUID='" + window.tblFloraSisf[x][y] + "'");
+							andereArt = frageSql(window.myDB, "SELECT [Artname vollständig] as Artname FROM qrytblFloraSisf_import where GUID='" + window.tblFloraSisf[x][y] + "'");
 							var DsSynonyme = {};
 							DsSynonyme.Name = "SISF Index 2 (2005): offizielle Art";
 							DsSynonyme.Typ = "taxonomisch";
@@ -239,7 +239,7 @@ function ergänzeFloraEingeschlosseneArten() {
 
 function ergänzeFloraEingeschlossenIn() {
 	$.when(initiiereImport()).then(function() {
-		var Artenliste = frageSql(window.myDB, 'SELECT tblFloraSisf_import.GUID FROM tblFloraSisfAggrSl INNER JOIN tblFloraSisf_import ON tblFloraSisfAggrSl.NO_NOM_INCLU = tblFloraSisf_import.[Taxonomie ID] GROUP BY tblFloraSisf_import.GUID');
+		var Artenliste = frageSql(window.myDB, 'SELECT qrytblFloraSisf_import.GUID FROM tblFloraSisfAggrSl INNER JOIN qrytblFloraSisf_import ON tblFloraSisfAggrSl.NO_NOM_INCLU = qrytblFloraSisf_import.[Taxonomie ID] GROUP BY qrytblFloraSisf_import.GUID');
 		var guidArray = [];
 		var a = 0;
 		var batch = 150;
@@ -277,7 +277,7 @@ function ergänzeFloraEingeschlossenIn_2(guidArray, a) {
 
 function ergänzeFloraEingeschlossenInFuerArt(Art) {
 	var qryFloraEingeschlossenIn, Synonym, DsEingeschlossenIn, BeziehungsObjekt, Beziehungspartner;
-	qryFloraEingeschlossenIn = frageSql(window.myDB, 'SELECT tblFloraSisf_import.GUID AS GUID1, tblFloraSisf_import_1.GUID AS GUID2, tblFloraSisf_import_1.[Artname vollständig] FROM (tblFloraSisfAggrSl INNER JOIN tblFloraSisf_import ON tblFloraSisfAggrSl.NO_NOM_INCLU = tblFloraSisf_import.[Taxonomie ID]) INNER JOIN tblFloraSisf_import AS tblFloraSisf_import_1 ON tblFloraSisfAggrSl.NO_AGR_SL = tblFloraSisf_import_1.[Taxonomie ID] WHERE tblFloraSisf_import.GUID="'+Art._id+'"');
+	qryFloraEingeschlossenIn = frageSql(window.myDB, 'SELECT qrytblFloraSisf_import.GUID AS GUID1, qrytblFloraSisf_import_1.GUID AS GUID2, qrytblFloraSisf_import_1.[Artname vollständig] FROM (tblFloraSisfAggrSl INNER JOIN qrytblFloraSisf_import ON tblFloraSisfAggrSl.NO_NOM_INCLU = qrytblFloraSisf_import.[Taxonomie ID]) INNER JOIN qrytblFloraSisf_import AS qrytblFloraSisf_import_1 ON tblFloraSisfAggrSl.NO_AGR_SL = qrytblFloraSisf_import_1.[Taxonomie ID] WHERE qrytblFloraSisf_import.GUID="'+Art._id+'"');
 	if (qryFloraEingeschlossenIn && qryFloraEingeschlossenIn.length > 0) {
 		//es gibt EingeschlossenIn
 		for (var k in qryFloraEingeschlossenIn) {
@@ -319,7 +319,7 @@ function ergänzeFloraEingeschlossenInFuerArt(Art) {
 
 function ergänzeFloraSynonyme() {
 	$.when(initiiereImport()).then(function() {
-		var Artenliste = frageSql(window.myDB, 'SELECT tblFloraSisf_import.[Synonym von] AS GUID1 FROM tblFloraSisf_import INNER JOIN tblFloraSisf_import AS tblFloraSisf_import_1 ON tblFloraSisf_import.[Synonym von] = tblFloraSisf_import_1.GUID UNION SELECT tblFloraSisf_import.GUID AS GUID1 FROM tblFloraSisf_import WHERE tblFloraSisf_import.[Synonym von] Is Not Null');
+		var Artenliste = frageSql(window.myDB, 'SELECT qrytblFloraSisf_import.[Synonym von] AS GUID1 FROM qrytblFloraSisf_import INNER JOIN qrytblFloraSisf_import AS qrytblFloraSisf_import_1 ON qrytblFloraSisf_import.[Synonym von] = qrytblFloraSisf_import_1.GUID UNION SELECT qrytblFloraSisf_import.GUID AS GUID1 FROM qrytblFloraSisf_import WHERE qrytblFloraSisf_import.[Synonym von] Is Not Null');
 		var guidArray = [];
 		var a = 0;
 		var batch = 150;
@@ -358,7 +358,7 @@ function ergänzeFloraSynonyme_2(guidArray, a) {
 
 function ergänzeFloraSynonymeFuerArt(Art) {
 	var qryFloraSynonyme, Synonym, DsSynonyme, BeziehungsObjekt, Beziehungspartner;
-	qryFloraSynonyme = frageSql(window.myDB, 'SELECT tblFloraSisf_import.GUID AS GUID1, tblFloraSisf_import.[Synonym von] AS GUID2, tblFloraSisf_import_1.[Artname vollständig] FROM tblFloraSisf_import INNER JOIN tblFloraSisf_import AS tblFloraSisf_import_1 ON tblFloraSisf_import.[Synonym von] = tblFloraSisf_import_1.GUID WHERE tblFloraSisf_import.GUID="'+Art._id+'" UNION SELECT tblFloraSisf_import.[Synonym von] AS GUID1, tblFloraSisf_import.GUID AS GUID2, tblFloraSisf_import.[Artname vollständig] FROM tblFloraSisf_import WHERE tblFloraSisf_import.[Synonym von] Is Not Null AND tblFloraSisf_import.[Synonym von]="'+Art._id+'" ORDER BY [Artname vollständig]');
+	qryFloraSynonyme = frageSql(window.myDB, 'SELECT qrytblFloraSisf_import.GUID AS GUID1, qrytblFloraSisf_import.[Synonym von] AS GUID2, qrytblFloraSisf_import_1.[Artname vollständig] FROM qrytblFloraSisf_import INNER JOIN qrytblFloraSisf_import AS qrytblFloraSisf_import_1 ON qrytblFloraSisf_import.[Synonym von] = qrytblFloraSisf_import_1.GUID WHERE qrytblFloraSisf_import.GUID="'+Art._id+'" UNION SELECT qrytblFloraSisf_import.[Synonym von] AS GUID1, qrytblFloraSisf_import.GUID AS GUID2, qrytblFloraSisf_import.[Artname vollständig] FROM qrytblFloraSisf_import WHERE qrytblFloraSisf_import.[Synonym von] Is Not Null AND qrytblFloraSisf_import.[Synonym von]="'+Art._id+'" ORDER BY [Artname vollständig]');
 	if (qryFloraSynonyme && qryFloraSynonyme.length > 0) {
 		//es gibt Synonyme
 		for (var k in qryFloraSynonyme) {
@@ -407,7 +407,7 @@ function importiereFloraDatensammlungen(tblName, Anz) {
 		}
 		//Datensätze der Datensammlung abfragen, wenn nicht schon vorhanden
 		if (!window["sqlDatensammlung" + tblName]) {
-			window["sqlDatensammlung" + tblName] = "SELECT * FROM " + tblName + "_import";
+			window["sqlDatensammlung" + tblName] = "SELECT * FROM qry" + tblName + "_import";
 		}
 		if (!window["Datensammlung" + tblName]) {
 			window["Datensammlung" + tblName] = frageSql(window.myDB, window["sqlDatensammlung" + tblName]);
@@ -525,7 +525,7 @@ function importiereMoosIndex(Anz) {
 		}
 		//Index importieren
 		if (!window.tblMooseNism) {
-			window.tblMooseNism = frageSql(window.myDB, "SELECT * FROM tblMooseNism_import");
+			window.tblMooseNism = frageSql(window.myDB, "SELECT * FROM qrytblMooseNism_import");
 		}
 		anzDs = 0;
 		for (var x in window.tblMooseNism) {
@@ -559,7 +559,7 @@ function importiereMoosIndex(Anz) {
 				for (var y in window.tblMooseNism[x]) {
 					if (window.tblMooseNism[x][y] !== "" && window.tblMooseNism[x][y] !== null && y !== "Gruppe") {
 						if (y === "Akzeptierte Referenz") {
-							andereArt = frageSql(window.myDB, "SELECT [Artname vollständig] as Artname FROM tblMooseNism_import where GUID='" + window.tblMooseNism[x][y] + "'");
+							andereArt = frageSql(window.myDB, "SELECT [Artname vollständig] as Artname FROM qrytblMooseNism_import where GUID='" + window.tblMooseNism[x][y] + "'");
 							var DsSynonyme = {};
 							DsSynonyme.Name = "NISM (2010): akzeptierte Referenz";
 							DsSynonyme.Typ = "taxonomisch";
@@ -606,7 +606,7 @@ function importiereMoosIndex(Anz) {
 
 function ergänzeMooseSynonyme() {
 	$.when(initiiereImport()).then(function() {
-		var Artenliste = frageSql(window.myDB, 'SELECT tblMooseNism_import.GUID AS id FROM tblMooseNism_import WHERE tblMooseNism_import.[Akzeptierte Referenz] Is Not Null UNION SELECT tblMooseNism_import.[Akzeptierte Referenz] AS id FROM tblMooseNism_import GROUP BY tblMooseNism_import.[Akzeptierte Referenz] HAVING tblMooseNism_import.[Akzeptierte Referenz] Is Not Null;');
+		var Artenliste = frageSql(window.myDB, 'SELECT qrytblMooseNism_import.GUID AS id FROM qrytblMooseNism_import WHERE qrytblMooseNism_import.[Akzeptierte Referenz] Is Not Null UNION SELECT qrytblMooseNism_import.[Akzeptierte Referenz] AS id FROM qrytblMooseNism_import GROUP BY qrytblMooseNism_import.[Akzeptierte Referenz] HAVING qrytblMooseNism_import.[Akzeptierte Referenz] Is Not Null;');
 		var guidArray = [];
 		var a = 0;
 		var batch = 150;
@@ -644,7 +644,7 @@ function ergänzeMooseSynonyme_2(guidArray, a) {
 
 function ergänzeMooseSynonymeFuerArt(Art) {
 	var qryMooseSynonyme, Synonym, DsSynonyme, BeziehungsObjekt, Beziehungspartner;
-	qryMooseSynonyme = frageSql(window.myDB, 'SELECT tblMooseNism_import.GUID AS GUID1, tblMooseNism_import_1.GUID AS GUID2, tblMooseNism_import_1.[Artname vollständig] FROM tblMooseNism_import INNER JOIN tblMooseNism_import AS tblMooseNism_import_1 ON tblMooseNism_import.[Akzeptierte Referenz] = tblMooseNism_import_1.GUID WHERE tblMooseNism_import.GUID="'+Art._id+'" UNION SELECT tblMooseNism_import.[Akzeptierte Referenz] AS GUID1, tblMooseNism_import.GUID AS GUID2, tblMooseNism_import.[Artname vollständig] FROM tblMooseNism_import GROUP BY tblMooseNism_import.[Akzeptierte Referenz], tblMooseNism_import.GUID, tblMooseNism_import.[Artname vollständig] HAVING tblMooseNism_import.[Akzeptierte Referenz]="'+Art._id+'"');
+	qryMooseSynonyme = frageSql(window.myDB, 'SELECT qrytblMooseNism_import.GUID AS GUID1, qrytblMooseNism_import_1.GUID AS GUID2, qrytblMooseNism_import_1.[Artname vollständig] FROM qrytblMooseNism_import INNER JOIN qrytblMooseNism_import AS qrytblMooseNism_import_1 ON qrytblMooseNism_import.[Akzeptierte Referenz] = qrytblMooseNism_import_1.GUID WHERE qrytblMooseNism_import.GUID="'+Art._id+'" UNION SELECT qrytblMooseNism_import.[Akzeptierte Referenz] AS GUID1, qrytblMooseNism_import.GUID AS GUID2, qrytblMooseNism_import.[Artname vollständig] FROM qrytblMooseNism_import GROUP BY qrytblMooseNism_import.[Akzeptierte Referenz], qrytblMooseNism_import.GUID, qrytblMooseNism_import.[Artname vollständig] HAVING qrytblMooseNism_import.[Akzeptierte Referenz]="'+Art._id+'"');
 	if (qryMooseSynonyme && qryMooseSynonyme.length > 0) {
 		//es gibt Synonyme
 		for (var k in qryMooseSynonyme) {
@@ -693,7 +693,7 @@ function importiereMoosDatensammlungen(tblName, Anz) {
 		}
 		//Datensätze der Datensammlung abfragen
 		if (!window["Datensammlung" + tblName]) {
-			window["Datensammlung" + tblName] = frageSql(window.myDB, "SELECT * FROM " + tblName + "_import");
+			window["Datensammlung" + tblName] = frageSql(window.myDB, "SELECT * FROM qry" + tblName + "_import");
 		}
 		anzDs = 0;
 		for (var x in window["Datensammlung" + tblName]) {
@@ -747,7 +747,7 @@ function importiereMacromycetesIndex(Anz) {
 		}
 		//Index importieren
 		if (!window.tblMacromycetes) {
-			window.tblMacromycetes = frageSql(window.myDB, "SELECT * FROM tblMacromycetes_import");
+			window.tblMacromycetes = frageSql(window.myDB, "SELECT * FROM qrytblMacromycetes_import");
 		}
 		anzDs = 0;
 		for (var x in window.tblMacromycetes) {
@@ -804,7 +804,7 @@ function importiereMacromycetesDatensammlungen(tblName, Anz) {
 		}
 		//Datensätze der Datensammlung abfragen
 		if (!window["Datensammlung" + tblName]) {
-			window["Datensammlung" + tblName] = frageSql(window.myDB, "SELECT * FROM " + tblName + "_import");
+			window["Datensammlung" + tblName] = frageSql(window.myDB, "SELECT * FROM qry" + tblName + "_import");
 		}
 		anzDs = 0;
 		for (var x in window["Datensammlung" + tblName]) {
@@ -858,7 +858,7 @@ function importiereFaunaIndex(Anz) {
 		}
 		//Index importieren
 		if (!window.tblFaunaCscf) {
-			window.tblFaunaCscf = frageSql(window.myDB, "SELECT * FROM tblFaunaCscf_import");
+			window.tblFaunaCscf = frageSql(window.myDB, "SELECT * FROM qrytblFaunaCscf_import");
 		}
 		anzDs = 0;
 		for (var x in window.tblFaunaCscf) {
@@ -916,7 +916,7 @@ function importiereFaunaDatensammlungen(tblName, Anz) {
 		}
 		//Datensätze der Datensammlung abfragen
 		if (!window["Datensammlung" + tblName]) {
-			window["Datensammlung" + tblName] = frageSql(window.myDB, "SELECT * FROM " + tblName + "_import");
+			window["Datensammlung" + tblName] = frageSql(window.myDB, "SELECT * FROM qry" + tblName + "_import");
 		}
 		anzDs = 0;
 		for (var x in window["Datensammlung" + tblName]) {
@@ -977,7 +977,7 @@ function importiereLrIndex(Anz) {
 		}
 		//Index importieren
 		if (!window.tblLr) {
-			window.tblLr = frageSql(window.myDB, "SELECT * FROM LR_import");
+			window.tblLr = frageSql(window.myDB, "SELECT * FROM qryLR_import");
 		}
 		anzDs = 0;
 		for (var x in window.tblLr) {
@@ -1102,7 +1102,7 @@ function ergänzeParentZuHierarchie(Lebensräume, parentGUID, Hierarchie) {
 function aktualisiereLrParent() {
 	$.when(initiiereImport()).then(function() {
 		var qryEinheiten;
-		qryEinheiten = frageSql(window.myDB, "SELECT GUID, Einheit FROM LR_import");
+		qryEinheiten = frageSql(window.myDB, "SELECT GUID, Einheit FROM qryLR_import");
 		$db = $.couch.db("artendb");
 		$db.view('artendb/lr?include_docs=true', {
 			success: function (data) {
@@ -1135,7 +1135,7 @@ function importiereLrDatensammlungen(tblName, Anz) {
 		}
 		//Datensätze der Datensammlung abfragen
 		if (!window["Datensammlung" + tblName]) {
-			window["Datensammlung" + tblName] = frageSql(window.myDB, "SELECT * FROM " + tblName + "_import");
+			window["Datensammlung" + tblName] = frageSql(window.myDB, "SELECT * FROM qry" + tblName + "_import");
 		}
 		anzDs = 0;
 		for (var x in window["Datensammlung" + tblName]) {
@@ -1366,7 +1366,7 @@ function importiereLrFaunaBeziehungen(tblName, beziehung_nr) {
 		//Informationen zur Datensammlung holen
 		var metadaten = frageSql(window.myDB, "SELECT * FROM qryBezMetadaten WHERE DsTabelle = '" + tblName + "' AND Beziehungen=1 AND BeziehungNr=" + beziehung_nr);
 		//Beziehungssammlungen holen
-		var beziehungen = frageSql(window.myDB, "SELECT * FROM tblLrFaunaBez_import WHERE DsTabelle='" + metadaten[0].DsTabelle + "' AND BeziehungNr=" + beziehung_nr);
+		var beziehungen = frageSql(window.myDB, "SELECT * FROM qrytblLrFaunaBez_import WHERE DsTabelle='" + metadaten[0].DsTabelle + "' AND BeziehungNr=" + beziehung_nr);
 		//Beziehungen pro Objekt zusammenfassen
 		var bezProFaunaArt = _.groupBy(beziehungen, function(bez){return bez["Fauna GUID"];});
 		var bezProLr = _.groupBy(beziehungen, function(bez){return bez["LR GUID"];});
@@ -1496,12 +1496,12 @@ function importiereLrFloraBeziehungen(tblName, beziehung_nr) {
 		}
 		var metadaten = window["DatensammlungMetadaten" + tblName + beziehung_nr];
 		//Anzahl Beziehungen ermitteln
-		var anzBezQuery = frageSql(window.myDB, "SELECT COUNT(tblLrFloraBez_import.GUID) AS anzBez FROM tblLrFloraBez_import WHERE DsTabelle='" + metadaten[0].DsTabelle + "' AND BeziehungNr=" + beziehung_nr);
+		var anzBezQuery = frageSql(window.myDB, "SELECT COUNT(qrytblLrFloraBez_import.GUID) AS anzBez FROM qrytblLrFloraBez_import WHERE DsTabelle='" + metadaten[0].DsTabelle + "' AND BeziehungNr=" + beziehung_nr);
 		var anzBez = anzBezQuery[0].anzBez;
 		//console.log('anzBez = ' + anzBez);
 		//console.log('tblName = ' + tblName);
 		//console.log('beziehung_nr = ' + beziehung_nr);
-		var beziehungen = frageSql(window.myDB, "SELECT * FROM tblLrFloraBez_import WHERE DsTabelle='" + tblName + "' AND BeziehungNr=" + beziehung_nr);
+		var beziehungen = frageSql(window.myDB, "SELECT * FROM qrytblLrFloraBez_import WHERE DsTabelle='" + tblName + "' AND BeziehungNr=" + beziehung_nr);
 		//console.log('beziehungen = ' + JSON.stringify(beziehungen));
 		//Beziehungen pro Objekt zusammenfassen
 		var bezProFloraArt = _.groupBy(beziehungen, function(bez){return bez["Flora GUID"];});
@@ -1690,7 +1690,7 @@ function importiereLrMooseBeziehungen(tblName, beziehung_nr) {
 		//Informationen zur Datensammlung holen
 		var metadaten = frageSql(window.myDB, "SELECT * FROM qryBezMetadaten WHERE DsTabelle = '" + tblName + "' AND Beziehungen=1 AND BeziehungNr=" + beziehung_nr);
 		//Beziehungen holen
-		var beziehungen = frageSql(window.myDB, "SELECT * FROM tblLrMooseBez_import WHERE DsTabelle='" + metadaten[0].DsTabelle + "' AND BeziehungNr=" + beziehung_nr);
+		var beziehungen = frageSql(window.myDB, "SELECT * FROM qrytblLrMooseBez_import WHERE DsTabelle='" + metadaten[0].DsTabelle + "' AND BeziehungNr=" + beziehung_nr);
 		console.log('window[tblLrMooseBez' + tblName + beziehung_nr + '].length = ' + beziehungen.length);
 		//Beziehungen pro Objekt zusammenfassen
 		var bezProMoosArt = _.groupBy(beziehungen, function(bez){return bez["Moos GUID"];});
@@ -2008,8 +2008,8 @@ function verbindeMitMdb() {
 	if ($("#dbpfad").val()) {
 		dbPfad = $("#dbpfad").val();
 	} else {
-		//dbPfad = "C:\\Users\\alex\\artendb_import\\export_in_json.mdb";	//zuhause
-		dbPfad = "C:\\Users\\Alexander\\artendb_import\\export_in_json.mdb";
+		dbPfad = "C:\\Users\\alex\\artendb_import\\export_in_json.mdb";	//zuhause
+		//dbPfad = "C:\\Users\\Alexander\\artendb_import\\export_in_json.mdb";
 	}
 	myDB = new ACCESSdb(dbPfad, {showErrors:true});
 	return myDB;
@@ -2284,7 +2284,7 @@ function baueIndexSchaltflächenAuf() {
 			html = "";
 			for (var i in DatensammlungFlora) {
 				//Anzahl Datensätze ermitteln
-				qryAnzDs = frageSql(window.myDB, "SELECT Count(GUID) AS Anzahl FROM tblFloraSisf_import");
+				qryAnzDs = frageSql(window.myDB, "SELECT Count(GUID) AS Anzahl FROM qrytblFloraSisf_import");
 				anzDs = qryAnzDs[0].Anzahl;
 				anzButtons = Math.ceil(anzDs/DatensammlungFlora[i].DsAnzDs);
 				for (y = 1; y <= anzButtons; y++) {
@@ -2305,7 +2305,7 @@ function baueIndexSchaltflächenAuf() {
 			html = "";
 			for (i in DatensammlungFauna) {
 				//Anzahl Datensätze ermitteln
-				qryAnzDs = frageSql(window.myDB, "SELECT Count(GUID) AS Anzahl FROM tblFaunaCscf_import");
+				qryAnzDs = frageSql(window.myDB, "SELECT Count(GUID) AS Anzahl FROM qrytblFaunaCscf_import");
 				anzDs = qryAnzDs[0].Anzahl;
 				anzButtons = Math.ceil(anzDs/DatensammlungFauna[i].DsAnzDs);
 				for (y = 1; y <= anzButtons; y++) {
