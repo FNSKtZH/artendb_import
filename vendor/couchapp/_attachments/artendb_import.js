@@ -525,7 +525,7 @@ function importiereMoosIndex(Anz) {
 		}
 		//Index importieren
 		if (!window.tblMooseNism) {
-			window.tblMooseNism = frageSql(window.myDB, "SELECT * FROM qrytblMooseNism_import");
+			window.tblMooseNism = frageSql(window.myDB, "SELECT * FROM tblMooseNism_import");
 		}
 		anzDs = 0;
 		for (var x in window.tblMooseNism) {
@@ -559,7 +559,7 @@ function importiereMoosIndex(Anz) {
 				for (var y in window.tblMooseNism[x]) {
 					if (window.tblMooseNism[x][y] !== "" && window.tblMooseNism[x][y] !== null && y !== "Gruppe") {
 						if (y === "Akzeptierte Referenz") {
-							andereArt = frageSql(window.myDB, "SELECT [Artname vollständig] as Artname FROM qrytblMooseNism_import where GUID='" + window.tblMooseNism[x][y] + "'");
+							andereArt = frageSql(window.myDB, "SELECT [Artname vollständig] as Artname FROM tblMooseNism_import where GUID='" + window.tblMooseNism[x][y] + "'");
 							var DsSynonyme = {};
 							DsSynonyme.Name = "NISM (2010): akzeptierte Referenz";
 							DsSynonyme.Typ = "taxonomisch";
@@ -606,7 +606,7 @@ function importiereMoosIndex(Anz) {
 
 function ergänzeMooseSynonyme() {
 	$.when(initiiereImport()).then(function() {
-		var Artenliste = frageSql(window.myDB, 'SELECT qrytblMooseNism_import.GUID AS id FROM qrytblMooseNism_import WHERE qrytblMooseNism_import.[Akzeptierte Referenz] Is Not Null UNION SELECT qrytblMooseNism_import.[Akzeptierte Referenz] AS id FROM qrytblMooseNism_import GROUP BY qrytblMooseNism_import.[Akzeptierte Referenz] HAVING qrytblMooseNism_import.[Akzeptierte Referenz] Is Not Null;');
+		var Artenliste = frageSql(window.myDB, 'SELECT tblMooseNism_import.GUID AS id FROM tblMooseNism_import WHERE tblMooseNism_import.[Akzeptierte Referenz] Is Not Null UNION SELECT tblMooseNism_import.[Akzeptierte Referenz] AS id FROM tblMooseNism_import GROUP BY tblMooseNism_import.[Akzeptierte Referenz] HAVING tblMooseNism_import.[Akzeptierte Referenz] Is Not Null');
 		var guidArray = [];
 		var a = 0;
 		var batch = 150;
@@ -644,7 +644,7 @@ function ergänzeMooseSynonyme_2(guidArray, a) {
 
 function ergänzeMooseSynonymeFuerArt(Art) {
 	var qryMooseSynonyme, Synonym, DsSynonyme, BeziehungsObjekt, Beziehungspartner;
-	qryMooseSynonyme = frageSql(window.myDB, 'SELECT qrytblMooseNism_import.GUID AS GUID1, qrytblMooseNism_import_1.GUID AS GUID2, qrytblMooseNism_import_1.[Artname vollständig] FROM qrytblMooseNism_import INNER JOIN qrytblMooseNism_import AS qrytblMooseNism_import_1 ON qrytblMooseNism_import.[Akzeptierte Referenz] = qrytblMooseNism_import_1.GUID WHERE qrytblMooseNism_import.GUID="'+Art._id+'" UNION SELECT qrytblMooseNism_import.[Akzeptierte Referenz] AS GUID1, qrytblMooseNism_import.GUID AS GUID2, qrytblMooseNism_import.[Artname vollständig] FROM qrytblMooseNism_import GROUP BY qrytblMooseNism_import.[Akzeptierte Referenz], qrytblMooseNism_import.GUID, qrytblMooseNism_import.[Artname vollständig] HAVING qrytblMooseNism_import.[Akzeptierte Referenz]="'+Art._id+'"');
+	qryMooseSynonyme = frageSql(window.myDB, 'SELECT tblMooseNism_import.GUID AS GUID1, tblMooseNism_import_1.GUID AS GUID2, tblMooseNism_import_1.[Artname vollständig] FROM tblMooseNism_import INNER JOIN tblMooseNism_import AS tblMooseNism_import_1 ON tblMooseNism_import.[Akzeptierte Referenz] = tblMooseNism_import_1.GUID WHERE tblMooseNism_import.GUID="'+Art._id+'" UNION SELECT tblMooseNism_import.[Akzeptierte Referenz] AS GUID1, tblMooseNism_import.GUID AS GUID2, tblMooseNism_import.[Artname vollständig] FROM tblMooseNism_import GROUP BY tblMooseNism_import.[Akzeptierte Referenz], tblMooseNism_import.GUID, tblMooseNism_import.[Artname vollständig] HAVING tblMooseNism_import.[Akzeptierte Referenz]="'+Art._id+'"');
 	if (qryMooseSynonyme && qryMooseSynonyme.length > 0) {
 		//es gibt Synonyme
 		for (var k in qryMooseSynonyme) {
