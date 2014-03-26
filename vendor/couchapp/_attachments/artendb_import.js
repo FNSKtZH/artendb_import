@@ -33,7 +33,7 @@ function importiereFloraIndex(Anz) {
 					Art.Taxonomie.Datenstand = window.tblDatensammlungMetadaten[0].DsDatenstand;
 				}
 				if (window.tblDatensammlungMetadaten[0].DsLink) {
-					Art.Taxonomie["Link"] = window.tblDatensammlungMetadaten[0].DsLink;
+					Art.Taxonomie.Link = window.tblDatensammlungMetadaten[0].DsLink;
 				}
 				//Daten der Datensammlung als Objekt gründen
 				Art.Taxonomie.Daten = {};
@@ -53,7 +53,7 @@ function importiereFloraIndex(Anz) {
 								DsSynonyme.Datenstand = Art.Taxonomie.Datenstand;
 							}
 							if (Art.Taxonomie.Link) {
-								DsSynonyme["Link"] = Art.Taxonomie.Link;
+								DsSynonyme.Link = Art.Taxonomie.Link;
 							}
 							DsSynonyme["Art der Beziehungen"] = "offizielle Art";
 							//aus dem Synonym ein Objekt bilden
@@ -141,7 +141,7 @@ function aktualisiereFloraGültigeNamen() {
 						DsGueltigeNamen.Datenstand = Art.Taxonomie.Datenstand;
 					}
 					if (Art.Taxonomie.Link) {
-						DsGueltigeNamen["Link"] = Art.Taxonomie.Link;
+						DsGueltigeNamen.Link = Art.Taxonomie.Link;
 					}
 					DsGueltigeNamen["Art der Beziehungen"] = "gültige Namen";
 					DsGueltigeNamen.Beziehungen = [];
@@ -200,7 +200,7 @@ function ergänzeFloraEingeschlosseneArten() {
 								DsEinschluss.Datenstand = Art.Taxonomie.Datenstand;
 							}
 							if (Art.Taxonomie.Link) {
-								DsEinschluss["Link"] = Art.Taxonomie.Link;
+								DsEinschluss.Link = Art.Taxonomie.Link;
 							}
 							DsEinschluss["Art der Beziehungen"] = "eingeschlossen";
 							DsEinschluss.Beziehungen = [];
@@ -211,7 +211,7 @@ function ergänzeFloraEingeschlosseneArten() {
 									Beziehungspartner = [];
 									Einschluss = {};
 									Einschluss.Gruppe = "Flora";
-									Einschluss.GUID = qryEingeschlosseneArten[k]["GUID_eingeschlossen"];
+									Einschluss.GUID = qryEingeschlosseneArten[k].GUID_eingeschlossen;
 									Einschluss.Name = qryEingeschlosseneArten[k]["Artname vollständig"];
 									Beziehungspartner.push(Einschluss);
 									BeziehungsObjekt = {};
@@ -291,7 +291,7 @@ function ergänzeFloraEingeschlossenInFuerArt(Art) {
 					DsEingeschlossenIn.Datenstand = Art.Taxonomie.Datenstand;
 				}
 				if (Art.Taxonomie.Link) {
-					DsEingeschlossenIn["Link"] = Art.Taxonomie.Link;
+					DsEingeschlossenIn.Link = Art.Taxonomie.Link;
 				}
 				DsEingeschlossenIn["Art der Beziehungen"] = "eingeschlossen in";
 				DsEingeschlossenIn.Beziehungen = [];
@@ -372,7 +372,7 @@ function ergänzeFloraSynonymeFuerArt(Art) {
 					DsSynonyme.Datenstand = Art.Taxonomie.Datenstand;
 				}
 				if (Art.Taxonomie.Link) {
-					DsSynonyme["Link"] = Art.Taxonomie.Link;
+					DsSynonyme.Link = Art.Taxonomie.Link;
 				}
 				DsSynonyme["Art der Beziehungen"] = "synonym";
 				DsSynonyme.Beziehungen = [];
@@ -425,7 +425,7 @@ function importiereFloraDatensammlungen(tblName, Anz) {
 					DatensammlungDieserArt.Datenstand = window["tblDatensammlungMetadaten" + tblName][0].DsDatenstand;
 				}
 				if (window["tblDatensammlungMetadaten" + tblName][0].DsLink) {
-					DatensammlungDieserArt["Link"] = window["tblDatensammlungMetadaten" + tblName][0].DsLink;
+					DatensammlungDieserArt.Link = window["tblDatensammlungMetadaten" + tblName][0].DsLink;
 				}
 				DatensammlungDieserArt["importiert von"] = "alex@gabriel-software.ch";
 				//Daten der Datensammlung als Objekt gründen
@@ -439,6 +439,9 @@ function importiereFloraDatensammlungen(tblName, Anz) {
 							if (window["Datensammlung" + tblName][x][y] === -1) {
 								//Access macht in Abfragen mit Wenn-Klausel aus true -1 > korrigieren
 								DatensammlungDieserArt.Daten[y] = true;
+							} else if (tblName === "tblFloraFnsJahresarten") {
+								// das ist ein Array
+								DatensammlungDieserArt.Daten[y] = JSON.parse("["+window["Datensammlung" + tblName][x][y]+"]");
 							} else {
 								//Normalfall
 								DatensammlungDieserArt.Daten[y] = window["Datensammlung" + tblName][x][y];
@@ -460,17 +463,47 @@ function importiereFloraDatensammlungen(tblName, Anz) {
 }
 
 function ergaenzeFloraZhGis() {
-	var a, i, doc;
+	var doc;
 	$db = $.couch.db("artendb");
 	$db.view("artendb/flora?include_docs=true", {
 		success: function(data) {
+			var a, datensammlung;
+			datensammlung = {};
+			datensammlung.Name = "ZH GIS";
+			datensammlung.Beschreibung = "GIS-Layer und Betrachtungsdistanzen für das Artenlistentool, Artengruppen für EvAB, im Kanton Zürich. Eigenschaften aller Arten";
+			datensammlung.Datenstand = "dauernd nachgeführt";
+			datensammlung.Link = "http://www.naturschutz.zh.ch";
+			datensammlung.Daten = {};
+			datensammlung.Daten["GIS-Layer"] = "Flora";
+			datensammlung.Daten["Artengruppen-ID in EvAB"] = 18;
+			datensammlung.Daten["Betrachtungsdistanz (m)"] = 500;
 			for (a in data.rows) {
 				doc = data.rows[a].doc;
-				for (i in doc.Datensammlungen) {
-					if (doc.Datensammlungen[i].Name === "ZH GIS") {
-						doc.Datensammlungen[i].Daten["Betrachtungsdistanz (m)"] = 500;
-					}
-				}
+				doc.Datensammlungen.push(datensammlung);
+				ergaenzeFloraZhGisSaveDoc(doc, a*2);
+			}
+		}
+	});
+}
+
+function ergaenzeMooseZhGis() {
+	var doc;
+	$db = $.couch.db("artendb");
+	$db.view("artendb/moose?include_docs=true", {
+		success: function(data) {
+			var a, datensammlung;
+			datensammlung = {};
+			datensammlung.Name = "ZH GIS";
+			datensammlung.Beschreibung = "GIS-Layer und Betrachtungsdistanzen für das Artenlistentool, Artengruppen für EvAB, im Kanton Zürich. Eigenschaften aller Arten";
+			datensammlung.Datenstand = "dauernd nachgeführt";
+			datensammlung.Link = "http://www.naturschutz.zh.ch";
+			datensammlung.Daten = {};
+			datensammlung.Daten["GIS-Layer"] = "Moose";
+			datensammlung.Daten["Artengruppen-ID in EvAB"] = 29;
+			datensammlung.Daten["Betrachtungsdistanz (m)"] = 500;
+			for (a in data.rows) {
+				doc = data.rows[a].doc;
+				doc.Datensammlungen.push(datensammlung);
 				ergaenzeFloraZhGisSaveDoc(doc, a*2);
 			}
 		}
@@ -518,7 +551,7 @@ function importiereMoosIndex(Anz) {
 					Art.Taxonomie.Datenstand = window.DatensammlungMetadatenMoose[0].DsDatenstand;
 				}
 				if (window.DatensammlungMetadatenMoose[0].DsLink) {
-					Art.Taxonomie["Link"] = window.DatensammlungMetadatenMoose[0].DsLink;
+					Art.Taxonomie.Link = window.DatensammlungMetadatenMoose[0].DsLink;
 				}
 				//Daten der Datensammlung als Objekt gründen
 				Art.Taxonomie.Daten = {};
@@ -535,7 +568,7 @@ function importiereMoosIndex(Anz) {
 								DsSynonyme.Datenstand = Art.Taxonomie.Datenstand;
 							}
 							if (Art.Taxonomie.Link) {
-								DsSynonyme["Link"] = Art.Taxonomie.Link;
+								DsSynonyme.Link = Art.Taxonomie.Link;
 							}
 							DsSynonyme["Art der Beziehungen"] = "akzeptierte Referenz";
 							//aus dem Synonym ein Objekt bilden
@@ -625,7 +658,7 @@ function ergänzeMooseSynonymeFuerArt(Art) {
 					DsSynonyme.Datenstand = Art.Taxonomie.Datenstand;
 				}
 				if (Art.Taxonomie.Link) {
-					DsSynonyme["Link"] = Art.Taxonomie.Link;
+					DsSynonyme.Link = Art.Taxonomie.Link;
 				}
 				DsSynonyme["Art der Beziehungen"] = "synonym";
 				DsSynonyme.Beziehungen = [];
@@ -675,7 +708,7 @@ function importiereMoosDatensammlungen(tblName, Anz) {
 					DatensammlungDieserArt.Datenstand = window["DatensammlungMetadaten" + tblName][0].DsDatenstand;
 				}
 				if (window["DatensammlungMetadaten" + tblName][0].DsLink) {
-					DatensammlungDieserArt["Link"] = window["DatensammlungMetadaten" + tblName][0].DsLink;
+					DatensammlungDieserArt.Link = window["DatensammlungMetadaten" + tblName][0].DsLink;
 				}
 				DatensammlungDieserArt["importiert von"] = "alex@gabriel-software.ch";
 				//Daten der Datensammlung als Objekt gründen
@@ -740,7 +773,7 @@ function importiereMacromycetesIndex(Anz) {
 					Art.Taxonomie.Datenstand = window.MacromycetesMetadaten[0].DsDatenstand;
 				}
 				if (window.MacromycetesMetadaten[0].DsLink) {
-					Art.Taxonomie["Link"] = window.MacromycetesMetadaten[0].DsLink;
+					Art.Taxonomie.Link = window.MacromycetesMetadaten[0].DsLink;
 				}
 				//Daten der Datensammlung als Objekt gründen
 				Art.Taxonomie.Daten = {};
@@ -786,7 +819,7 @@ function importiereMacromycetesDatensammlungen(tblName, Anz) {
 					DatensammlungDieserArt.Datenstand = window["DatensammlungMetadaten" + tblName][0].DsDatenstand;
 				}
 				if (window["DatensammlungMetadaten" + tblName][0].DsLink) {
-					DatensammlungDieserArt["Link"] = window["DatensammlungMetadaten" + tblName][0].DsLink;
+					DatensammlungDieserArt.Link = window["DatensammlungMetadaten" + tblName][0].DsLink;
 				}
 				DatensammlungDieserArt["importiert von"] = "alex@gabriel-software.ch";
 				//Daten der Datensammlung als Objekt gründen
@@ -852,7 +885,7 @@ function importiereFaunaIndex(Anz) {
 					Art.Taxonomie.Datenstand = window.FaunaMetadaten[0].DsDatenstand;
 				}
 				if (window.FaunaMetadaten[0].DsLink) {
-					Art.Taxonomie["Link"] = window.FaunaMetadaten[0].DsLink;
+					Art.Taxonomie.Link = window.FaunaMetadaten[0].DsLink;
 				}
 				//Daten der Datensammlung als Objekt gründen
 				Art.Taxonomie.Daten = {};
@@ -898,7 +931,7 @@ function importiereFaunaDatensammlungen(tblName, Anz) {
 					DatensammlungDieserArt.Datenstand = window["DatensammlungMetadaten" + tblName][0].DsDatenstand;
 				}
 				if (window["DatensammlungMetadaten" + tblName][0].DsLink) {
-					DatensammlungDieserArt["Link"] = window["DatensammlungMetadaten" + tblName][0].DsLink;
+					DatensammlungDieserArt.Link = window["DatensammlungMetadaten" + tblName][0].DsLink;
 				}
 				if (window["DatensammlungMetadaten" + tblName][0].zusammenfassend == "true") {
 					DatensammlungDieserArt.zusammenfassend = true;
@@ -913,6 +946,9 @@ function importiereFaunaDatensammlungen(tblName, Anz) {
 						if (window["Datensammlung" + tblName][x][y] === -1) {
 							//Access macht in Abfragen mit Wenn-Klausel aus true -1 > korrigieren
 							DatensammlungDieserArt.Daten[y] = true;
+						} else if (tblName === "tblFaunaFnsJahresarten") {
+							// das ist ein Array
+							DatensammlungDieserArt.Daten[y] = JSON.parse("["+window["Datensammlung" + tblName][x][y]+"]");
 						} else {
 							//Normalfall
 							DatensammlungDieserArt.Daten[y] = window["Datensammlung" + tblName][x][y];
@@ -970,7 +1006,7 @@ function importiereLrIndex(Anz) {
 					Art.Taxonomie.Datenstand = window.LrMetadaten[0].DsDatenstand;
 				}
 				if (window.LrMetadaten[0].DsLink) {
-					Art.Taxonomie["Link"] = window.LrMetadaten[0].DsLink;
+					Art.Taxonomie.Link = window.LrMetadaten[0].DsLink;
 				}
 				//Daten der Datensammlung als Objekt gründen
 				Art.Taxonomie.Daten = {};
@@ -1116,7 +1152,7 @@ function importiereLrDatensammlungen(tblName, Anz) {
 					DatensammlungDieserArt.Datenstand = window["DatensammlungMetadaten" + tblName][0].DsDatenstand;
 				}
 				if (window["DatensammlungMetadaten" + tblName][0].DsLink) {
-					DatensammlungDieserArt["Link"] = window["DatensammlungMetadaten" + tblName][0].DsLink;
+					DatensammlungDieserArt.Link = window["DatensammlungMetadaten" + tblName][0].DsLink;
 				}
 				DatensammlungDieserArt["importiert von"] = "alex@gabriel-software.ch";
 				//Daten der Datensammlung als Objekt gründen
@@ -1166,7 +1202,7 @@ function fuegeDatensammlungZuArt(GUID, DsName, DatensammlungDieserArt) {
 						doc.Datensammlungen[i].Daten = {};
 					}
 					//nur noch fehlende Felder anhängen
-					for (y in DatensammlungDieserArt.Daten) {
+					for (var y in DatensammlungDieserArt.Daten) {
 						if (!doc.Datensammlungen[i].Daten[y]) {
 							doc.Datensammlungen[i].Daten[y] = DatensammlungDieserArt.Daten[y];
 						}
@@ -1220,12 +1256,12 @@ function importiereFloraFaunaBeziehungen(tblName, Anz) {
 		//wenn noch nicht vorhanden...
 		if (!window[tblName]) {
 			//Beziehungssammlungen holen
-			window[tblName] = frageSql(window.myDB, "SELECT * FROM " + tblName + "_import");
+			window[tblName] = frageSql(window.myDB, "SELECT * FROM qrytblFloraFaunaBez_import");
 		}
 		//wenn noch nicht vorhanden...
 		if (!window[tblName + "_artenliste"]) {
 			//liste aller Arten holen, von denen Beziehungssammlungen importiert werden sollen
-			window[tblName + "_artenliste"] = frageSql(window.myDB, 'SELECT ' + tblName + '_import.[Flora GUID] AS [GUID] FROM ' + tblName + '_import UNION SELECT ' + tblName + '_import.[Fauna GUID] AS [GUID] from ' + tblName + '_import');
+			window[tblName + "_artenliste"] = frageSql(window.myDB, 'SELECT qrytblFloraFaunaBez_import.[Flora GUID] AS [GUID] FROM qrytblFloraFaunaBez_import UNION SELECT qrytblFloraFaunaBez_import.[Fauna GUID] AS [GUID] from qrytblFloraFaunaBez_import');
 		}
 		anzDs = 0;
 		for (var f in window[tblName + "_artenliste"]) {
@@ -1260,7 +1296,7 @@ function importiereFloraFaunaBeziehungenFuerArt (GUID, tblName) {
 		Datensammlung.Datenstand = window["DatensammlungMetadaten" + tblName][0].DsDatenstand;
 	}
 	if (window["DatensammlungMetadaten" + tblName][0].DsLink) {
-		Datensammlung["Link"] = window["DatensammlungMetadaten" + tblName][0].DsLink;
+		Datensammlung.Link = window["DatensammlungMetadaten" + tblName][0].DsLink;
 	}
 	if (tblName === "tblFloraFaunaBezEbert") {
 		Datensammlung["Art der Beziehungen"] = "Beziehungen zwischen Schmetterlingen und Pflanzenarten";
@@ -1271,7 +1307,8 @@ function importiereFloraFaunaBeziehungenFuerArt (GUID, tblName) {
 	//den Array für die Beziehungen schaffen
 	Datensammlung.Beziehungen = [];
 	//durch alle Beziehungen loopen
-	for (var x = 0; x < window[tblName].length; x++) {
+	var x;
+	for (x = 0; x < window[tblName].length; x++) {
 		if (window[tblName][x]["Flora GUID"] === GUID || window[tblName][x]["Fauna GUID"] === GUID) {
 			//Beziehung enthält diese Art
 			Beziehung = {};
@@ -1361,7 +1398,7 @@ function importiereLrFaunaBeziehungenFuerArt (GUID, metadaten, beziehungen) {
 		Datensammlung.Datenstand = metadaten[0].DsDatenstand;
 	}
 	if (metadaten[0].DsLink) {
-		Datensammlung["Link"] = metadaten[0].DsLink;
+		Datensammlung.Link = metadaten[0].DsLink;
 	}
 	//Art der Beziehung soll eine Eigenschaft der Datensammlung sein, nicht der Beziehung
 	Datensammlung["Art der Beziehungen"] = beziehungen[0]["Art der Beziehung"];
@@ -1560,7 +1597,7 @@ function importiereLrFloraBeziehungenFuerObjekt (objekt, metadaten, beziehungen)
 		Datensammlung.Datenstand = metadaten[0].DsDatenstand;
 	}
 	if (metadaten[0].DsLink) {
-		Datensammlung["Link"] = metadaten[0].DsLink;
+		Datensammlung.Link = metadaten[0].DsLink;
 	}
 	//Art der Beziehung soll eine Eigenschaft der Datensammlung sein, nicht der Beziehungen
 	Datensammlung["Art der Beziehungen"] = beziehungen[0]["Art der Beziehung"];
@@ -1686,7 +1723,7 @@ function importiereLrMooseBeziehungenFuerArt (GUID, metadaten, beziehungen) {
 		Datensammlung.Datenstand = metadaten[0].DsDatenstand;
 	}
 	if (metadaten[0].DsLink) {
-		Datensammlung["Link"] = metadaten[0].DsLink;
+		Datensammlung.Link = metadaten[0].DsLink;
 	}
 	//Art der Beziehung soll eine Eigenschaft der Datensammlung sein, nicht der Beziehungen
 	Datensammlung["Art der Beziehungen"] = beziehungen[0]["Art der Beziehung"];
@@ -1966,13 +2003,15 @@ function initiiereImport() {
 }
 
 function verbindeMitMdb() {
-	var myDB, dbPfad;
+	var myDB, 
+		dbPfad;
 	if ($("#dbpfad").val()) {
 		dbPfad = $("#dbpfad").val();
 	} else {
-		dbPfad = "C:\\Users\\alex\\artendb_import\\export_in_json.mdb";
+		//dbPfad = "C:\\Users\\alex\\artendb_import\\export_in_json.mdb";	//zuhause
+		dbPfad = "C:\\Users\\Alexander\\artendb_import\\export_in_json.mdb";
 	}
-	myDB = new ACCESSdb(dbPfad, {showErrors:false});
+	myDB = new ACCESSdb(dbPfad, {showErrors:true});
 	return myDB;
 }
 
@@ -2137,7 +2176,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 			DatensammlungenFloraFaunaBezEbert = frageSql(window.myDB, sqlDatensammlungenFloraFaunaBezEbert);
 			//liste aller Arten erzeugen, von denen Beziehungen importiert werden sollen
 			if (!window.tblFloraFaunaBezEbert_artenliste) {
-				window.tblFloraFaunaBezEbert_artenliste = frageSql(window.myDB, 'SELECT tblFloraFaunaBezEbert_import.[Flora GUID] AS [GUID] FROM tblFloraFaunaBezEbert_import UNION SELECT tblFloraFaunaBezEbert_import.[Fauna GUID] AS [GUID] from tblFloraFaunaBezEbert_import');
+				window.tblFloraFaunaBezEbert_artenliste = frageSql(window.myDB, 'SELECT qrytblFloraFaunaBez_import.[Flora GUID] AS [GUID] FROM qrytblFloraFaunaBez_import UNION SELECT qrytblFloraFaunaBez_import.[Fauna GUID] AS [GUID] from qrytblFloraFaunaBez_import');
 			}
 			html = "";
 			for (i in DatensammlungenFloraFaunaBezEbert) {
@@ -2164,7 +2203,7 @@ function baueDatensammlungenSchaltflächenAuf() {
 			DatensammlungenFloraFaunaBezWestrich = frageSql(window.myDB, sqlDatensammlungenFloraFaunaBezWestrich);
 			//liste aller Arten erzeugen, von denen Beziehungen importiert werden sollen
 			if (!window.tblFloraFaunaBezWestrich_artenliste) {
-				window.tblFloraFaunaBezWestrich_artenliste = frageSql(window.myDB, 'SELECT tblFloraFaunaBezWestrich_import.[Flora GUID] AS [GUID] FROM tblFloraFaunaBezWestrich_import UNION SELECT tblFloraFaunaBezWestrich_import.[Fauna GUID] AS [GUID] from tblFloraFaunaBezWestrich_import');
+				window.tblFloraFaunaBezWestrich_artenliste = frageSql(window.myDB, 'SELECT qrytblFloraFaunaBez_import.[Flora GUID] AS [GUID] FROM qrytblFloraFaunaBez_import UNION SELECT qrytblFloraFaunaBez_import.[Fauna GUID] AS [GUID] from qrytblFloraFaunaBez_import');
 			}
 			html = "";
 			for (i in DatensammlungenFloraFaunaBezWestrich) {

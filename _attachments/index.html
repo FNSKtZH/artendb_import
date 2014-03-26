@@ -40,6 +40,7 @@
 			<div id="SchaltflächenMoosIndex">hier kommen die Moose</div><br><br>
 			<input type='checkbox' id="MooseSynonyme">Synonyme ergänzen<br><br>
 			<div id="SchaltflächenMoosDatensammlungen"></div><br><br>
+			<input type='checkbox' id="MooseZhGis">ZH GIS ergänzen<br><br>
 			<input type='checkbox' viewname="moose" class="dokumenteVonViewLöschen">Moose löschen<br><br>
 		</div>
 		<hr>
@@ -152,6 +153,9 @@
 			});
 			$("body").on("click", "#FloraZhGis", function() {
 				ergaenzeFloraZhGis();
+			});
+			$("body").on("click", "#MooseZhGis", function() {
+				ergaenzeMooseZhGis();
 			});
 			$("body").on("click", "#MooseSynonyme", function() {
 				ergänzeMooseSynonyme();
