@@ -1101,27 +1101,43 @@ function ergänzeParentZuHierarchie(Lebensräume, parentGUID, Hierarchie) {
 //ein Objekt mit GUID und Name = Einheit
 function aktualisiereLrParent() {
 	$.when(initiiereImport()).then(function() {
-		var qryEinheiten;
-		qryEinheiten = frageSql(window.myDB, "SELECT GUID, Einheit FROM qryLR_import");
+		// LR holen
 		$db = $.couch.db("artendb");
 		$db.view('artendb/lr?include_docs=true', {
 			success: function (data) {
-				for (var i in data.rows) {
-					var LR, Parent;
-					LR = data.rows[i].doc;
-					if (LR.Taxonomie.Daten.Parent) {
-						for (var k in qryEinheiten) {
-							if (qryEinheiten[k].GUID === LR.Taxonomie.Daten.Parent) {
-								Parent = {};
-								Parent.GUID = qryEinheiten[k].GUID;
-								Parent.Name = qryEinheiten[k].Einheit;
+				var i,
+					k,
+					lr_docs,
+					lr_parents,
+					lr_doc,
+					lr_parent,
+					parent;
+
+				// Array aller LR-docs erstellen
+				lr_docs = _.map(data.rows, function(row) {
+					return row.doc;
+				});
+
+				// Kopie erstellen, um daraus die Parents zu extrahieren
+				lr_parents = lr_docs;
+
+				_.each(lr_docs, function(lr_doc) {
+					if (lr_doc.Taxonomie.Daten.Parent && typeof lr_doc.Taxonomie.Daten.Parent === "string") {
+						// erst mal die höchste Ebene abfangen
+
+						for (k in lr_parents) {
+							lr_parent = lr_parents[k];
+							if (lr_parent._id === lr_doc.Taxonomie.Daten.Parent) {
+								parent = {};
+								parent.GUID = lr_parent._id;
+								parent.Name = lr_parent.Taxonomie.Daten.Einheit;
 								break;
 							}
 						}
-						LR.Taxonomie.Daten.Parent = Parent;
-						$db.saveDoc(LR);
+						lr_doc.Taxonomie.Daten.Parent = parent;
+						$db.saveDoc(lr_doc);
 					}
-				}
+				});
 			}
 		});
 	});
@@ -1240,7 +1256,7 @@ function fuegeDatensammlungZuArt(GUID, DsName, DatensammlungDieserArt) {
 
 
 
-function importiereFloraFaunaBeziehungen(tblName, Anz) {
+/*function importiereFloraFaunaBeziehungen(tblName, Anz) {
 	//Alle Arten der Beziehungssammlungen aus Access abfragen
 	//durch alle Arten der Beziehungssammlungen aus Access zirkeln
 	//darin: durch alle Beziehungen zirkeln
@@ -1277,9 +1293,53 @@ function importiereFloraFaunaBeziehungen(tblName, Anz) {
 			}
 		}
 	});
+}*/
+
+function importiereFloraFaunaBeziehungen(tblName, Anz) {
+	//Alle Arten der Beziehungssammlungen aus Access abfragen
+	//durch alle Arten der Beziehungssammlungen aus Access zirkeln
+	//darin: durch alle Beziehungen zirkeln
+	//wenn die Beziehung die Art enthält, Beziehung ergänzen
+	//ein mal in die couch schreiben. SONST GIBT ES KONFLIKTE
+	var wer = "ebert";
+	if (tblName === "tblFloraFaunaBezWestrich") {
+		wer = "westrich";
+	}
+
+	$.when(initiiereImport()).then(function() {
+		var anzDs;
+		//wenn noch nicht vorhanden...
+		if (!window["DatensammlungMetadaten" + tblName]) {
+			//Informationen zur Datensammlung holen
+			window["DatensammlungMetadaten" + tblName] = frageSql(window.myDB, "SELECT * FROM tblDatensammlungMetadaten WHERE DsTabelle = '" + tblName + "'");
+		}
+		//wenn noch nicht vorhanden...
+		if (!window[tblName]) {
+			//Beziehungssammlungen holen
+			window[tblName] = frageSql(window.myDB, "SELECT * FROM qrytblFloraFaunaBez_import WHERE wer = '" + wer + "'");
+		}
+		//wenn noch nicht vorhanden...
+		if (!window[tblName + "_artenliste"]) {
+			//liste aller Arten holen, von denen Beziehungssammlungen importiert werden sollen
+			window[tblName + "_artenliste"] = frageSql(window.myDB, "SELECT qrytblFloraFaunaBez_import.[Flora GUID] AS [GUID] FROM qrytblFloraFaunaBez_import WHERE wer = '" + wer + "' UNION SELECT qrytblFloraFaunaBez_import.[Fauna GUID] AS [GUID] from qrytblFloraFaunaBez_import WHERE wer = '" + wer + "'");
+		}
+		anzDs = 0;
+		for (var f in window[tblName + "_artenliste"]) {
+			//Artenliste in Häppchen aufteilen
+			anzDs += 1;
+			//nur importieren, wenn innerhalb des mit Anz übergebenen Häppchen (in Access-DB definiert)
+			if ((anzDs > (Anz*window["DatensammlungMetadaten" + tblName][0].DsAnzDs-window["DatensammlungMetadaten" + tblName][0].DsAnzDs)) && (anzDs <= Anz*window["DatensammlungMetadaten" + tblName][0].DsAnzDs)) {
+				//jetzt die Beziehungssammlungen dieser Art holen
+				importiereFloraFaunaBeziehungenFuerArt(window[tblName + "_artenliste"][f].GUID, tblName);
+			}
+			if (anzDs === Anz*window["DatensammlungMetadaten" + tblName][0].DsAnzDs || anzDs === window[tblName + "_artenliste"].length) {
+				console.log("Import von " + tblName + " fertig: anzDs = " + anzDs);
+			}
+		}
+	});
 }
 
-//importiert die Flora-Fauna-Beziehungssammlungen eine Art
+//importiert die Flora-Fauna-Beziehungssammlungen einer Art
 //benötigt deren GUID und den Tabellennahmen
 function importiereFloraFaunaBeziehungenFuerArt (GUID, tblName) {
 	var Feldnamen = ["Imago", "Larve", "Ei"];
