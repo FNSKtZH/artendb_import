@@ -2566,3 +2566,51 @@ function sortiereBeziehungenNachName(beziehungen) {
 	});
 	return beziehungen;
 }
+
+function renameTaxonomie(gruppe) {
+	$db = $.couch.db("artendb");
+	$db.view('artendb/'+gruppe+'?include_docs=true', {
+		success: function(data) {
+			var doc, f, name;
+			for (f = 0; f<data.rows.length; f++) {
+				doc = data.rows[f].doc;
+				if (doc.Gruppe) {
+					if (doc.Taxonomie && doc.Taxonomie.Name) {
+						name = bestimmeTaxonomieNameVonGruppe(doc.Gruppe);
+						if (doc.Taxonomie.Name !== name) {
+							// nur umbenennen, wenn falsch
+							doc.Taxonomie.Name = name;
+							renameTaxonomie_2(doc, f);
+						}
+					}
+				}
+			}
+		}
+	});
+}
+
+// f ist anzahl millisekunden
+// Speicherauftrag wird später geschickt
+function renameTaxonomie_2(doc, f) {
+	setTimeout(function(){
+		renameTaxonomie_3(doc);
+	}, f*2);
+}
+
+function renameTaxonomie_3(doc) {
+	$db = $.couch.db("artendb");
+	$db.saveDoc(doc);
+}
+
+function bestimmeTaxonomieNameVonGruppe(gruppe) {
+	switch (gruppe) {
+		case "Fauna":
+			return "CSCF (2009)";
+		case "Flora":
+			return "SISF Index 2 (2005)";
+		case "Moose":
+			return "NISM (2010)";
+		case "Macromycetes":
+			return "Swissfunghi (2011)";
+	}
+}

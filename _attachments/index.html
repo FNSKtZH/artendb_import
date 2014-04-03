@@ -98,6 +98,14 @@
 			<div id="SchaltflächenLrLrBez"><input type='checkbox' name='LrLrBez'>LrLrBez</div><br><br>
 		</div>
 
+		<h3>Taxonomie umbenennen</h3>
+		<div style="column-width:550px;">
+			<div id="taxonomie_flora_umbenennen"><input type='checkbox' name='taxonomie_flora_umbenennen'>Flora</div><br>
+			<div id="taxonomie_fauna_umbenennen"><input type='checkbox' name='taxonomie_fauna_umbenennen'>Fauna</div><br>
+			<div id="taxonomie_moose_umbenennen"><input type='checkbox' name='taxonomie_moose_umbenennen'>Moose</div><br>
+			<div id="taxonomie_pilze_umbenennen"><input type='checkbox' name='taxonomie_pilze_umbenennen'>Pilze</div><br><br>
+		</div>
+
 		<script>
 			$(document).ready(function () {
 				baueIndexSchaltflächenAuf();
@@ -187,6 +195,18 @@
 			});
 			$("body").on("click", "[name='LrLrBez']", function() {
 				importiereLrLrBeziehungen();
+			});
+			$("body").on("click", "[name='taxonomie_flora_umbenennen']", function() {
+				renameTaxonomie("flora");
+			});
+			$("body").on("click", "[name='taxonomie_fauna_umbenennen']", function() {
+				renameTaxonomie("fauna");
+			});
+			$("body").on("click", "[name='taxonomie_moose_umbenennen']", function() {
+				renameTaxonomie("moose");
+			});
+			$("body").on("click", "[name='taxonomie_pilze_umbenennen']", function() {
+				renameTaxonomie("macromycetes");
 			});
 			$("body").on("click", ".dokumenteVonViewLöschen", function() {
 				löscheDokumenteVonView($(this).attr("viewname"));
